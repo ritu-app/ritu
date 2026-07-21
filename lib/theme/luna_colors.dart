@@ -4,6 +4,8 @@ abstract final class LunaColors {
   static const Color backgroundPage = Color(0xFFF9F7F4);
   static const Color sage500 = Color(0xFF5F8F7A);
   static const Color sage600 = Color(0xFF4F7765);
+  static const Color meadow600 = Color(0xFF6FA17C);
+  static const Color textPositive = Color(0xFF588164);
   static const Color neutral500 = Color(0xFFA9A19B);
   static const Color neutral600 = Color(0xFF8A827D);
   static const Color textSecondary = Color(0xFF69635F);
@@ -17,7 +19,15 @@ abstract final class LunaColors {
   static const Color fillElevated = Color(0xFFFFFFFF);
   static const Color fillSecondary = Color(0xFFEDF5F0);
   static const Color fillMuted = Color(0xFFEFEFEF);
+  static const Color fillSubtle = Color(0xFFF9F7F4);
+  static const Color fillAccent = Color(0xFFEFD8CE);
+  static const Color fillInfo = Color(0xFFE1DAF0);
   static const Color fillBrandPressed = Color(0xFF416252);
+  static const Color cycleMenstrual = Color(0xFFC98A8A);
+  static const Color rosewood900 = Color(0xFF583333);
+  static const Color gradientSh1 = Color(0xFF5F8F7A);
+  static const Color gradientSh2 = Color(0xFFAFCDB8);
+  static const Color gradientSh3 = Color(0xFFE4C6B8);
   static const Color white = Color(0xFFFFFFFF);
   static const Color divider = Color(0xFFD9D4CF);
 }

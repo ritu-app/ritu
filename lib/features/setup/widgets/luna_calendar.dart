@@ -12,6 +12,7 @@ class LunaCalendar extends StatelessWidget {
     required this.onMonthChanged,
     this.selectedDate,
     this.markedDates = const {},
+    this.periodDates = const {},
     this.onDateSelected,
     this.selectionStyle = LunaCalendarSelectionStyle.filled,
   });
@@ -20,6 +21,7 @@ class LunaCalendar extends StatelessWidget {
   final ValueChanged<DateTime> onMonthChanged;
   final DateTime? selectedDate;
   final Set<DateTime> markedDates;
+  final Set<DateTime> periodDates;
   final ValueChanged<DateTime>? onDateSelected;
   final LunaCalendarSelectionStyle selectionStyle;
 
@@ -47,6 +49,14 @@ class LunaCalendar extends StatelessWidget {
 
   bool _isMarked(DateTime day) =>
       markedDates.any((d) => _isSameDay(d, day));
+
+  bool _isPeriod(DateTime day) =>
+      periodDates.any((d) => _isSameDay(d, day));
+
+  bool _isToday(DateTime day) {
+    final now = DateTime.now();
+    return _isSameDay(day, now);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -150,64 +160,107 @@ class LunaCalendar extends StatelessWidget {
     final isSelected =
         selectedDate != null && _isSameDay(selectedDate!, date);
     final isMarked = _isMarked(date);
+    final isPeriod = _isPeriod(date);
+    final showTodayDot = isPeriod && _isToday(date);
 
     return GestureDetector(
       onTap: onDateSelected == null ? null : () => onDateSelected!(date),
       child: SizedBox(
         width: 30,
         height: 36,
-        child: selectionStyle == LunaCalendarSelectionStyle.filled &&
-                isSelected
+        child: isPeriod
             ? Center(
                 child: Container(
                   width: 30,
                   height: 30,
                   alignment: Alignment.center,
                   decoration: const BoxDecoration(
-                    color: LunaColors.fillBrandPressed,
+                    color: LunaColors.cycleMenstrual,
                     shape: BoxShape.circle,
                   ),
-                  child: Text(
-                    '$dayNumber',
-                    style: GoogleFonts.dmSans(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      height: 1,
-                      color: LunaColors.textInverse,
-                    ),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Text(
+                        '$dayNumber',
+                        style: GoogleFonts.dmSans(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          height: 1,
+                          color: LunaColors.rosewood900,
+                        ),
+                      ),
+                      if (showTodayDot)
+                        const Positioned(
+                          bottom: 3,
+                          child: SizedBox(
+                            width: 4,
+                            height: 4,
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: LunaColors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
               )
-            : Stack(
-                alignment: Alignment.center,
-                children: [
-                  Text(
-                    '$dayNumber',
-                    style: GoogleFonts.dmSans(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      height: 1,
-                      color: LunaColors.textPrimary,
-                    ),
-                  ),
-                  if (isMarked ||
-                      (selectionStyle == LunaCalendarSelectionStyle.dotted &&
-                          isSelected))
-                    const Positioned(
-                      bottom: 0,
-                      child: SizedBox(
-                        width: 4,
-                        height: 4,
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: LunaColors.sage500,
-                          ),
+            : selectionStyle == LunaCalendarSelectionStyle.filled &&
+                    isSelected
+                ? Center(
+                    child: Container(
+                      width: 30,
+                      height: 30,
+                      alignment: Alignment.center,
+                      decoration: const BoxDecoration(
+                        color: LunaColors.fillBrandPressed,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Text(
+                        '$dayNumber',
+                        style: GoogleFonts.dmSans(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          height: 1,
+                          color: LunaColors.textInverse,
                         ),
                       ),
                     ),
-                ],
-              ),
+                  )
+                : Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Text(
+                        '$dayNumber',
+                        style: GoogleFonts.dmSans(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          height: 1,
+                          color: LunaColors.textPrimary,
+                        ),
+                      ),
+                      if (isMarked ||
+                          (selectionStyle ==
+                                  LunaCalendarSelectionStyle.dotted &&
+                              isSelected))
+                        const Positioned(
+                          bottom: 0,
+                          child: SizedBox(
+                            width: 4,
+                            height: 4,
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: LunaColors.sage500,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
       ),
     );
   }

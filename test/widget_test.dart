@@ -12,7 +12,7 @@ void main() {
     expect(find.text('Get started'), findsOneWidget);
   });
 
-  testWidgets('Onboarding reaches setup screens', (tester) async {
+  testWidgets('Onboarding completes into homepage', (tester) async {
     await tester.pumpWidget(const LunaApp());
     await tester.pump();
 
@@ -28,24 +28,27 @@ void main() {
     await tester.tap(find.text('Continue'));
     await tester.pumpAndSettle();
 
-    expect(find.text('What did your last period start?'), findsOneWidget);
-    expect(find.text('This look right'), findsOneWidget);
     await tester.tap(find.text('This look right'));
     await tester.pumpAndSettle();
-
-    expect(find.text('Do you have past period dates?'), findsOneWidget);
-    expect(find.text('Add a date'), findsOneWidget);
-
-    final continueButton = tester.widget<FilledButton>(
-      find.widgetWithText(FilledButton, 'Continue'),
-    );
-    expect(continueButton.onPressed, isNull);
 
     await tester.tap(find.text('Skip – I’ll build from today'));
     await tester.pumpAndSettle();
 
-    expect(find.text('A gentle nudge each morning'), findsOneWidget);
-    expect(find.text('Turn on reminders'), findsOneWidget);
-    expect(find.text('Skip for now'), findsOneWidget);
+    await tester.tap(find.text('Skip for now'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Welcome,'), findsOneWidget);
+    expect(find.text('Maya ✨'), findsOneWidget);
+    expect(find.text('days since last period'), findsOneWidget);
+    expect(find.text('How are you feeling today?'), findsOneWidget);
+    expect(find.text('Log today'), findsOneWidget);
+    expect(find.text('Home'), findsWidgets);
+
+    await tester.scrollUntilVisible(
+      find.text('Cycle calendar'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('Cycle calendar'), findsOneWidget);
   });
 }

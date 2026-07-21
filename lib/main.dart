@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'features/home/home_screen.dart';
 import 'features/onboarding/confirmation_screen.dart';
 import 'features/onboarding/name_screen.dart';
 import 'features/setup/last_period_screen.dart';
@@ -18,6 +19,36 @@ class LunaApp extends StatelessWidget {
   void _push(BuildContext context, Widget page) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(builder: (_) => page),
+    );
+  }
+
+  void _goHome(BuildContext context, String name) {
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute<void>(
+        builder: (_) => HomeScreen(name: name),
+      ),
+      (route) => false,
+    );
+  }
+
+  Widget _pastDates(BuildContext context, String name) {
+    return PastDatesScreen(
+      onContinue: () => _push(context, _notifications(context, name)),
+      onSkip: () => _push(context, _notifications(context, name)),
+    );
+  }
+
+  Widget _notifications(BuildContext context, String name) {
+    return NotificationScreen(
+      onTurnOn: () => _goHome(context, name),
+      onSkip: () => _goHome(context, name),
+    );
+  }
+
+  Widget _lastPeriod(BuildContext context, String name) {
+    return LastPeriodScreen(
+      onContinue: () => _push(context, _pastDates(context, name)),
+      onSkip: () => _push(context, _pastDates(context, name)),
     );
   }
 
@@ -40,49 +71,7 @@ class LunaApp extends StatelessWidget {
                       ConfirmationScreen(
                         name: name,
                         onContinue: () {
-                          _push(
-                            context,
-                            LastPeriodScreen(
-                              onContinue: () {
-                                _push(
-                                  context,
-                                  PastDatesScreen(
-                                    onContinue: () {
-                                      _push(
-                                        context,
-                                        const NotificationScreen(),
-                                      );
-                                    },
-                                    onSkip: () {
-                                      _push(
-                                        context,
-                                        const NotificationScreen(),
-                                      );
-                                    },
-                                  ),
-                                );
-                              },
-                              onSkip: () {
-                                _push(
-                                  context,
-                                  PastDatesScreen(
-                                    onContinue: () {
-                                      _push(
-                                        context,
-                                        const NotificationScreen(),
-                                      );
-                                    },
-                                    onSkip: () {
-                                      _push(
-                                        context,
-                                        const NotificationScreen(),
-                                      );
-                                    },
-                                  ),
-                                );
-                              },
-                            ),
-                          );
+                          _push(context, _lastPeriod(context, name));
                         },
                       ),
                     );
