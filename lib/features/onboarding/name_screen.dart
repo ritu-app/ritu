@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../theme/luna_colors.dart';
+import '../../theme/ritu_colors.dart';
 
 class NameScreen extends StatefulWidget {
   const NameScreen({super.key, this.onContinue});
@@ -40,7 +40,7 @@ class _NameScreenState extends State<NameScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: LunaColors.backgroundPage,
+      backgroundColor: RituColors.backgroundPage,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -48,20 +48,20 @@ class _NameScreenState extends State<NameScreen> {
             children: [
               const Spacer(flex: 2),
               Image.asset(
-                'assets/images/luna_logo.png',
+                'assets/images/ritu_logo.png',
                 width: 96,
                 height: 96,
                 filterQuality: FilterQuality.high,
               ),
               const SizedBox(height: 48),
               Text(
-                'What should Luna call you?',
+                'What should Ritu call you?',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.dmSans(
                   fontSize: 22,
                   fontWeight: FontWeight.w600,
                   height: 26 / 22,
-                  color: LunaColors.textPrimary,
+                  color: RituColors.textPrimary,
                 ),
               ),
               const SizedBox(height: 8),
@@ -72,7 +72,7 @@ class _NameScreenState extends State<NameScreen> {
                   fontSize: 15,
                   fontWeight: FontWeight.w400,
                   height: 24 / 15,
-                  color: LunaColors.textSecondary,
+                  color: RituColors.textSecondary,
                 ),
               ),
               const SizedBox(height: 24),
@@ -87,19 +87,19 @@ class _NameScreenState extends State<NameScreen> {
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
                   height: 24 / 15,
-                  color: LunaColors.textPrimary,
+                  color: RituColors.textPrimary,
                 ),
-                cursorColor: LunaColors.sage500,
+                cursorColor: RituColors.sage500,
                 decoration: InputDecoration(
                   hintText: 'Your first name',
                   hintStyle: GoogleFonts.dmSans(
                     fontSize: 15,
                     fontWeight: FontWeight.w500,
                     height: 24 / 15,
-                    color: LunaColors.textDisabled,
+                    color: RituColors.textDisabled,
                   ),
                   filled: true,
-                  fillColor: LunaColors.fillElevated,
+                  fillColor: RituColors.fillElevated,
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 12,
@@ -107,13 +107,13 @@ class _NameScreenState extends State<NameScreen> {
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                     borderSide: const BorderSide(
-                      color: LunaColors.borderSubtle,
+                      color: RituColors.borderSubtle,
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                     borderSide: const BorderSide(
-                      color: LunaColors.sage500,
+                      color: RituColors.sage500,
                     ),
                   ),
                 ),

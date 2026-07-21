@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../theme/luna_colors.dart';
+import '../../../theme/ritu_colors.dart';
 
 class ProgressDots extends StatelessWidget {
   const ProgressDots({
@@ -26,8 +26,8 @@ class ProgressDots extends StatelessWidget {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: i <= currentStep
-                  ? LunaColors.sage500
-                  : LunaColors.borderDisabled,
+                  ? RituColors.sage500
+                  : RituColors.borderDisabled,
             ),
           ),
         ],

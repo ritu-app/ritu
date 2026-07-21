@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../theme/luna_colors.dart';
+import '../../../theme/ritu_colors.dart';
 
-class LunaChoiceChip extends StatelessWidget {
-  const LunaChoiceChip({
+class RituChoiceChip extends StatelessWidget {
+  const RituChoiceChip({
     super.key,
     required this.label,
     required this.selected,
@@ -26,10 +26,10 @@ class LunaChoiceChip extends StatelessWidget {
         height: 34,
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: selected ? LunaColors.fillSecondary : LunaColors.fillMuted,
+          color: selected ? RituColors.fillSecondary : RituColors.fillMuted,
           borderRadius: BorderRadius.circular(999),
           border: Border.all(
-            color: selected ? LunaColors.sage600 : LunaColors.borderDisabled,
+            color: selected ? RituColors.sage600 : RituColors.borderDisabled,
           ),
         ),
         alignment: Alignment.center,
@@ -39,7 +39,7 @@ class LunaChoiceChip extends StatelessWidget {
             fontSize: 13,
             fontWeight: selected ? FontWeight.w500 : FontWeight.w400,
             height: 20 / 13,
-            color: selected ? LunaColors.textPrimary : LunaColors.textMuted,
+            color: selected ? RituColors.textPrimary : RituColors.textMuted,
           ),
         ),
       ),
@@ -47,8 +47,8 @@ class LunaChoiceChip extends StatelessWidget {
   }
 }
 
-class LunaDateChip extends StatelessWidget {
-  const LunaDateChip({
+class RituDateChip extends StatelessWidget {
+  const RituDateChip({
     super.key,
     required this.label,
     required this.onRemove,
@@ -63,9 +63,9 @@ class LunaDateChip extends StatelessWidget {
       height: 34,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: LunaColors.fillSecondary,
+        color: RituColors.fillSecondary,
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: LunaColors.sage600),
+        border: Border.all(color: RituColors.sage600),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -76,7 +76,7 @@ class LunaDateChip extends StatelessWidget {
               fontSize: 13,
               fontWeight: FontWeight.w400,
               height: 20 / 13,
-              color: LunaColors.textPrimary,
+              color: RituColors.textPrimary,
             ),
           ),
           const SizedBox(width: 8),
@@ -86,7 +86,7 @@ class LunaDateChip extends StatelessWidget {
             child: const Icon(
               Icons.close,
               size: 16,
-              color: LunaColors.sage600,
+              color: RituColors.sage600,
             ),
           ),
         ],

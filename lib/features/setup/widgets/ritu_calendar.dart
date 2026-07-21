@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../theme/luna_colors.dart';
+import '../../../theme/ritu_colors.dart';
 
-enum LunaCalendarSelectionStyle { filled, dotted }
+enum RituCalendarSelectionStyle { filled, dotted }
 
-class LunaCalendar extends StatelessWidget {
-  const LunaCalendar({
+class RituCalendar extends StatelessWidget {
+  const RituCalendar({
     super.key,
     required this.month,
     required this.onMonthChanged,
@@ -14,7 +14,7 @@ class LunaCalendar extends StatelessWidget {
     this.markedDates = const {},
     this.periodDates = const {},
     this.onDateSelected,
-    this.selectionStyle = LunaCalendarSelectionStyle.filled,
+    this.selectionStyle = RituCalendarSelectionStyle.filled,
   });
 
   final DateTime month;
@@ -23,7 +23,7 @@ class LunaCalendar extends StatelessWidget {
   final Set<DateTime> markedDates;
   final Set<DateTime> periodDates;
   final ValueChanged<DateTime>? onDateSelected;
-  final LunaCalendarSelectionStyle selectionStyle;
+  final RituCalendarSelectionStyle selectionStyle;
 
   static const _monthNames = [
     'January',
@@ -72,9 +72,9 @@ class LunaCalendar extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: LunaColors.fillElevated,
+        color: RituColors.fillElevated,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: LunaColors.borderSubtle),
+        border: Border.all(color: RituColors.borderSubtle),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
@@ -102,7 +102,7 @@ class LunaCalendar extends StatelessWidget {
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
                     height: 24 / 15,
-                    color: LunaColors.textPrimary,
+                    color: RituColors.textPrimary,
                   ),
                 ),
               ),
@@ -128,7 +128,7 @@ class LunaCalendar extends StatelessWidget {
                       fontSize: 10,
                       fontWeight: FontWeight.w500,
                       height: 14 / 10,
-                      color: LunaColors.textDisabled,
+                      color: RituColors.textDisabled,
                     ),
                   ),
                 ),
@@ -175,7 +175,7 @@ class LunaCalendar extends StatelessWidget {
                   height: 30,
                   alignment: Alignment.center,
                   decoration: const BoxDecoration(
-                    color: LunaColors.cycleMenstrual,
+                    color: RituColors.cycleMenstrual,
                     shape: BoxShape.circle,
                   ),
                   child: Stack(
@@ -187,7 +187,7 @@ class LunaCalendar extends StatelessWidget {
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
                           height: 1,
-                          color: LunaColors.rosewood900,
+                          color: RituColors.rosewood900,
                         ),
                       ),
                       if (showTodayDot)
@@ -199,7 +199,7 @@ class LunaCalendar extends StatelessWidget {
                             child: DecoratedBox(
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: LunaColors.white,
+                                color: RituColors.white,
                               ),
                             ),
                           ),
@@ -208,7 +208,7 @@ class LunaCalendar extends StatelessWidget {
                   ),
                 ),
               )
-            : selectionStyle == LunaCalendarSelectionStyle.filled &&
+            : selectionStyle == RituCalendarSelectionStyle.filled &&
                     isSelected
                 ? Center(
                     child: Container(
@@ -216,7 +216,7 @@ class LunaCalendar extends StatelessWidget {
                       height: 30,
                       alignment: Alignment.center,
                       decoration: const BoxDecoration(
-                        color: LunaColors.fillBrandPressed,
+                        color: RituColors.fillBrandPressed,
                         shape: BoxShape.circle,
                       ),
                       child: Text(
@@ -225,7 +225,7 @@ class LunaCalendar extends StatelessWidget {
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
                           height: 1,
-                          color: LunaColors.textInverse,
+                          color: RituColors.textInverse,
                         ),
                       ),
                     ),
@@ -239,12 +239,12 @@ class LunaCalendar extends StatelessWidget {
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
                           height: 1,
-                          color: LunaColors.textPrimary,
+                          color: RituColors.textPrimary,
                         ),
                       ),
                       if (isMarked ||
                           (selectionStyle ==
-                                  LunaCalendarSelectionStyle.dotted &&
+                                  RituCalendarSelectionStyle.dotted &&
                               isSelected))
                         const Positioned(
                           bottom: 0,
@@ -254,7 +254,7 @@ class LunaCalendar extends StatelessWidget {
                             child: DecoratedBox(
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: LunaColors.sage500,
+                                color: RituColors.sage500,
                               ),
                             ),
                           ),
@@ -277,7 +277,7 @@ class _NavIcon extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
-      child: Icon(icon, size: 16, color: LunaColors.textDisabled),
+      child: Icon(icon, size: 16, color: RituColors.textDisabled),
     );
   }
 }

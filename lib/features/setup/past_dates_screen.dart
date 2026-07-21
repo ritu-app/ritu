@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../theme/luna_colors.dart';
+import '../../theme/ritu_colors.dart';
 import 'widgets/choice_chips.dart';
-import 'widgets/luna_calendar.dart';
+import 'widgets/ritu_calendar.dart';
 import 'widgets/progress_dots.dart';
 import 'widgets/setup_footer.dart';
 
@@ -72,7 +72,7 @@ class _PastDatesScreenState extends State<PastDatesScreen> {
     final canContinue = _dates.isNotEmpty;
 
     return Scaffold(
-      backgroundColor: LunaColors.backgroundPage,
+      backgroundColor: RituColors.backgroundPage,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -93,18 +93,18 @@ class _PastDatesScreenState extends State<PastDatesScreen> {
                           fontSize: 22,
                           fontWeight: FontWeight.w600,
                           height: 26 / 22,
-                          color: LunaColors.textPrimary,
+                          color: RituColors.textPrimary,
                         ),
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'It helps Luna understand your cycle right away. Completely optional.',
+                        'It helps Ritu understand your cycle right away. Completely optional.',
                         textAlign: TextAlign.center,
                         style: GoogleFonts.dmSans(
                           fontSize: 15,
                           fontWeight: FontWeight.w400,
                           height: 24 / 15,
-                          color: LunaColors.textSecondary,
+                          color: RituColors.textSecondary,
                         ),
                       ),
                       const SizedBox(height: 24),
@@ -114,7 +114,7 @@ class _PastDatesScreenState extends State<PastDatesScreen> {
                           runSpacing: 8,
                           children: [
                             for (final date in _dates)
-                              LunaDateChip(
+                              RituDateChip(
                                 label: _chipLabel(date),
                                 onRemove: () {
                                   setState(() {
@@ -129,10 +129,10 @@ class _PastDatesScreenState extends State<PastDatesScreen> {
                         const SizedBox(height: 16),
                       ],
                       if (_showCalendar) ...[
-                        LunaCalendar(
+                        RituCalendar(
                           month: _visibleMonth,
                           markedDates: _dates.toSet(),
-                          selectionStyle: LunaCalendarSelectionStyle.dotted,
+                          selectionStyle: RituCalendarSelectionStyle.dotted,
                           onMonthChanged: (month) {
                             setState(() => _visibleMonth = month);
                           },
@@ -154,7 +154,7 @@ class _PastDatesScreenState extends State<PastDatesScreen> {
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
                           height: 20 / 13,
-                          color: LunaColors.textTertiary,
+                          color: RituColors.textTertiary,
                         ),
                       ),
                     ],

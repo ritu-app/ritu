@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../theme/luna_colors.dart';
+import '../../theme/ritu_colors.dart';
 import 'widgets/progress_dots.dart';
 import 'widgets/setup_footer.dart';
 
@@ -18,7 +18,7 @@ class NotificationScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: LunaColors.backgroundPage,
+      backgroundColor: RituColors.backgroundPage,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -30,7 +30,7 @@ class NotificationScreen extends StatelessWidget {
               const Icon(
                 Icons.notifications_none_rounded,
                 size: 64,
-                color: LunaColors.sage500,
+                color: RituColors.sage500,
               ),
               const SizedBox(height: 20),
               Text(
@@ -40,7 +40,7 @@ class NotificationScreen extends StatelessWidget {
                   fontSize: 22,
                   fontWeight: FontWeight.w600,
                   height: 26 / 22,
-                  color: LunaColors.textPrimary,
+                  color: RituColors.textPrimary,
                 ),
               ),
               const SizedBox(height: 8),
@@ -51,7 +51,7 @@ class NotificationScreen extends StatelessWidget {
                   fontSize: 15,
                   fontWeight: FontWeight.w400,
                   height: 24 / 15,
-                  color: LunaColors.textSecondary,
+                  color: RituColors.textSecondary,
                 ),
               ),
               const Spacer(),

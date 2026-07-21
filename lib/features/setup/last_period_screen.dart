@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../theme/luna_colors.dart';
+import '../../theme/ritu_colors.dart';
 import 'widgets/choice_chips.dart';
-import 'widgets/luna_calendar.dart';
+import 'widgets/ritu_calendar.dart';
 import 'widgets/progress_dots.dart';
 import 'widgets/setup_footer.dart';
 
@@ -48,7 +48,7 @@ class _LastPeriodScreenState extends State<LastPeriodScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: LunaColors.backgroundPage,
+      backgroundColor: RituColors.backgroundPage,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -69,7 +69,7 @@ class _LastPeriodScreenState extends State<LastPeriodScreen> {
                           fontSize: 22,
                           fontWeight: FontWeight.w600,
                           height: 26 / 22,
-                          color: LunaColors.textPrimary,
+                          color: RituColors.textPrimary,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -80,11 +80,11 @@ class _LastPeriodScreenState extends State<LastPeriodScreen> {
                           fontSize: 15,
                           fontWeight: FontWeight.w400,
                           height: 24 / 15,
-                          color: LunaColors.textSecondary,
+                          color: RituColors.textSecondary,
                         ),
                       ),
                       const SizedBox(height: 16),
-                      LunaCalendar(
+                      RituCalendar(
                         month: _visibleMonth,
                         selectedDate: _selectedDate,
                         onMonthChanged: (month) {
@@ -101,7 +101,7 @@ class _LastPeriodScreenState extends State<LastPeriodScreen> {
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
                           height: 24 / 18,
-                          color: LunaColors.textPrimary,
+                          color: RituColors.textPrimary,
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -111,7 +111,7 @@ class _LastPeriodScreenState extends State<LastPeriodScreen> {
                             if (option != PeriodDuration.values.first)
                               const SizedBox(width: 8),
                             Expanded(
-                              child: LunaChoiceChip(
+                              child: RituChoiceChip(
                                 label: option.label,
                                 selected: _duration == option,
                                 width: double.infinity,

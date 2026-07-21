@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-abstract final class LunaColors {
+abstract final class RituColors {
   static const Color backgroundPage = Color(0xFFF9F7F4);
   static const Color sage500 = Color(0xFF5F8F7A);
   static const Color sage600 = Color(0xFF4F7765);

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../theme/luna_colors.dart';
+import '../../theme/ritu_colors.dart';
 
 class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key, this.onGetStarted});
@@ -11,7 +11,7 @@ class SplashScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: LunaColors.backgroundPage,
+      backgroundColor: RituColors.backgroundPage,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -46,19 +46,19 @@ class _BrandBlock extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Image.asset(
-          'assets/images/luna_logo.png',
+          'assets/images/ritu_logo.png',
           width: 120,
           height: 120,
           filterQuality: FilterQuality.high,
         ),
         const SizedBox(height: 12),
         Text(
-          'Luna',
+          'Ritu',
           textAlign: TextAlign.center,
           style: GoogleFonts.dmSerifDisplay(
             fontSize: 48,
             fontWeight: FontWeight.w400,
-            color: LunaColors.sage600,
+            color: RituColors.sage600,
             height: 1,
           ),
         ),
@@ -69,7 +69,7 @@ class _BrandBlock extends StatelessWidget {
           style: GoogleFonts.dmSans(
             fontSize: 12,
             fontWeight: FontWeight.w500,
-            color: LunaColors.neutral600,
+            color: RituColors.neutral600,
             letterSpacing: 0.96,
             height: 1,
           ),
@@ -78,7 +78,7 @@ class _BrandBlock extends StatelessWidget {
         Container(
           width: 114,
           height: 1,
-          color: LunaColors.divider,
+          color: RituColors.divider,
         ),
         const SizedBox(height: 7),
         Text(
@@ -87,7 +87,7 @@ class _BrandBlock extends StatelessWidget {
           style: GoogleFonts.dmSans(
             fontSize: 12,
             fontWeight: FontWeight.w400,
-            color: LunaColors.neutral500,
+            color: RituColors.neutral500,
             height: 1.25,
           ),
         ),

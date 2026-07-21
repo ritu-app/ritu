@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:luna_app/main.dart';
+import 'package:ritu/main.dart';
 
 void main() {
-  testWidgets('Splash screen shows Luna branding and CTA', (tester) async {
-    await tester.pumpWidget(const LunaApp());
+  testWidgets('Splash screen shows Ritu branding and CTA', (tester) async {
+    await tester.pumpWidget(const RituApp());
     await tester.pump();
 
-    expect(find.text('Luna'), findsOneWidget);
+    expect(find.text('Ritu'), findsOneWidget);
     expect(find.text('Get started'), findsOneWidget);
   });
 
   testWidgets('Onboarding completes into homepage', (tester) async {
-    await tester.pumpWidget(const LunaApp());
+    await tester.pumpWidget(const RituApp());
     await tester.pump();
 
     await tester.tap(find.text('Get started'));

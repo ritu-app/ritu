@@ -7,14 +7,14 @@ import 'features/setup/last_period_screen.dart';
 import 'features/setup/notification_screen.dart';
 import 'features/setup/past_dates_screen.dart';
 import 'features/splash/splash_screen.dart';
-import 'theme/luna_theme.dart';
+import 'theme/ritu_theme.dart';
 
 void main() {
-  runApp(const LunaApp());
+  runApp(const RituApp());
 }
 
-class LunaApp extends StatelessWidget {
-  const LunaApp({super.key});
+class RituApp extends StatelessWidget {
+  const RituApp({super.key});
 
   void _push(BuildContext context, Widget page) {
     Navigator.of(context).push(
@@ -55,9 +55,9 @@ class LunaApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Luna',
+      title: 'Ritu',
       debugShowCheckedModeBanner: false,
-      theme: buildLunaTheme(),
+      theme: buildRituTheme(),
       home: Builder(
         builder: (context) {
           return SplashScreen(

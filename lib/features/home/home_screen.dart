@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../theme/luna_colors.dart';
+import '../../theme/ritu_colors.dart';
 import '../settings/settings_screen.dart';
-import '../setup/widgets/luna_calendar.dart';
+import '../setup/widgets/ritu_calendar.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
@@ -58,7 +58,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: LunaColors.backgroundPage,
+      backgroundColor: RituColors.backgroundPage,
       body: SafeArea(
         bottom: false,
         child: Column(
@@ -181,19 +181,19 @@ class _HomeTab extends StatelessWidget {
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
                 height: 24 / 15,
-                color: LunaColors.textPrimary,
+                color: RituColors.textPrimary,
               ),
             ),
             const Spacer(),
             const Icon(
               Icons.edit_outlined,
               size: 18,
-              color: LunaColors.textDisabled,
+              color: RituColors.textDisabled,
             ),
           ],
         ),
         const SizedBox(height: 12),
-        LunaCalendar(
+        RituCalendar(
           month: calendarMonth,
           periodDates: periodDates,
           onMonthChanged: onMonthChanged,
@@ -227,7 +227,7 @@ class _Header extends StatelessWidget {
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
                   height: 20 / 13,
-                  color: LunaColors.textSecondary,
+                  color: RituColors.textSecondary,
                 ),
               ),
               Text(
@@ -236,7 +236,7 @@ class _Header extends StatelessWidget {
                   fontSize: 28,
                   fontWeight: FontWeight.w400,
                   height: 34 / 28,
-                  color: LunaColors.textPrimary,
+                  color: RituColors.textPrimary,
                 ),
               ),
             ],
@@ -247,7 +247,7 @@ class _Header extends StatelessWidget {
             const Icon(
               Icons.local_fire_department_outlined,
               size: 20,
-              color: LunaColors.textDisabled,
+              color: RituColors.textDisabled,
             ),
             const SizedBox(width: 4),
             Text(
@@ -255,7 +255,7 @@ class _Header extends StatelessWidget {
               style: GoogleFonts.dmSans(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: LunaColors.textDisabled,
+                color: RituColors.textDisabled,
               ),
             ),
             const SizedBox(width: 12),
@@ -267,7 +267,7 @@ class _Header extends StatelessWidget {
                 child: Icon(
                   Icons.settings_outlined,
                   size: 22,
-                  color: LunaColors.textDisabled,
+                  color: RituColors.textDisabled,
                 ),
               ),
             ),
@@ -298,9 +298,9 @@ class _StatusCard extends StatelessWidget {
           begin: Alignment(-0.8, -0.6),
           end: Alignment(0.9, 0.7),
           colors: [
-            LunaColors.gradientSh1,
-            LunaColors.gradientSh2,
-            LunaColors.gradientSh3,
+            RituColors.gradientSh1,
+            RituColors.gradientSh2,
+            RituColors.gradientSh3,
           ],
           stops: [0.11, 0.56, 0.88],
         ),
@@ -314,7 +314,7 @@ class _StatusCard extends StatelessWidget {
               fontSize: 52,
               fontWeight: FontWeight.w400,
               height: 54 / 52,
-              color: LunaColors.textInverse,
+              color: RituColors.textInverse,
             ),
           ),
           Text(
@@ -323,13 +323,13 @@ class _StatusCard extends StatelessWidget {
               fontSize: 13,
               fontWeight: FontWeight.w600,
               height: 20 / 13,
-              color: LunaColors.textInverse,
+              color: RituColors.textInverse,
             ),
           ),
           const SizedBox(height: 12),
           Container(
             height: 1,
-            color: LunaColors.white.withValues(alpha: 0.35),
+            color: RituColors.white.withValues(alpha: 0.35),
           ),
           const SizedBox(height: 12),
           Row(
@@ -341,7 +341,7 @@ class _StatusCard extends StatelessWidget {
                     fontSize: 11,
                     fontWeight: FontWeight.w500,
                     height: 18 / 11,
-                    color: LunaColors.textInverse,
+                    color: RituColors.textInverse,
                   ),
                 ),
               ),
@@ -351,7 +351,7 @@ class _StatusCard extends StatelessWidget {
                   fontSize: 11,
                   fontWeight: FontWeight.w500,
                   height: 18 / 11,
-                  color: LunaColors.textInverse,
+                  color: RituColors.textInverse,
                 ),
               ),
             ],
@@ -379,9 +379,9 @@ class _CheckInCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(12, 16, 12, 20),
       decoration: BoxDecoration(
-        color: LunaColors.fillElevated,
+        color: RituColors.fillElevated,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: LunaColors.borderSubtle),
+        border: Border.all(color: RituColors.borderSubtle),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -392,7 +392,7 @@ class _CheckInCard extends StatelessWidget {
               fontSize: 15,
               fontWeight: FontWeight.w600,
               height: 24 / 15,
-              color: LunaColors.textPrimary,
+              color: RituColors.textPrimary,
             ),
           ),
           const SizedBox(height: 12),
@@ -418,7 +418,7 @@ class _CheckInCard extends StatelessWidget {
               fontSize: 13,
               fontWeight: FontWeight.w600,
               height: 20 / 13,
-              color: LunaColors.textSecondary,
+              color: RituColors.textSecondary,
             ),
           ),
           Text(
@@ -427,7 +427,7 @@ class _CheckInCard extends StatelessWidget {
               fontSize: 11,
               fontWeight: FontWeight.w400,
               height: 18 / 11,
-              color: LunaColors.textTertiary,
+              color: RituColors.textTertiary,
             ),
           ),
           const SizedBox(height: 12),
@@ -437,8 +437,8 @@ class _CheckInCard extends StatelessWidget {
             child: FilledButton(
               onPressed: () {},
               style: FilledButton.styleFrom(
-                backgroundColor: LunaColors.sage500,
-                foregroundColor: LunaColors.white,
+                backgroundColor: RituColors.sage500,
+                foregroundColor: RituColors.white,
                 padding: EdgeInsets.zero,
                 textStyle: GoogleFonts.dmSans(
                   fontSize: 13,
@@ -477,10 +477,10 @@ class _MoodChip extends StatelessWidget {
         height: 69,
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: selected ? LunaColors.fillSecondary : LunaColors.fillSubtle,
+          color: selected ? RituColors.fillSecondary : RituColors.fillSubtle,
           borderRadius: BorderRadius.circular(12),
           border: selected
-              ? Border.all(color: LunaColors.sage600)
+              ? Border.all(color: RituColors.sage600)
               : Border.all(color: Colors.transparent),
         ),
         child: Column(
@@ -497,7 +497,7 @@ class _MoodChip extends StatelessWidget {
                 fontSize: 11,
                 fontWeight: FontWeight.w500,
                 height: 18 / 11,
-                color: LunaColors.textPrimary,
+                color: RituColors.textPrimary,
               ),
             ),
           ],
@@ -524,7 +524,7 @@ class _PatternsCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: LunaColors.fillAccent,
+        color: RituColors.fillAccent,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -536,17 +536,17 @@ class _PatternsCard extends StatelessWidget {
               fontSize: 15,
               fontWeight: FontWeight.w600,
               height: 24 / 15,
-              color: LunaColors.textPrimary,
+              color: RituColors.textPrimary,
             ),
           ),
           const SizedBox(height: 4),
           Text(
-            'Keep logging and Luna will surface trends in your energy, mood, and sleep.',
+            'Keep logging and Ritu will surface trends in your energy, mood, and sleep.',
             style: GoogleFonts.dmSans(
               fontSize: 13,
               fontWeight: FontWeight.w400,
               height: 20 / 13,
-              color: LunaColors.textSecondary,
+              color: RituColors.textSecondary,
             ),
           ),
           const SizedBox(height: 8),
@@ -555,8 +555,8 @@ class _PatternsCard extends StatelessWidget {
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 5,
-              backgroundColor: LunaColors.white,
-              color: LunaColors.meadow600,
+              backgroundColor: RituColors.white,
+              color: RituColors.meadow600,
             ),
           ),
           const SizedBox(height: 8),
@@ -567,7 +567,7 @@ class _PatternsCard extends StatelessWidget {
                 fontSize: 11,
                 fontWeight: FontWeight.w400,
                 height: 18 / 11,
-                color: LunaColors.textSecondary,
+                color: RituColors.textSecondary,
               ),
             ),
           ),
@@ -588,7 +588,7 @@ class _SpeedUpBanner extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: LunaColors.fillInfo,
+        color: RituColors.fillInfo,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -603,7 +603,7 @@ class _SpeedUpBanner extends StatelessWidget {
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
                     height: 24 / 15,
-                    color: LunaColors.textPrimary,
+                    color: RituColors.textPrimary,
                   ),
                 ),
               ),
@@ -612,19 +612,19 @@ class _SpeedUpBanner extends StatelessWidget {
                 child: const Icon(
                   Icons.close,
                   size: 18,
-                  color: LunaColors.textDisabled,
+                  color: RituColors.textDisabled,
                 ),
               ),
             ],
           ),
           const SizedBox(height: 4),
           Text(
-            'Adding past period dates helps Luna understand your cycle right away',
+            'Adding past period dates helps Ritu understand your cycle right away',
             style: GoogleFonts.dmSans(
               fontSize: 13,
               fontWeight: FontWeight.w400,
               height: 20 / 13,
-              color: LunaColors.textSecondary,
+              color: RituColors.textSecondary,
             ),
           ),
           const SizedBox(height: 8),
@@ -634,7 +634,7 @@ class _SpeedUpBanner extends StatelessWidget {
               fontSize: 13,
               fontWeight: FontWeight.w500,
               height: 20 / 13,
-              color: LunaColors.textPositive,
+              color: RituColors.textPositive,
             ),
           ),
         ],
@@ -663,9 +663,9 @@ class _BottomNav extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
-        color: LunaColors.fillElevated,
+        color: RituColors.fillElevated,
         border: Border(
-          top: BorderSide(color: LunaColors.borderSubtle),
+          top: BorderSide(color: RituColors.borderSubtle),
         ),
       ),
       child: SafeArea(
@@ -687,8 +687,8 @@ class _BottomNav extends StatelessWidget {
                               : _items[i].$1,
                           size: 22,
                           color: currentIndex == i
-                              ? LunaColors.sage600
-                              : LunaColors.textDisabled,
+                              ? RituColors.sage600
+                              : RituColors.textDisabled,
                         ),
                         const SizedBox(height: 4),
                         Text(
@@ -698,8 +698,8 @@ class _BottomNav extends StatelessWidget {
                             fontWeight: FontWeight.w500,
                             height: 14 / 10,
                             color: currentIndex == i
-                                ? LunaColors.sage600
-                                : LunaColors.textDisabled,
+                                ? RituColors.sage600
+                                : RituColors.textDisabled,
                           ),
                         ),
                       ],
@@ -727,7 +727,7 @@ class _PlaceholderTab extends StatelessWidget {
         style: GoogleFonts.dmSans(
           fontSize: 15,
           fontWeight: FontWeight.w500,
-          color: LunaColors.textSecondary,
+          color: RituColors.textSecondary,
         ),
       ),
     );

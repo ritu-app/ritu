@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../theme/luna_colors.dart';
+import '../../../theme/ritu_colors.dart';
 
 class SetupFooter extends StatelessWidget {
   const SetupFooter({
@@ -45,7 +45,7 @@ class SetupFooter extends StatelessWidget {
                 fontSize: 15,
                 fontWeight: FontWeight.w500,
                 height: 24 / 15,
-                color: LunaColors.textTertiary,
+                color: RituColors.textTertiary,
               ),
             ),
           ),
@@ -73,8 +73,8 @@ class OutlinedPillButton extends StatelessWidget {
       child: OutlinedButton(
         onPressed: onPressed,
         style: OutlinedButton.styleFrom(
-          foregroundColor: LunaColors.sage600,
-          side: const BorderSide(color: LunaColors.sage500),
+          foregroundColor: RituColors.sage600,
+          side: const BorderSide(color: RituColors.sage500),
           shape: const StadiumBorder(),
           textStyle: GoogleFonts.dmSans(
             fontSize: 15,

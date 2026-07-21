@@ -1,4 +1,4 @@
-package com.brisk.luna_app
+package app.ritu
 
 import io.flutter.embedding.android.FlutterActivity
 

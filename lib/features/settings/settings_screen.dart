@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../theme/luna_colors.dart';
+import '../../theme/ritu_colors.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({
@@ -24,7 +24,7 @@ class SettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: LunaColors.backgroundPage,
+      backgroundColor: RituColors.backgroundPage,
       body: SafeArea(
         child: Column(
           children: [
@@ -47,29 +47,29 @@ class SettingsScreen extends StatelessWidget {
                     children: [
                       _SettingsRow(
                         icon: Icons.calendar_today_outlined,
-                        iconBackground: LunaColors.fillPositiveSecondary,
-                        iconColor: LunaColors.sage600,
+                        iconBackground: RituColors.fillPositiveSecondary,
+                        iconColor: RituColors.sage600,
                         title: 'Period Started',
                         subtitle: periodStartedLabel,
                       ),
                       _SettingsRow(
                         icon: Icons.history,
-                        iconBackground: LunaColors.fillPositiveSecondary,
-                        iconColor: LunaColors.sage600,
+                        iconBackground: RituColors.fillPositiveSecondary,
+                        iconColor: RituColors.sage600,
                         title: 'Period History',
                         subtitle: 'No dates added',
                       ),
                       _SettingsRow(
                         icon: Icons.schedule_outlined,
-                        iconBackground: LunaColors.fillPositiveSecondary,
-                        iconColor: LunaColors.sage600,
+                        iconBackground: RituColors.fillPositiveSecondary,
+                        iconColor: RituColors.sage600,
                         title: 'Cycle Learning',
                         subtitle: 'Unclassified – needs 3 cycles',
                       ),
                       _SettingsRow(
                         icon: Icons.add_circle_outline,
-                        iconBackground: LunaColors.fillPositiveSecondary,
-                        iconColor: LunaColors.sage600,
+                        iconBackground: RituColors.fillPositiveSecondary,
+                        iconColor: RituColors.sage600,
                         title: 'Custom Symptoms',
                         subtitle: 'Add your own symptoms to track',
                         showDivider: false,
@@ -83,22 +83,22 @@ class SettingsScreen extends StatelessWidget {
                     children: [
                       _SettingsRow(
                         icon: Icons.notifications_none_rounded,
-                        iconBackground: LunaColors.fillAttentionSecondary,
-                        iconColor: LunaColors.iconAttention,
+                        iconBackground: RituColors.fillAttentionSecondary,
+                        iconColor: RituColors.iconAttention,
                         title: 'Daily Reminder',
                         subtitle: '8:00 AM',
                       ),
                       _SettingsRow(
                         icon: Icons.auto_awesome,
-                        iconBackground: LunaColors.fillAttentionSecondary,
-                        iconColor: LunaColors.iconAttention,
+                        iconBackground: RituColors.fillAttentionSecondary,
+                        iconColor: RituColors.iconAttention,
                         title: 'Insight Alerts',
-                        subtitle: 'When Luna spots something new',
+                        subtitle: 'When Ritu spots something new',
                       ),
                       _SettingsRow(
                         icon: Icons.nightlight_round,
-                        iconBackground: LunaColors.fillAttentionSecondary,
-                        iconColor: LunaColors.iconAttention,
+                        iconBackground: RituColors.fillAttentionSecondary,
+                        iconColor: RituColors.iconAttention,
                         title: 'Period Reminder',
                         subtitle: 'A gentle nudge before your period',
                         showDivider: false,
@@ -112,29 +112,29 @@ class SettingsScreen extends StatelessWidget {
                     children: [
                       _SettingsRow(
                         icon: Icons.cloud_upload_outlined,
-                        iconBackground: LunaColors.fillInfoSecondary,
-                        iconColor: LunaColors.iconInfo,
+                        iconBackground: RituColors.fillInfoSecondary,
+                        iconColor: RituColors.iconInfo,
                         title: 'iCloud Backup',
                         subtitle: 'Off',
                       ),
                       _SettingsRow(
                         icon: Icons.ios_share_outlined,
-                        iconBackground: LunaColors.fillPositiveSecondary,
-                        iconColor: LunaColors.sage600,
+                        iconBackground: RituColors.fillPositiveSecondary,
+                        iconColor: RituColors.sage600,
                         title: 'Export Data',
                         subtitle: 'Download a complete copy of everything',
                       ),
                       _SettingsRow(
                         icon: Icons.bar_chart_rounded,
-                        iconBackground: LunaColors.fillAttentionSecondary,
-                        iconColor: LunaColors.iconAttention,
+                        iconBackground: RituColors.fillAttentionSecondary,
+                        iconColor: RituColors.iconAttention,
                         title: 'Usage Analytics',
-                        subtitle: 'Helps improve Luna – no personal data',
+                        subtitle: 'Helps improve Ritu – no personal data',
                       ),
                       _SettingsRow(
                         icon: Icons.delete_outline,
-                        iconBackground: LunaColors.fillCriticalSecondary,
-                        iconColor: LunaColors.iconCritical,
+                        iconBackground: RituColors.fillCriticalSecondary,
+                        iconColor: RituColors.iconCritical,
                         title: 'Delete Data',
                         subtitle: 'Permanently removes everything',
                         showDivider: false,
@@ -148,27 +148,27 @@ class SettingsScreen extends StatelessWidget {
                     children: [
                       _SettingsRow(
                         icon: Icons.help_outline,
-                        iconBackground: LunaColors.fillInfoSecondary,
-                        iconColor: LunaColors.iconInfo,
+                        iconBackground: RituColors.fillInfoSecondary,
+                        iconColor: RituColors.iconInfo,
                         title: 'Help & Support',
                       ),
                       _SettingsRow(
                         icon: Icons.lock_outline,
-                        iconBackground: LunaColors.fillInfoSecondary,
-                        iconColor: LunaColors.iconInfo,
+                        iconBackground: RituColors.fillInfoSecondary,
+                        iconColor: RituColors.iconInfo,
                         title: 'Privacy Policy',
                       ),
                       _SettingsRow(
                         icon: Icons.description_outlined,
-                        iconBackground: LunaColors.fillInfoSecondary,
-                        iconColor: LunaColors.iconInfo,
+                        iconBackground: RituColors.fillInfoSecondary,
+                        iconColor: RituColors.iconInfo,
                         title: 'Terms of Service',
                       ),
                       _SettingsRow(
                         icon: Icons.info_outline,
-                        iconBackground: LunaColors.fillInfoSecondary,
-                        iconColor: LunaColors.iconInfo,
-                        title: 'About Luna',
+                        iconBackground: RituColors.fillInfoSecondary,
+                        iconColor: RituColors.iconInfo,
+                        title: 'About Ritu',
                         showDivider: false,
                       ),
                     ],
@@ -201,7 +201,7 @@ class _SettingsAppBar extends StatelessWidget {
             icon: const Icon(
               Icons.chevron_left,
               size: 28,
-              color: LunaColors.textPrimary,
+              color: RituColors.textPrimary,
             ),
           ),
           Expanded(
@@ -212,7 +212,7 @@ class _SettingsAppBar extends StatelessWidget {
                 fontSize: 18,
                 fontWeight: FontWeight.w400,
                 height: 25 / 18,
-                color: LunaColors.textPrimary,
+                color: RituColors.textPrimary,
               ),
             ),
           ),
@@ -240,9 +240,9 @@ class _ProfileCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: LunaColors.fillElevated,
+        color: RituColors.fillElevated,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: LunaColors.borderSubtle),
+        border: Border.all(color: RituColors.borderSubtle),
       ),
       child: Row(
         children: [
@@ -256,9 +256,9 @@ class _ProfileCard extends StatelessWidget {
                 begin: Alignment(-0.7, -0.5),
                 end: Alignment(0.8, 0.8),
                 colors: [
-                  LunaColors.gradientVb1,
-                  LunaColors.gradientVb2,
-                  LunaColors.gradientVb3,
+                  RituColors.gradientVb1,
+                  RituColors.gradientVb2,
+                  RituColors.gradientVb3,
                 ],
                 stops: [0.14, 0.59, 0.95],
               ),
@@ -269,7 +269,7 @@ class _ProfileCard extends StatelessWidget {
                 fontSize: 22,
                 fontWeight: FontWeight.w700,
                 height: 26 / 22,
-                color: LunaColors.textInverse,
+                color: RituColors.textInverse,
               ),
             ),
           ),
@@ -284,7 +284,7 @@ class _ProfileCard extends StatelessWidget {
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
                     height: 24 / 18,
-                    color: LunaColors.textPrimary,
+                    color: RituColors.textPrimary,
                   ),
                 ),
                 Text(
@@ -293,7 +293,7 @@ class _ProfileCard extends StatelessWidget {
                     fontSize: 11,
                     fontWeight: FontWeight.w500,
                     height: 18 / 11,
-                    color: LunaColors.textTertiary,
+                    color: RituColors.textTertiary,
                   ),
                 ),
               ],
@@ -318,7 +318,7 @@ class _SectionLabel extends StatelessWidget {
         fontSize: 13,
         fontWeight: FontWeight.w600,
         height: 20 / 13,
-        color: LunaColors.textDisabled,
+        color: RituColors.textDisabled,
       ),
     );
   }
@@ -335,9 +335,9 @@ class _SettingsGroup extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: LunaColors.fillElevated,
+        color: RituColors.fillElevated,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: LunaColors.borderSubtle),
+        border: Border.all(color: RituColors.borderSubtle),
       ),
       child: Column(children: children),
     );
@@ -392,7 +392,7 @@ class _SettingsRow extends StatelessWidget {
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
                           height: 20 / 13,
-                          color: LunaColors.textPrimary,
+                          color: RituColors.textPrimary,
                         ),
                       ),
                       if (subtitle != null)
@@ -402,7 +402,7 @@ class _SettingsRow extends StatelessWidget {
                             fontSize: 11,
                             fontWeight: FontWeight.w500,
                             height: 18 / 11,
-                            color: LunaColors.textTertiary,
+                            color: RituColors.textTertiary,
                           ),
                         ),
                     ],
@@ -411,7 +411,7 @@ class _SettingsRow extends StatelessWidget {
                 const Icon(
                   Icons.chevron_right,
                   size: 16,
-                  color: LunaColors.textDisabled,
+                  color: RituColors.textDisabled,
                 ),
               ],
             ),
@@ -421,7 +421,7 @@ class _SettingsRow extends StatelessWidget {
           const Divider(
             height: 1,
             thickness: 0.5,
-            color: LunaColors.borderSubtle,
+            color: RituColors.borderSubtle,
           ),
       ],
     );
@@ -436,11 +436,11 @@ class _Footer extends StatelessWidget {
     return Column(
       children: [
         Text(
-          'Luna',
+          'Ritu',
           style: GoogleFonts.dmSerifDisplay(
             fontSize: 28,
             fontWeight: FontWeight.w400,
-            color: LunaColors.sage600,
+            color: RituColors.sage600,
           ),
         ),
         const SizedBox(height: 4),
@@ -450,7 +450,7 @@ class _Footer extends StatelessWidget {
             fontSize: 11,
             fontWeight: FontWeight.w500,
             height: 18 / 11,
-            color: LunaColors.textTertiary,
+            color: RituColors.textTertiary,
           ),
         ),
       ],

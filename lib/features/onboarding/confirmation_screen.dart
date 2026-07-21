@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../theme/luna_colors.dart';
+import '../../theme/ritu_colors.dart';
 
 class ConfirmationScreen extends StatelessWidget {
   const ConfirmationScreen({
@@ -16,7 +16,7 @@ class ConfirmationScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: LunaColors.backgroundPage,
+      backgroundColor: RituColors.backgroundPage,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -30,18 +30,18 @@ class ConfirmationScreen extends StatelessWidget {
                   fontSize: 38,
                   fontWeight: FontWeight.w400,
                   height: 42 / 38,
-                  color: LunaColors.textPrimary,
+                  color: RituColors.textPrimary,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
-                'Luna is ready to help you understand your cycle',
+                'Ritu is ready to help you understand your cycle',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.dmSans(
                   fontSize: 15,
                   fontWeight: FontWeight.w400,
                   height: 24 / 15,
-                  color: LunaColors.textSecondary,
+                  color: RituColors.textSecondary,
                 ),
               ),
               const Spacer(),
@@ -52,7 +52,7 @@ class ConfirmationScreen extends StatelessWidget {
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
                   height: 20 / 13,
-                  color: LunaColors.textTertiary,
+                  color: RituColors.textTertiary,
                 ),
               ),
               const SizedBox(height: 12),
