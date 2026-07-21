@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../theme/luna_colors.dart';
+import '../settings/settings_screen.dart';
 import '../setup/widgets/luna_calendar.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -141,7 +142,16 @@ class _HomeTab extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
       children: [
-        _Header(name: name),
+        _Header(
+          name: name,
+          onSettingsTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => SettingsScreen(name: name),
+              ),
+            );
+          },
+        ),
         const SizedBox(height: 16),
         _StatusCard(
           daysSinceLastPeriod: daysSinceLastPeriod,
@@ -194,9 +204,13 @@ class _HomeTab extends StatelessWidget {
 }
 
 class _Header extends StatelessWidget {
-  const _Header({required this.name});
+  const _Header({
+    required this.name,
+    required this.onSettingsTap,
+  });
 
   final String name;
+  final VoidCallback onSettingsTap;
 
   @override
   Widget build(BuildContext context) {
@@ -245,10 +259,17 @@ class _Header extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 12),
-            const Icon(
-              Icons.settings_outlined,
-              size: 22,
-              color: LunaColors.textDisabled,
+            GestureDetector(
+              onTap: onSettingsTap,
+              behavior: HitTestBehavior.opaque,
+              child: const Padding(
+                padding: EdgeInsets.all(4),
+                child: Icon(
+                  Icons.settings_outlined,
+                  size: 22,
+                  color: LunaColors.textDisabled,
+                ),
+              ),
             ),
           ],
         ),

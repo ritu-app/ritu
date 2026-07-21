@@ -22,12 +22,22 @@ abstract final class LunaColors {
   static const Color fillSubtle = Color(0xFFF9F7F4);
   static const Color fillAccent = Color(0xFFEFD8CE);
   static const Color fillInfo = Color(0xFFE1DAF0);
+  static const Color fillPositiveSecondary = Color(0xFFF3FBF5);
+  static const Color fillAttentionSecondary = Color(0xFFFFFBEF);
+  static const Color fillInfoSecondary = Color(0xFFF8F6FC);
+  static const Color fillCriticalSecondary = Color(0xFFFCF4F4);
+  static const Color iconAttention = Color(0xFFC49A3A);
+  static const Color iconInfo = Color(0xFF8B7BB5);
+  static const Color iconCritical = Color(0xFFC45C5C);
   static const Color fillBrandPressed = Color(0xFF416252);
   static const Color cycleMenstrual = Color(0xFFC98A8A);
   static const Color rosewood900 = Color(0xFF583333);
   static const Color gradientSh1 = Color(0xFF5F8F7A);
   static const Color gradientSh2 = Color(0xFFAFCDB8);
   static const Color gradientSh3 = Color(0xFFE4C6B8);
+  static const Color gradientVb1 = Color(0xFF5F8F7A);
+  static const Color gradientVb2 = Color(0xFF8EB29C);
+  static const Color gradientVb3 = Color(0xFFDCE9E1);
   static const Color white = Color(0xFFFFFFFF);
   static const Color divider = Color(0xFFD9D4CF);
 }

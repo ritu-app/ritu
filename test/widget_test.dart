@@ -44,6 +44,17 @@ void main() {
     expect(find.text('Log today'), findsOneWidget);
     expect(find.text('Home'), findsWidgets);
 
+    await tester.tap(find.byIcon(Icons.settings_outlined));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Settings'), findsOneWidget);
+    expect(find.text('Maya'), findsOneWidget);
+    expect(find.text('Cycle & Tracking'), findsOneWidget);
+    expect(find.text('Daily Reminder'), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.chevron_left));
+    await tester.pumpAndSettle();
+
     await tester.scrollUntilVisible(
       find.text('Cycle calendar'),
       200,
