@@ -76,5 +76,20 @@ void main() {
       scrollable: find.byType(Scrollable).first,
     );
     expect(find.text('Cycle insights'), findsOneWidget);
+
+    await tester.tap(find.text('Journal'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Your space to reflect'), findsOneWidget);
+    expect(find.text('A space for you, just as you are'), findsOneWidget);
+    expect(find.text('Today’s reflection'), findsOneWidget);
+    expect(find.text('Save entry'), findsOneWidget);
+
+    await tester.scrollUntilVisible(
+      find.text('Build self awareness'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('Journal helps you'), findsOneWidget);
   });
 }
