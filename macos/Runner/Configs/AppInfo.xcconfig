@@ -8,7 +8,7 @@
 PRODUCT_NAME = Ritu
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = app.ritu
+PRODUCT_BUNDLE_IDENTIFIER = care.ritu.ritu
 
 // The copyright displayed in application information
 PRODUCT_COPYRIGHT = Copyright © 2026 Ritu. All rights reserved.
