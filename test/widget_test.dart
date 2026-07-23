@@ -61,5 +61,20 @@ void main() {
       scrollable: find.byType(Scrollable).first,
     );
     expect(find.text('Cycle calendar'), findsOneWidget);
+
+    await tester.tap(find.text('Insights'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Understand your patterns'), findsOneWidget);
+    expect(find.text('Your journey is just beginning'), findsOneWidget);
+    expect(find.text('What you’ll unlock'), findsOneWidget);
+    expect(find.text('Energy trends'), findsOneWidget);
+
+    await tester.scrollUntilVisible(
+      find.text('Cycle insights'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('Cycle insights'), findsOneWidget);
   });
 }

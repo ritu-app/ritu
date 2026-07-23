@@ -57,6 +57,7 @@ flutter:
 
   assets:
     - assets/images/ritu_logo.png
+    - assets/images/insights_journey.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

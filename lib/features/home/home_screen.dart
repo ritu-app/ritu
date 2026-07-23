@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../theme/ritu_colors.dart';
+import '../insights/insights_screen.dart';
 import '../settings/settings_screen.dart';
 import '../setup/widgets/ritu_calendar.dart';
 
@@ -64,29 +65,33 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           children: [
             Expanded(
-              child: _tabIndex == 0
-                  ? _HomeTab(
-                      name: widget.name,
-                      daysSinceLastPeriod: widget.daysSinceLastPeriod,
-                      lastPeriodLabel: widget.lastPeriodLabel,
-                      patternDaysLogged: widget.patternDaysLogged,
-                      patternDaysRequired: widget.patternDaysRequired,
-                      showSpeedUpBanner: _showSpeedUpBanner,
-                      selectedMood: _selectedMood,
-                      moods: _moods,
-                      calendarMonth: _calendarMonth,
-                      periodDates: _periodDates,
-                      onMoodSelected: (mood) {
-                        setState(() => _selectedMood = mood);
-                      },
-                      onDismissBanner: () {
-                        setState(() => _showSpeedUpBanner = false);
-                      },
-                      onMonthChanged: (month) {
-                        setState(() => _calendarMonth = month);
-                      },
-                    )
-                  : _PlaceholderTab(label: _tabLabel(_tabIndex)),
+              child: switch (_tabIndex) {
+                0 => _HomeTab(
+                    name: widget.name,
+                    daysSinceLastPeriod: widget.daysSinceLastPeriod,
+                    lastPeriodLabel: widget.lastPeriodLabel,
+                    patternDaysLogged: widget.patternDaysLogged,
+                    patternDaysRequired: widget.patternDaysRequired,
+                    showSpeedUpBanner: _showSpeedUpBanner,
+                    selectedMood: _selectedMood,
+                    moods: _moods,
+                    calendarMonth: _calendarMonth,
+                    periodDates: _periodDates,
+                    onMoodSelected: (mood) {
+                      setState(() => _selectedMood = mood);
+                    },
+                    onDismissBanner: () {
+                      setState(() => _showSpeedUpBanner = false);
+                    },
+                    onMonthChanged: (month) {
+                      setState(() => _calendarMonth = month);
+                    },
+                  ),
+                1 => InsightsScreen(
+                    onLogToday: () => setState(() => _tabIndex = 0),
+                  ),
+                _ => _PlaceholderTab(label: _tabLabel(_tabIndex)),
+              },
             ),
             _BottomNav(
               currentIndex: _tabIndex,
