@@ -91,5 +91,19 @@ void main() {
       scrollable: find.byType(Scrollable).first,
     );
     expect(find.text('Journal helps you'), findsOneWidget);
+
+    await tester.tap(find.text('Reports'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Export your health data'), findsOneWidget);
+    expect(find.text('Your first report is on the way'), findsOneWidget);
+    expect(find.text('Why Reports Are Valuable'), findsOneWidget);
+
+    await tester.scrollUntilVisible(
+      find.text('Keep everything in one place'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('Generate professional reports'), findsOneWidget);
   });
 }

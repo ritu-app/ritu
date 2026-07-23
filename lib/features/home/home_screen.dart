@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../theme/ritu_colors.dart';
 import '../insights/insights_screen.dart';
 import '../journal/journal_screen.dart';
+import '../reports/reports_screen.dart';
 import '../settings/settings_screen.dart';
 import '../setup/widgets/ritu_calendar.dart';
 
@@ -92,6 +93,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     onLogToday: () => setState(() => _tabIndex = 0),
                   ),
                 2 => const JournalScreen(),
+                3 => const ReportsScreen(),
                 _ => _PlaceholderTab(label: _tabLabel(_tabIndex)),
               },
             ),
