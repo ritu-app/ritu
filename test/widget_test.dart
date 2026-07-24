@@ -127,4 +127,37 @@ void main() {
     expect(find.text('Get started'), findsOneWidget);
     expect(await profiles.getProfile(), isNull);
   });
+
+  testWidgets('Editing name from Settings updates profile and Home', (
+    tester,
+  ) async {
+    final profiles = ProfileRepository(database);
+    await profiles.upsertDisplayName('Maya');
+    await profiles.markOnboardingCompleted();
+
+    await tester.pumpWidget(createRituApp(database: database));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.settings_outlined));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Maya'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('What should Ritu call you?'), findsOneWidget);
+    expect(find.text('Change your first name'), findsOneWidget);
+
+    await tester.enterText(find.byType(TextField), 'Nora');
+    await tester.pump();
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Nora'), findsOneWidget);
+    expect((await profiles.getProfile())?.displayName, 'Nora');
+
+    await tester.tap(find.byIcon(Icons.chevron_left));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Nora ✨'), findsOneWidget);
+  });
 }

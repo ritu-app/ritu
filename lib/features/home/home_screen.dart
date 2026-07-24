@@ -35,6 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _showSpeedUpBanner = true;
   String? _selectedMood;
   late DateTime _calendarMonth;
+  late String _name;
 
   static const _moods = [
     ('😊', 'Radiant'),
@@ -47,6 +48,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    _name = widget.name;
     final now = DateTime.now();
     _calendarMonth = DateTime(now.year, now.month);
   }
@@ -71,7 +73,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Expanded(
               child: switch (_tabIndex) {
                 0 => _HomeTab(
-                    name: widget.name,
+                    name: _name,
                     loggingSince: widget.loggingSince,
                     daysSinceLastPeriod: widget.daysSinceLastPeriod,
                     lastPeriodLabel: widget.lastPeriodLabel,
@@ -90,6 +92,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     },
                     onMonthChanged: (month) {
                       setState(() => _calendarMonth = month);
+                    },
+                    onNameUpdated: (name) {
+                      setState(() => _name = name);
                     },
                   ),
                 1 => InsightsScreen(
@@ -134,6 +139,7 @@ class _HomeTab extends StatelessWidget {
     required this.onMoodSelected,
     required this.onDismissBanner,
     required this.onMonthChanged,
+    required this.onNameUpdated,
   });
 
   final String name;
@@ -150,6 +156,7 @@ class _HomeTab extends StatelessWidget {
   final ValueChanged<String> onMoodSelected;
   final VoidCallback onDismissBanner;
   final ValueChanged<DateTime> onMonthChanged;
+  final ValueChanged<String> onNameUpdated;
 
   @override
   Widget build(BuildContext context) {
@@ -158,15 +165,16 @@ class _HomeTab extends StatelessWidget {
       children: [
         _Header(
           name: name,
-          onSettingsTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute<void>(
+          onSettingsTap: () async {
+            final updated = await Navigator.of(context).push<String>(
+              MaterialPageRoute<String>(
                 builder: (_) => SettingsScreen(
                   name: name,
                   loggingSince: loggingSince,
                 ),
               ),
             );
+            if (updated != null) onNameUpdated(updated);
           },
         ),
         const SizedBox(height: 16),
