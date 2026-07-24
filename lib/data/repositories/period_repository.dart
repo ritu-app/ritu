@@ -167,6 +167,76 @@ class PeriodRepository {
     });
   }
 
+  /// All period starts except the latest episode (older history only).
+  Future<List<DateTime>> getPastStartedOn() async {
+    final all = await getAll();
+    if (all.length <= 1) return [];
+    return all.skip(1).map((log) => dateOnly(log.startedOn)).toList();
+  }
+
+  /// Adds one past start (settings / history). Skips dates on/after the latest.
+  Future<PeriodLog?> addPastStart({
+    required DateTime startedOn,
+    required int? typicalPeriodDays,
+  }) async {
+    final start = dateOnly(startedOn);
+    final latest = await getLatest();
+    if (latest != null && !start.isBefore(dateOnly(latest.startedOn))) {
+      return null;
+    }
+    return upsertPeriod(
+      startedOn: start,
+      endedOn: estimateEnd(start, typicalPeriodDays),
+      source: PeriodSources.settings,
+    );
+  }
+
+  Future<void> deleteByStartedOn(DateTime startedOn) async {
+    final start = dateOnly(startedOn);
+    await (_db.delete(_db.periodLogs)..where((t) => t.startedOn.equals(start)))
+        .go();
+  }
+
+  /// Replaces past (non-latest) starts with [startedOnDates].
+  ///
+  /// The latest episode is left unchanged. Dates on or after the latest start
+  /// are ignored. Removals delete matching rows.
+  Future<void> syncPastStarts({
+    required List<DateTime> startedOnDates,
+    required int? typicalPeriodDays,
+  }) async {
+    final latest = await getLatest();
+    final latestStart =
+        latest == null ? null : dateOnly(latest.startedOn);
+
+    final desired = <DateTime>{};
+    for (final raw in startedOnDates) {
+      final start = dateOnly(raw);
+      if (latestStart != null && !start.isBefore(latestStart)) continue;
+      desired.add(start);
+    }
+
+    await _db.transaction(() async {
+      final all = await getAll();
+      for (final log in all) {
+        final start = dateOnly(log.startedOn);
+        if (latestStart != null && start == latestStart) continue;
+        if (!desired.contains(start)) {
+          await (_db.delete(_db.periodLogs)..where((t) => t.id.equals(log.id)))
+              .go();
+        }
+      }
+
+      for (final start in desired) {
+        await upsertPeriod(
+          startedOn: start,
+          endedOn: estimateEnd(start, typicalPeriodDays),
+          source: PeriodSources.settings,
+        );
+      }
+    });
+  }
+
   /// Moves (or creates) the latest period episode to [newStartedOn].
   ///
   /// Recalculates `endedOn` from [typicalPeriodDays] when provided; otherwise

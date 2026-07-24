@@ -63,7 +63,7 @@ class OutlinedPillButton extends StatelessWidget {
   });
 
   final String label;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -74,13 +74,22 @@ class OutlinedPillButton extends StatelessWidget {
         onPressed: onPressed,
         style: OutlinedButton.styleFrom(
           foregroundColor: RituColors.sage600,
+          disabledForegroundColor: RituColors.textDisabled,
           side: const BorderSide(color: RituColors.sage500),
+          disabledBackgroundColor: Colors.transparent,
           shape: const StadiumBorder(),
           textStyle: GoogleFonts.dmSans(
             fontSize: 15,
             fontWeight: FontWeight.w600,
             height: 24 / 15,
           ),
+        ).copyWith(
+          side: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.disabled)) {
+              return const BorderSide(color: RituColors.borderDisabled);
+            }
+            return const BorderSide(color: RituColors.sage500);
+          }),
         ),
         child: Text(label),
       ),

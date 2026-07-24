@@ -14,6 +14,7 @@ class RituCalendar extends StatelessWidget {
     this.selectedDate,
     this.markedDates = const {},
     this.periodDates = const {},
+    this.previewDates = const {},
     this.onDateSelected,
     this.selectionStyle = RituCalendarSelectionStyle.filled,
     this.maxSelectableDate,
@@ -24,6 +25,11 @@ class RituCalendar extends StatelessWidget {
   final DateTime? selectedDate;
   final Set<DateTime> markedDates;
   final Set<DateTime> periodDates;
+
+  /// Days to render as plain colored text (no fill) — e.g. an estimated
+  /// bleed range preview while picking a period start date.
+  final Set<DateTime> previewDates;
+
   final ValueChanged<DateTime>? onDateSelected;
   final RituCalendarSelectionStyle selectionStyle;
 
@@ -57,6 +63,9 @@ class RituCalendar extends StatelessWidget {
 
   bool _isPeriod(DateTime day) =>
       periodDates.any((d) => _isSameDay(d, day));
+
+  bool _isPreview(DateTime day) =>
+      previewDates.any((d) => _isSameDay(d, day));
 
   bool _isToday(DateTime day) {
     final now = DateTime.now();
@@ -178,6 +187,7 @@ class RituCalendar extends StatelessWidget {
         selectable && selectedDate != null && _isSameDay(selectedDate!, date);
     final isMarked = selectable && _isMarked(date);
     final isPeriod = _isPeriod(date);
+    final isPreview = !isSelected && selectable && _isPreview(date);
     final showTodayDot = isPeriod && _isToday(date);
     final dayColor = !selectable
         ? RituColors.textDisabled
@@ -185,7 +195,11 @@ class RituCalendar extends StatelessWidget {
             ? RituColors.rosewood900
             : isSelected && selectionStyle == RituCalendarSelectionStyle.filled
                 ? RituColors.textInverse
-                : RituColors.textPrimary;
+                : isSelected && selectionStyle == RituCalendarSelectionStyle.dotted
+                    ? RituColors.iconCritical
+                    : isPreview
+                        ? RituColors.iconCritical
+                        : RituColors.textPrimary;
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,

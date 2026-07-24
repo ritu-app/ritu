@@ -61,7 +61,7 @@ class RituDateChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: 34,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.fromLTRB(12, 8, 8, 8),
       decoration: BoxDecoration(
         color: RituColors.fillSecondary,
         borderRadius: BorderRadius.circular(999),
@@ -74,7 +74,7 @@ class RituDateChip extends StatelessWidget {
             label,
             style: GoogleFonts.dmSans(
               fontSize: 13,
-              fontWeight: FontWeight.w400,
+              fontWeight: FontWeight.w500,
               height: 20 / 13,
               color: RituColors.textPrimary,
             ),
@@ -83,10 +83,13 @@ class RituDateChip extends StatelessWidget {
           GestureDetector(
             onTap: onRemove,
             behavior: HitTestBehavior.opaque,
-            child: const Icon(
-              Icons.close,
-              size: 16,
-              color: RituColors.sage600,
+            child: const Padding(
+              padding: EdgeInsets.all(2),
+              child: Icon(
+                Icons.close,
+                size: 16,
+                color: RituColors.sage600,
+              ),
             ),
           ),
         ],

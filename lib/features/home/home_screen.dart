@@ -37,6 +37,7 @@ class _HomeScreenState extends State<HomeScreen> {
   String? _lastPeriodLabel;
   Set<DateTime> _periodDates = {};
   int _periodCount = 0;
+  int _pastPeriodCount = 0;
   bool _periodDataLoaded = false;
 
   static const _moods = [
@@ -70,6 +71,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final days = await periods.daysSinceLastPeriod();
     final bleed = await periods.allBleedDays();
     final all = await periods.getAll();
+    final past = await periods.getPastStartedOn();
     if (!mounted) return;
     setState(() {
       _daysSinceLastPeriod = days;
@@ -77,6 +79,7 @@ class _HomeScreenState extends State<HomeScreen> {
           latest == null ? null : formatDisplayDate(latest.startedOn);
       _periodDates = bleed;
       _periodCount = all.length;
+      _pastPeriodCount = past.length;
       _showSpeedUpBanner = all.length < 2;
     });
   }
@@ -118,6 +121,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     },
                     onReturnedFromSettings: _loadPeriodData,
                     periodStartedLabel: _lastPeriodLabel,
+                    pastPeriodCount: _pastPeriodCount,
                   ),
                 1 => InsightsScreen(
                     onLogToday: () => setState(() => _tabIndex = 0),
@@ -164,6 +168,7 @@ class _HomeTab extends StatelessWidget {
     required this.onNameUpdated,
     required this.onReturnedFromSettings,
     this.periodStartedLabel,
+    this.pastPeriodCount = 0,
   });
 
   final String name;
@@ -183,6 +188,7 @@ class _HomeTab extends StatelessWidget {
   final ValueChanged<String> onNameUpdated;
   final Future<void> Function() onReturnedFromSettings;
   final String? periodStartedLabel;
+  final int pastPeriodCount;
 
   @override
   Widget build(BuildContext context) {
@@ -198,6 +204,7 @@ class _HomeTab extends StatelessWidget {
                   name: name,
                   loggingSince: loggingSince,
                   periodStartedLabel: periodStartedLabel,
+                  pastPeriodCount: pastPeriodCount,
                 ),
               ),
             );

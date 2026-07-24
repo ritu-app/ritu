@@ -5,7 +5,8 @@ import '../../app/app_scope.dart';
 import '../../core/date_format.dart';
 import '../../theme/ritu_colors.dart';
 import 'edit_name_dialog.dart';
-import 'edit_period_started_dialog.dart';
+import 'period_history_screen.dart';
+import 'period_started_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({
@@ -13,11 +14,13 @@ class SettingsScreen extends StatefulWidget {
     required this.name,
     required this.loggingSince,
     this.periodStartedLabel,
+    this.pastPeriodCount = 0,
   });
 
   final String name;
   final DateTime loggingSince;
   final String? periodStartedLabel;
+  final int pastPeriodCount;
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
@@ -26,6 +29,7 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   late String _name = widget.name;
   late String? _periodStartedLabel = widget.periodStartedLabel;
+  late int _pastPeriodCount = widget.pastPeriodCount;
 
   String get _initial {
     final trimmed = _name.trim();
@@ -34,6 +38,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   String get _loggingSinceLabel => formatDisplayDate(widget.loggingSince);
+
+  String get _periodHistorySubtitle =>
+      _pastPeriodCount == 0 ? 'No dates added' : 'View and edit past dates';
 
   void _popWithName() {
     Navigator.of(context).pop(_name);
@@ -53,28 +60,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _editPeriodStarted() async {
-    final periods = AppScope.periods(context);
-    final profiles = AppScope.profiles(context);
-    final latest = await periods.getLatest();
-    final profile = await profiles.getProfile();
-    if (!mounted) return;
-
-    final selected = await showEditPeriodStartedDialog(
-      context,
-      currentStartedOn: latest?.startedOn,
+    final selected = await Navigator.of(context).push<DateTime>(
+      MaterialPageRoute<DateTime>(
+        builder: (_) => const PeriodStartedScreen(),
+      ),
     );
     if (selected == null || !mounted) return;
+    setState(() => _periodStartedLabel = formatDisplayDate(selected));
+  }
 
-    final sameDay = latest != null &&
-        dateOnly(latest.startedOn) == dateOnly(selected);
-    if (sameDay) return;
-
-    await periods.updateLatestStartedOn(
-      newStartedOn: selected,
-      typicalPeriodDays: profile?.typicalPeriodDays,
+  Future<void> _editPeriodHistory() async {
+    final count = await Navigator.of(context).push<int>(
+      MaterialPageRoute<int>(
+        builder: (_) => const PeriodHistoryScreen(),
+      ),
     );
     if (!mounted) return;
-    setState(() => _periodStartedLabel = formatDisplayDate(selected));
+    if (count != null) {
+      setState(() => _pastPeriodCount = count);
+    }
   }
 
   Future<void> _confirmAndDeleteData() async {
@@ -176,9 +180,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           iconBackground: RituColors.fillPositiveSecondary,
                           iconColor: RituColors.sage600,
                           title: 'Period History',
-                          subtitle: _periodStartedLabel == null
-                              ? 'No dates added'
-                              : 'View and edit past dates',
+                          subtitle: _periodHistorySubtitle,
+                          onTap: _editPeriodHistory,
                         ),
                         _SettingsRow(
                           icon: Icons.schedule_outlined,

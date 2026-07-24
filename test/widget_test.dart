@@ -222,23 +222,16 @@ void main() {
     await tester.tap(find.text('Period Started'));
     await tester.pumpAndSettle();
 
-    expect(find.text('What did your last period start?'), findsOneWidget);
-    expect(
-      find.text('Change the start date of your latest period'),
-      findsOneWidget,
-    );
+    expect(find.text('When did your last period start?'), findsOneWidget);
+    expect(find.byType(Dialog), findsNothing);
 
-    final dialog = find.byType(Dialog);
-    final day15 = find.descendant(of: dialog, matching: find.text('15'));
+    final day15 = find.text('15');
     expect(day15, findsOneWidget);
     await tester.ensureVisible(day15);
     await tester.tap(day15);
     await tester.pump();
 
-    final save = find.descendant(
-      of: dialog,
-      matching: find.widgetWithText(FilledButton, 'Save'),
-    );
+    final save = find.widgetWithText(FilledButton, 'Save');
     await tester.ensureVisible(save);
     await tester.tap(save);
     await tester.pumpAndSettle();
@@ -278,12 +271,10 @@ void main() {
     await tester.tap(find.text('Period Started'));
     await tester.pumpAndSettle();
 
-    final dialog = find.byType(Dialog);
+    expect(find.byType(Dialog), findsNothing);
+
     // Move to next month (should be blocked) and try a late day in current month.
-    final forward = find.descendant(
-      of: dialog,
-      matching: find.byIcon(Icons.chevron_right),
-    );
+    final forward = find.byIcon(Icons.chevron_right);
     await tester.tap(forward);
     await tester.pumpAndSettle();
 
@@ -304,27 +295,16 @@ void main() {
       'December',
     ];
     expect(
-      find.descendant(
-        of: dialog,
-        matching: find.text('${months[now.month - 1]} ${now.year}'),
-      ),
+      find.text('${months[now.month - 1]} ${now.year}'),
       findsOneWidget,
     );
 
     if (now.day < 28) {
-      final futureDay = find.descendant(
-        of: dialog,
-        matching: find.text('${now.day + 1}'),
-      );
+      final futureDay = find.text('${now.day + 1}');
       await tester.ensureVisible(futureDay);
       await tester.tap(futureDay);
       await tester.pump();
-      await tester.tap(
-        find.descendant(
-          of: dialog,
-          matching: find.widgetWithText(FilledButton, 'Save'),
-        ),
-      );
+      await tester.tap(find.widgetWithText(FilledButton, 'Save'));
       await tester.pumpAndSettle();
 
       final latest = await periods.getLatest();
@@ -338,5 +318,62 @@ void main() {
       ),
       throwsArgumentError,
     );
+  });
+
+  testWidgets('Period History from Settings adds past dates', (tester) async {
+    final profiles = ProfileRepository(database);
+    final periods = PeriodRepository(database);
+    await profiles.upsertDisplayName('Maya');
+    await profiles.setTypicalPeriodDays(5);
+    await profiles.markOnboardingCompleted();
+    await periods.upsertPeriod(
+      startedOn: DateTime(2026, 6, 20),
+      endedOn: DateTime(2026, 6, 24),
+      source: PeriodSources.onboardingLast,
+    );
+
+    await tester.pumpWidget(createRituApp(database: database));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.settings_outlined));
+    await tester.pumpAndSettle();
+
+    expect(find.text('No dates added'), findsOneWidget);
+
+    await tester.tap(find.text('Period History'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Do you have past period dates?'), findsOneWidget);
+    expect(find.text('Add a date'), findsOneWidget);
+    expect(find.text('Save'), findsNothing);
+
+    // Calendar is always visible; selecting a day only stages it — it's
+    // stored once "Add a date" is pressed.
+    await tester.ensureVisible(find.text('1'));
+    await tester.tap(find.text('1'));
+    await tester.pump();
+
+    expect(await periods.getPastStartedOn(), isEmpty);
+
+    final addDate = find.widgetWithText(OutlinedButton, 'Add a date');
+    await tester.ensureVisible(addDate);
+    await tester.tap(addDate);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Jun 1'), findsOneWidget);
+
+    final past = await periods.getPastStartedOn();
+    expect(past, [DateTime(2026, 6, 1)]);
+    expect(
+      dateOnly((await periods.getLatest())!.startedOn),
+      DateTime(2026, 6, 20),
+    );
+
+    await tester.tap(
+      find.widgetWithIcon(IconButton, Icons.chevron_left),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('View and edit past dates'), findsOneWidget);
   });
 }

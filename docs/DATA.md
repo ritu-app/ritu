@@ -84,7 +84,8 @@ Single-row table for the person using this install.
 4. Setup finished → `markOnboardingCompleted`
 5. Cold start → if `onboarding_completed_at` is set → Home; else Splash / onboarding
 6. Settings → **Period Started** → `updateLatestStartedOn` (moves latest episode; `source = settings`)
-7. Settings → **Delete Data** → `clearAllData()` then remount at Splash
+7. Settings → **Period History** → `addPastStart` / `deleteByStartedOn` as dates are added or removed (latest unchanged)
+8. Settings → **Delete Data** → `clearAllData()` then remount at Splash
 
 ### `period_logs`
 
