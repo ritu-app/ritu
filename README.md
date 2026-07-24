@@ -2,6 +2,8 @@
 
 A private journal for your cycle.
 
+For how on-device data is stored and how the schema is laid out, see [docs/DATA.md](docs/DATA.md).
+
 ## Prerequisites
 
 - [Flutter](https://docs.flutter.dev/get-started/install) (stable)

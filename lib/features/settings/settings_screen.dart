@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../app/app_scope.dart';
 import '../../theme/ritu_colors.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -19,6 +20,63 @@ class SettingsScreen extends StatelessWidget {
     final trimmed = name.trim();
     if (trimmed.isEmpty) return '?';
     return trimmed.substring(0, 1).toUpperCase();
+  }
+
+  Future<void> _confirmAndDeleteData(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          backgroundColor: RituColors.fillElevated,
+          title: Text(
+            'Delete all data?',
+            style: GoogleFonts.dmSans(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: RituColors.textPrimary,
+            ),
+          ),
+          content: Text(
+            'This permanently removes your profile and all local data on this device. You can’t undo this.',
+            style: GoogleFonts.dmSans(
+              fontSize: 14,
+              fontWeight: FontWeight.w400,
+              height: 20 / 14,
+              color: RituColors.textSecondary,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: Text(
+                'Cancel',
+                style: GoogleFonts.dmSans(
+                  fontWeight: FontWeight.w600,
+                  color: RituColors.textSecondary,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: Text(
+                'Delete',
+                style: GoogleFonts.dmSans(
+                  fontWeight: FontWeight.w600,
+                  color: RituColors.iconCritical,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true || !context.mounted) return;
+
+    final scope = AppScope.of(context);
+    await scope.profileRepository.clearAllData();
+    if (!context.mounted) return;
+    scope.restartApp();
   }
 
   @override
@@ -108,23 +166,23 @@ class SettingsScreen extends StatelessWidget {
                   const SizedBox(height: 20),
                   const _SectionLabel('Data & Privacy'),
                   const SizedBox(height: 8),
-                  const _SettingsGroup(
+                  _SettingsGroup(
                     children: [
-                      _SettingsRow(
+                      const _SettingsRow(
                         icon: Icons.cloud_upload_outlined,
                         iconBackground: RituColors.fillInfoSecondary,
                         iconColor: RituColors.iconInfo,
                         title: 'iCloud Backup',
                         subtitle: 'Off',
                       ),
-                      _SettingsRow(
+                      const _SettingsRow(
                         icon: Icons.ios_share_outlined,
                         iconBackground: RituColors.fillPositiveSecondary,
                         iconColor: RituColors.sage600,
                         title: 'Export Data',
                         subtitle: 'Download a complete copy of everything',
                       ),
-                      _SettingsRow(
+                      const _SettingsRow(
                         icon: Icons.bar_chart_rounded,
                         iconBackground: RituColors.fillAttentionSecondary,
                         iconColor: RituColors.iconAttention,
@@ -138,6 +196,7 @@ class SettingsScreen extends StatelessWidget {
                         title: 'Delete Data',
                         subtitle: 'Permanently removes everything',
                         showDivider: false,
+                        onTap: () => _confirmAndDeleteData(context),
                       ),
                     ],
                   ),
@@ -352,6 +411,7 @@ class _SettingsRow extends StatelessWidget {
     required this.title,
     this.subtitle,
     this.showDivider = true,
+    this.onTap,
   });
 
   final IconData icon;
@@ -360,13 +420,14 @@ class _SettingsRow extends StatelessWidget {
   final String title;
   final String? subtitle;
   final bool showDivider;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
         InkWell(
-          onTap: () {},
+          onTap: onTap,
           borderRadius: BorderRadius.circular(8),
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 8),
