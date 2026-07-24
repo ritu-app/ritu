@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ritu/app/ritu_app.dart';
 import 'package:ritu/data/local/app_database.dart';
 import 'package:ritu/data/repositories/profile_repository.dart';
+import 'package:ritu/features/settings/settings_screen.dart';
 
 void main() {
   late AppDatabase database;
@@ -62,6 +63,10 @@ void main() {
     await tester.tap(find.byIcon(Icons.settings_outlined));
     await tester.pumpAndSettle();
     expect(find.text('Maya'), findsOneWidget);
+    expect(
+      find.text('Logging since ${formatLoggingSinceDate(profile!.onboardingCompletedAt!)}'),
+      findsOneWidget,
+    );
 
     await tester.tap(find.byIcon(Icons.chevron_left));
     await tester.pumpAndSettle();

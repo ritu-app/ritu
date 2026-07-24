@@ -51,7 +51,6 @@ class _RituAppState extends State<RituApp> {
 
 class _AppBootstrap extends StatefulWidget {
   const _AppBootstrap({
-    super.key,
     required this.profileRepository,
   });
 
@@ -78,7 +77,10 @@ class _AppBootstrapState extends State<_AppBootstrap> {
 
         final profile = snapshot.data;
         if (profile != null && profile.hasCompletedOnboarding) {
-          return HomeScreen(name: profile.displayName);
+          return HomeScreen(
+            name: profile.displayName,
+            loggingSince: profile.onboardingCompletedAt!,
+          );
         }
 
         return const _OnboardingFlow();
@@ -97,11 +99,15 @@ class _OnboardingFlow extends StatelessWidget {
   }
 
   Future<void> _goHome(BuildContext context, String name) async {
-    await AppScope.profiles(context).markOnboardingCompleted();
+    final profile =
+        await AppScope.profiles(context).markOnboardingCompleted();
     if (!context.mounted) return;
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute<void>(
-        builder: (_) => HomeScreen(name: name),
+        builder: (_) => HomeScreen(
+          name: name,
+          loggingSince: profile.onboardingCompletedAt!,
+        ),
       ),
       (route) => false,
     );

@@ -8,12 +8,12 @@ class SettingsScreen extends StatelessWidget {
   const SettingsScreen({
     super.key,
     required this.name,
-    this.loggingSinceLabel = 'June 17, 2026',
+    required this.loggingSince,
     this.periodStartedLabel = 'June 17, 2026',
   });
 
   final String name;
-  final String loggingSinceLabel;
+  final DateTime loggingSince;
   final String periodStartedLabel;
 
   String get _initial {
@@ -21,6 +21,8 @@ class SettingsScreen extends StatelessWidget {
     if (trimmed.isEmpty) return '?';
     return trimmed.substring(0, 1).toUpperCase();
   }
+
+  String get _loggingSinceLabel => formatLoggingSinceDate(loggingSince);
 
   Future<void> _confirmAndDeleteData(BuildContext context) async {
     final confirmed = await showDialog<bool>(
@@ -96,7 +98,7 @@ class SettingsScreen extends StatelessWidget {
                   _ProfileCard(
                     initial: _initial,
                     name: name,
-                    loggingSinceLabel: loggingSinceLabel,
+                    loggingSinceLabel: _loggingSinceLabel,
                   ),
                   const SizedBox(height: 20),
                   const _SectionLabel('Cycle & Tracking'),
@@ -517,4 +519,23 @@ class _Footer extends StatelessWidget {
       ],
     );
   }
+}
+
+/// e.g. July 24, 2026
+String formatLoggingSinceDate(DateTime date) {
+  const months = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+  return '${months[date.month - 1]} ${date.day}, ${date.year}';
 }

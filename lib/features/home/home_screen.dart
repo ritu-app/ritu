@@ -12,6 +12,7 @@ class HomeScreen extends StatefulWidget {
   const HomeScreen({
     super.key,
     required this.name,
+    required this.loggingSince,
     this.daysSinceLastPeriod = 2,
     this.lastPeriodLabel = 'September 17',
     this.patternDaysLogged = 1,
@@ -19,6 +20,7 @@ class HomeScreen extends StatefulWidget {
   });
 
   final String name;
+  final DateTime loggingSince;
   final int daysSinceLastPeriod;
   final String lastPeriodLabel;
   final int patternDaysLogged;
@@ -70,6 +72,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: switch (_tabIndex) {
                 0 => _HomeTab(
                     name: widget.name,
+                    loggingSince: widget.loggingSince,
                     daysSinceLastPeriod: widget.daysSinceLastPeriod,
                     lastPeriodLabel: widget.lastPeriodLabel,
                     patternDaysLogged: widget.patternDaysLogged,
@@ -118,6 +121,7 @@ class _HomeScreenState extends State<HomeScreen> {
 class _HomeTab extends StatelessWidget {
   const _HomeTab({
     required this.name,
+    required this.loggingSince,
     required this.daysSinceLastPeriod,
     required this.lastPeriodLabel,
     required this.patternDaysLogged,
@@ -133,6 +137,7 @@ class _HomeTab extends StatelessWidget {
   });
 
   final String name;
+  final DateTime loggingSince;
   final int daysSinceLastPeriod;
   final String lastPeriodLabel;
   final int patternDaysLogged;
@@ -156,7 +161,10 @@ class _HomeTab extends StatelessWidget {
           onSettingsTap: () {
             Navigator.of(context).push(
               MaterialPageRoute<void>(
-                builder: (_) => SettingsScreen(name: name),
+                builder: (_) => SettingsScreen(
+                  name: name,
+                  loggingSince: loggingSince,
+                ),
               ),
             );
           },
