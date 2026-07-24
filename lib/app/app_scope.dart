@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
 
+import '../data/repositories/period_repository.dart';
 import '../data/repositories/profile_repository.dart';
 
-/// Provides [ProfileRepository] and app-level actions to the widget tree.
+/// Provides repositories and app-level actions to the widget tree.
 class AppScope extends InheritedWidget {
   const AppScope({
     super.key,
     required this.profileRepository,
+    required this.periodRepository,
     required this.restartApp,
     required super.child,
   });
 
   final ProfileRepository profileRepository;
+  final PeriodRepository periodRepository;
 
   /// Remounts the root bootstrap (e.g. after wiping local data).
   final VoidCallback restartApp;
@@ -26,9 +29,14 @@ class AppScope extends InheritedWidget {
     return of(context).profileRepository;
   }
 
+  static PeriodRepository periods(BuildContext context) {
+    return of(context).periodRepository;
+  }
+
   @override
   bool updateShouldNotify(AppScope oldWidget) {
     return profileRepository != oldWidget.profileRepository ||
+        periodRepository != oldWidget.periodRepository ||
         restartApp != oldWidget.restartApp;
   }
 }

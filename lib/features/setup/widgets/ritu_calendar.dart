@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../core/date_format.dart';
 import '../../../theme/ritu_colors.dart';
 
 enum RituCalendarSelectionStyle { filled, dotted }
@@ -15,6 +16,7 @@ class RituCalendar extends StatelessWidget {
     this.periodDates = const {},
     this.onDateSelected,
     this.selectionStyle = RituCalendarSelectionStyle.filled,
+    this.maxSelectableDate,
   });
 
   final DateTime month;
@@ -24,6 +26,9 @@ class RituCalendar extends StatelessWidget {
   final Set<DateTime> periodDates;
   final ValueChanged<DateTime>? onDateSelected;
   final RituCalendarSelectionStyle selectionStyle;
+
+  /// Inclusive last day that can be selected. Days after this are disabled.
+  final DateTime? maxSelectableDate;
 
   static const _monthNames = [
     'January',
@@ -58,6 +63,12 @@ class RituCalendar extends StatelessWidget {
     return _isSameDay(day, now);
   }
 
+  bool _isSelectable(DateTime day) {
+    final max = maxSelectableDate;
+    if (max == null) return true;
+    return !dateOnly(day).isAfter(dateOnly(max));
+  }
+
   @override
   Widget build(BuildContext context) {
     final firstOfMonth = _normalizedMonth;
@@ -67,6 +78,10 @@ class RituCalendar extends StatelessWidget {
     final startOffset = firstOfMonth.weekday % 7;
     final totalCells = startOffset + daysInMonth;
     final rowCount = ((totalCells + 6) / 7).floor();
+    final max = maxSelectableDate == null ? null : dateOnly(maxSelectableDate!);
+    final canGoForward = max == null ||
+        DateTime(firstOfMonth.year, firstOfMonth.month + 1)
+            .isBefore(DateTime(max.year, max.month + 1));
 
     return Container(
       width: double.infinity,
@@ -108,6 +123,7 @@ class RituCalendar extends StatelessWidget {
               ),
               _NavIcon(
                 icon: Icons.chevron_right,
+                enabled: canGoForward,
                 onTap: () => onMonthChanged(
                   DateTime(firstOfMonth.year, firstOfMonth.month + 1),
                 ),
@@ -157,18 +173,29 @@ class RituCalendar extends StatelessWidget {
     }
 
     final date = DateTime(month.year, month.month, dayNumber);
+    final selectable = _isSelectable(date);
     final isSelected =
-        selectedDate != null && _isSameDay(selectedDate!, date);
-    final isMarked = _isMarked(date);
+        selectable && selectedDate != null && _isSameDay(selectedDate!, date);
+    final isMarked = selectable && _isMarked(date);
     final isPeriod = _isPeriod(date);
     final showTodayDot = isPeriod && _isToday(date);
+    final dayColor = !selectable
+        ? RituColors.textDisabled
+        : isPeriod
+            ? RituColors.rosewood900
+            : isSelected && selectionStyle == RituCalendarSelectionStyle.filled
+                ? RituColors.textInverse
+                : RituColors.textPrimary;
 
     return GestureDetector(
-      onTap: onDateSelected == null ? null : () => onDateSelected!(date),
+      behavior: HitTestBehavior.opaque,
+      onTap: !selectable || onDateSelected == null
+          ? null
+          : () => onDateSelected!(date),
       child: SizedBox(
         width: 30,
         height: 36,
-        child: isPeriod
+        child: isPeriod && selectable
             ? Center(
                 child: Container(
                   width: 30,
@@ -187,7 +214,7 @@ class RituCalendar extends StatelessWidget {
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
                           height: 1,
-                          color: RituColors.rosewood900,
+                          color: dayColor,
                         ),
                       ),
                       if (showTodayDot)
@@ -225,7 +252,7 @@ class RituCalendar extends StatelessWidget {
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
                           height: 1,
-                          color: RituColors.textInverse,
+                          color: dayColor,
                         ),
                       ),
                     ),
@@ -239,7 +266,7 @@ class RituCalendar extends StatelessWidget {
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
                           height: 1,
-                          color: RituColors.textPrimary,
+                          color: dayColor,
                         ),
                       ),
                       if (isMarked ||
@@ -267,17 +294,28 @@ class RituCalendar extends StatelessWidget {
 }
 
 class _NavIcon extends StatelessWidget {
-  const _NavIcon({required this.icon, required this.onTap});
+  const _NavIcon({
+    required this.icon,
+    required this.onTap,
+    this.enabled = true,
+  });
 
   final IconData icon;
   final VoidCallback onTap;
+  final bool enabled;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: enabled ? onTap : null,
       behavior: HitTestBehavior.opaque,
-      child: Icon(icon, size: 16, color: RituColors.textDisabled),
+      child: Icon(
+        icon,
+        size: 16,
+        color: enabled
+            ? RituColors.textDisabled
+            : RituColors.textDisabled.withValues(alpha: 0.35),
+      ),
     );
   }
 }

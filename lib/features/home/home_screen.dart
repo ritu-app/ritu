@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../app/app_scope.dart';
+import '../../core/date_format.dart';
 import '../../theme/ritu_colors.dart';
 import '../insights/insights_screen.dart';
 import '../journal/journal_screen.dart';
@@ -13,17 +15,11 @@ class HomeScreen extends StatefulWidget {
     super.key,
     required this.name,
     required this.loggingSince,
-    this.daysSinceLastPeriod = 2,
-    this.lastPeriodLabel = 'September 17',
-    this.patternDaysLogged = 1,
     this.patternDaysRequired = 14,
   });
 
   final String name;
   final DateTime loggingSince;
-  final int daysSinceLastPeriod;
-  final String lastPeriodLabel;
-  final int patternDaysLogged;
   final int patternDaysRequired;
 
   @override
@@ -36,6 +32,12 @@ class _HomeScreenState extends State<HomeScreen> {
   String? _selectedMood;
   late DateTime _calendarMonth;
   late String _name;
+
+  int? _daysSinceLastPeriod;
+  String? _lastPeriodLabel;
+  Set<DateTime> _periodDates = {};
+  int _periodCount = 0;
+  bool _periodDataLoaded = false;
 
   static const _moods = [
     ('😊', 'Radiant'),
@@ -53,13 +55,30 @@ class _HomeScreenState extends State<HomeScreen> {
     _calendarMonth = DateTime(now.year, now.month);
   }
 
-  Set<DateTime> get _periodDates {
-    // Demo period days matching the Figma new-user home (17–19 of current month).
-    return {
-      DateTime(_calendarMonth.year, _calendarMonth.month, 17),
-      DateTime(_calendarMonth.year, _calendarMonth.month, 18),
-      DateTime(_calendarMonth.year, _calendarMonth.month, 19),
-    };
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_periodDataLoaded) {
+      _periodDataLoaded = true;
+      _loadPeriodData();
+    }
+  }
+
+  Future<void> _loadPeriodData() async {
+    final periods = AppScope.periods(context);
+    final latest = await periods.getLatest();
+    final days = await periods.daysSinceLastPeriod();
+    final bleed = await periods.allBleedDays();
+    final all = await periods.getAll();
+    if (!mounted) return;
+    setState(() {
+      _daysSinceLastPeriod = days;
+      _lastPeriodLabel =
+          latest == null ? null : formatDisplayDate(latest.startedOn);
+      _periodDates = bleed;
+      _periodCount = all.length;
+      _showSpeedUpBanner = all.length < 2;
+    });
   }
 
   @override
@@ -75,9 +94,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 0 => _HomeTab(
                     name: _name,
                     loggingSince: widget.loggingSince,
-                    daysSinceLastPeriod: widget.daysSinceLastPeriod,
-                    lastPeriodLabel: widget.lastPeriodLabel,
-                    patternDaysLogged: widget.patternDaysLogged,
+                    daysSinceLastPeriod: _daysSinceLastPeriod,
+                    lastPeriodLabel: _lastPeriodLabel,
+                    patternDaysLogged:
+                        _periodCount.clamp(0, widget.patternDaysRequired),
                     patternDaysRequired: widget.patternDaysRequired,
                     showSpeedUpBanner: _showSpeedUpBanner,
                     selectedMood: _selectedMood,
@@ -96,6 +116,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     onNameUpdated: (name) {
                       setState(() => _name = name);
                     },
+                    onReturnedFromSettings: _loadPeriodData,
+                    periodStartedLabel: _lastPeriodLabel,
                   ),
                 1 => InsightsScreen(
                     onLogToday: () => setState(() => _tabIndex = 0),
@@ -140,12 +162,14 @@ class _HomeTab extends StatelessWidget {
     required this.onDismissBanner,
     required this.onMonthChanged,
     required this.onNameUpdated,
+    required this.onReturnedFromSettings,
+    this.periodStartedLabel,
   });
 
   final String name;
   final DateTime loggingSince;
-  final int daysSinceLastPeriod;
-  final String lastPeriodLabel;
+  final int? daysSinceLastPeriod;
+  final String? lastPeriodLabel;
   final int patternDaysLogged;
   final int patternDaysRequired;
   final bool showSpeedUpBanner;
@@ -157,6 +181,8 @@ class _HomeTab extends StatelessWidget {
   final VoidCallback onDismissBanner;
   final ValueChanged<DateTime> onMonthChanged;
   final ValueChanged<String> onNameUpdated;
+  final Future<void> Function() onReturnedFromSettings;
+  final String? periodStartedLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -171,10 +197,12 @@ class _HomeTab extends StatelessWidget {
                 builder: (_) => SettingsScreen(
                   name: name,
                   loggingSince: loggingSince,
+                  periodStartedLabel: periodStartedLabel,
                 ),
               ),
             );
             if (updated != null) onNameUpdated(updated);
+            await onReturnedFromSettings();
           },
         ),
         const SizedBox(height: 16),
@@ -309,11 +337,12 @@ class _StatusCard extends StatelessWidget {
     required this.lastPeriodLabel,
   });
 
-  final int daysSinceLastPeriod;
-  final String lastPeriodLabel;
+  final int? daysSinceLastPeriod;
+  final String? lastPeriodLabel;
 
   @override
   Widget build(BuildContext context) {
+    final hasPeriod = daysSinceLastPeriod != null && lastPeriodLabel != null;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
@@ -334,7 +363,7 @@ class _StatusCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '$daysSinceLastPeriod',
+            hasPeriod ? '$daysSinceLastPeriod' : '—',
             style: GoogleFonts.dmSerifDisplay(
               fontSize: 52,
               fontWeight: FontWeight.w400,
@@ -343,7 +372,7 @@ class _StatusCard extends StatelessWidget {
             ),
           ),
           Text(
-            'days since last period',
+            hasPeriod ? 'days since last period' : 'No period logged yet',
             style: GoogleFonts.dmSans(
               fontSize: 13,
               fontWeight: FontWeight.w600,
@@ -361,7 +390,9 @@ class _StatusCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  'Last period $lastPeriodLabel',
+                  hasPeriod
+                      ? 'Last period $lastPeriodLabel'
+                      : 'Add your last period in Settings',
                   style: GoogleFonts.dmSans(
                     fontSize: 11,
                     fontWeight: FontWeight.w500,
@@ -371,7 +402,7 @@ class _StatusCard extends StatelessWidget {
                 ),
               ),
               Text(
-                'No history yet',
+                hasPeriod ? '' : 'No history yet',
                 style: GoogleFonts.dmSans(
                   fontSize: 11,
                   fontWeight: FontWeight.w500,

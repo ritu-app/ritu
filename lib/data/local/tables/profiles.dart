@@ -8,6 +8,9 @@ class Profiles extends Table {
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get onboardingCompletedAt => dateTime().nullable()();
 
+  /// Typical bleed length in days (e.g. 3, 5, 7). Null means "Varies".
+  IntColumn get typicalPeriodDays => integer().nullable()();
+
   @override
   Set<Column<Object>> get primaryKey => {id};
 }

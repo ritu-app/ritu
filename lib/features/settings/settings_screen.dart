@@ -2,20 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../app/app_scope.dart';
+import '../../core/date_format.dart';
 import '../../theme/ritu_colors.dart';
 import 'edit_name_dialog.dart';
+import 'edit_period_started_dialog.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({
     super.key,
     required this.name,
     required this.loggingSince,
-    this.periodStartedLabel = 'June 17, 2026',
+    this.periodStartedLabel,
   });
 
   final String name;
   final DateTime loggingSince;
-  final String periodStartedLabel;
+  final String? periodStartedLabel;
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
@@ -23,6 +25,7 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   late String _name = widget.name;
+  late String? _periodStartedLabel = widget.periodStartedLabel;
 
   String get _initial {
     final trimmed = _name.trim();
@@ -30,7 +33,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return trimmed.substring(0, 1).toUpperCase();
   }
 
-  String get _loggingSinceLabel => formatLoggingSinceDate(widget.loggingSince);
+  String get _loggingSinceLabel => formatDisplayDate(widget.loggingSince);
 
   void _popWithName() {
     Navigator.of(context).pop(_name);
@@ -47,6 +50,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await AppScope.profiles(context).upsertDisplayName(updated);
     if (!mounted) return;
     setState(() => _name = updated);
+  }
+
+  Future<void> _editPeriodStarted() async {
+    final periods = AppScope.periods(context);
+    final profiles = AppScope.profiles(context);
+    final latest = await periods.getLatest();
+    final profile = await profiles.getProfile();
+    if (!mounted) return;
+
+    final selected = await showEditPeriodStartedDialog(
+      context,
+      currentStartedOn: latest?.startedOn,
+    );
+    if (selected == null || !mounted) return;
+
+    final sameDay = latest != null &&
+        dateOnly(latest.startedOn) == dateOnly(selected);
+    if (sameDay) return;
+
+    await periods.updateLatestStartedOn(
+      newStartedOn: selected,
+      typicalPeriodDays: profile?.typicalPeriodDays,
+    );
+    if (!mounted) return;
+    setState(() => _periodStartedLabel = formatDisplayDate(selected));
   }
 
   Future<void> _confirmAndDeleteData() async {
@@ -140,14 +168,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           iconBackground: RituColors.fillPositiveSecondary,
                           iconColor: RituColors.sage600,
                           title: 'Period Started',
-                          subtitle: widget.periodStartedLabel,
+                          subtitle: _periodStartedLabel ?? 'Not set',
+                          onTap: _editPeriodStarted,
                         ),
                         _SettingsRow(
                           icon: Icons.history,
                           iconBackground: RituColors.fillPositiveSecondary,
                           iconColor: RituColors.sage600,
                           title: 'Period History',
-                          subtitle: 'No dates added',
+                          subtitle: _periodStartedLabel == null
+                              ? 'No dates added'
+                              : 'View and edit past dates',
                         ),
                         _SettingsRow(
                           icon: Icons.schedule_outlined,
@@ -559,23 +590,4 @@ class _Footer extends StatelessWidget {
       ],
     );
   }
-}
-
-/// e.g. July 24, 2026
-String formatLoggingSinceDate(DateTime date) {
-  const months = [
-    'January',
-    'February',
-    'March',
-    'April',
-    'May',
-    'June',
-    'July',
-    'August',
-    'September',
-    'October',
-    'November',
-    'December',
-  ];
-  return '${months[date.month - 1]} ${date.day}, ${date.year}';
 }

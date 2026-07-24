@@ -4,10 +4,10 @@ Ritu stores all user data **on-device only** (SQLite via [Drift](https://drift.s
 
 ## Principles
 
-- **UI → repository → database.** Screens do not run SQL. They call repositories (e.g. `ProfileRepository`).
+- **UI → repository → database.** Screens do not run SQL. They call repositories (e.g. `ProfileRepository`, `PeriodRepository`).
 - **Single local user.** The app is phone-scoped; the profile table is a singleton row (`id = 1`).
 - **Migrations over ad-hoc edits.** Schema changes bump `AppDatabase.schemaVersion` and use Drift’s `MigrationStrategy`.
-- **Extensible tables.** New domains (period logs, journal entries, moods) get their own tables and repositories; they do not overload `profiles`.
+- **Extensible tables.** New domains (journal entries, moods) get their own tables and repositories.
 
 ## Stack
 
@@ -23,7 +23,7 @@ Ritu stores all user data **on-device only** (SQLite via [Drift](https://drift.s
 
 Database file name: **`ritu.sqlite`** (opened as `driftDatabase(name: 'ritu')`).
 
-Current **schema version:** `1`.
+Current **schema version:** `2`.
 
 ### Regenerating code
 
@@ -42,19 +42,21 @@ Tests use `AppDatabase.memory()` so they do not touch the device file.
 ```
 lib/data/
   local/
-    app_database.dart      # AppDatabase, schemaVersion, connection
-    app_database.g.dart    # generated
+    app_database.dart
+    app_database.g.dart
     tables/
       profiles.dart
+      period_logs.dart
   repositories/
     profile_repository.dart
+    period_repository.dart
 ```
 
 ```
 Widget / flow
     │
     ▼
-ProfileRepository (domain-friendly API)
+ProfileRepository / PeriodRepository
     │
     ▼
 AppDatabase (Drift / SQLite)
@@ -69,24 +71,44 @@ Single-row table for the person using this install.
 | Column | Type | Notes |
 |--------|------|--------|
 | `id` | `INTEGER` PK | Always `1` |
-| `display_name` | `TEXT` (1–80) | First name from onboarding |
+| `display_name` | `TEXT` (1–80) | First name from onboarding / Settings |
 | `created_at` | `DATETIME` | Set on first insert |
 | `onboarding_completed_at` | `DATETIME` nullable | Set when the user reaches Home after setup |
+| `typical_period_days` | `INTEGER` nullable | 3 / 5 / 7 from onboarding chips; null = “Varies” |
 
 **Lifecycle**
 
 1. Name screen Continue → `upsertDisplayName`
-2. Setup finished (notifications Turn on / Skip) → `markOnboardingCompleted`
-3. Cold start → if `onboarding_completed_at` is set → Home with `display_name`; else Splash / onboarding
-4. Settings → **Delete Data** (with confirmation) → `clearAllData()` wipes every table, then the app remounts at Splash
+2. Last period Continue → `setTypicalPeriodDays` + `recordLastPeriod`
+3. Past dates Continue → `recordPastStarts` (optional)
+4. Setup finished → `markOnboardingCompleted`
+5. Cold start → if `onboarding_completed_at` is set → Home; else Splash / onboarding
+6. Settings → **Period Started** → `updateLatestStartedOn` (moves latest episode; `source = settings`)
+7. Settings → **Delete Data** → `clearAllData()` then remount at Splash
+
+### `period_logs`
+
+One row per **period episode** (not one row per bleed day).
+
+| Column | Type | Notes |
+|--------|------|--------|
+| `id` | `INTEGER` PK auto | |
+| `started_on` | `DATETIME` (date-only) | Unique |
+| `ended_on` | `DATETIME` nullable | Inclusive last bleed day; null if unknown |
+| `source` | `TEXT` | `onboarding_last`, `onboarding_past`, `calendar`, `settings` |
+| `created_at` | `DATETIME` | |
+| `updated_at` | `DATETIME` | |
+
+**Derived in `PeriodRepository` (not stored):**
+
+- Bleed days for the calendar = inclusive `started_on…ended_on` (or start-only if end is null)
+- Days since last period = today − latest `started_on`
+- When only a start + typical length is known, `ended_on = started_on + (typical_period_days - 1)`
 
 ## Planned extensions (not implemented yet)
 
-Suggested next tables (names may change when built):
-
 | Table | Purpose |
 |--------|---------|
-| `period_logs` | Period start/end (or day marks) from setup + calendar |
 | `journal_entries` | Free-text reflections from Journal |
 | `mood_logs` | Daily mood check-ins from Home |
 | `settings` | Reminders, notification prefs, etc. |

@@ -7,11 +7,13 @@ class Profile {
     required this.displayName,
     required this.createdAt,
     this.onboardingCompletedAt,
+    this.typicalPeriodDays,
   });
 
   final String displayName;
   final DateTime createdAt;
   final DateTime? onboardingCompletedAt;
+  final int? typicalPeriodDays;
 
   bool get hasCompletedOnboarding => onboardingCompletedAt != null;
 
@@ -20,6 +22,7 @@ class Profile {
       displayName: row.displayName,
       createdAt: row.createdAt,
       onboardingCompletedAt: row.onboardingCompletedAt,
+      typicalPeriodDays: row.typicalPeriodDays,
     );
   }
 }
@@ -55,8 +58,23 @@ class ProfileRepository {
             displayName: trimmed,
             createdAt: existing?.createdAt ?? now,
             onboardingCompletedAt: Value(existing?.onboardingCompletedAt),
+            typicalPeriodDays: Value(existing?.typicalPeriodDays),
           ),
         );
+
+    return (await getProfile())!;
+  }
+
+  Future<Profile> setTypicalPeriodDays(int? days) async {
+    final existing = await getProfile();
+    if (existing == null) {
+      throw StateError('Cannot set typical period days without a profile');
+    }
+
+    await (_db.update(_db.profiles)..where((t) => t.id.equals(_singletonId)))
+        .write(
+      ProfilesCompanion(typicalPeriodDays: Value(days)),
+    );
 
     return (await getProfile())!;
   }
@@ -77,6 +95,6 @@ class ProfileRepository {
     return (await getProfile())!;
   }
 
-  /// Wipes all local tables (profile today; more tables later).
+  /// Wipes all local tables (profile, period logs, …).
   Future<void> clearAllData() => _db.clearAllData();
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/local/app_database.dart';
+import '../data/repositories/period_repository.dart';
 import '../data/repositories/profile_repository.dart';
 import '../features/home/home_screen.dart';
 import '../features/onboarding/confirmation_screen.dart';
@@ -16,9 +17,11 @@ class RituApp extends StatefulWidget {
   const RituApp({
     super.key,
     required this.profileRepository,
+    required this.periodRepository,
   });
 
   final ProfileRepository profileRepository;
+  final PeriodRepository periodRepository;
 
   @override
   State<RituApp> createState() => _RituAppState();
@@ -35,6 +38,7 @@ class _RituAppState extends State<RituApp> {
   Widget build(BuildContext context) {
     return AppScope(
       profileRepository: widget.profileRepository,
+      periodRepository: widget.periodRepository,
       restartApp: _restartApp,
       child: MaterialApp(
         key: _bootstrapKey,
@@ -115,7 +119,17 @@ class _OnboardingFlow extends StatelessWidget {
 
   Widget _pastDates(BuildContext context, String name) {
     return PastDatesScreen(
-      onContinue: () => _push(context, _notifications(context, name)),
+      onContinue: (dates) async {
+        final profiles = AppScope.profiles(context);
+        final periods = AppScope.periods(context);
+        final typical = (await profiles.getProfile())?.typicalPeriodDays;
+        await periods.recordPastStarts(
+          startedOnDates: dates,
+          typicalPeriodDays: typical,
+        );
+        if (!context.mounted) return;
+        _push(context, _notifications(context, name));
+      },
       onSkip: () => _push(context, _notifications(context, name)),
     );
   }
@@ -129,7 +143,18 @@ class _OnboardingFlow extends StatelessWidget {
 
   Widget _lastPeriod(BuildContext context, String name) {
     return LastPeriodScreen(
-      onContinue: () => _push(context, _pastDates(context, name)),
+      onContinue: (startedOn, duration) async {
+        final profiles = AppScope.profiles(context);
+        final periods = AppScope.periods(context);
+        final days = duration.typicalDays;
+        await profiles.setTypicalPeriodDays(days);
+        await periods.recordLastPeriod(
+          startedOn: startedOn,
+          typicalPeriodDays: days,
+        );
+        if (!context.mounted) return;
+        _push(context, _pastDates(context, name));
+      },
       onSkip: () => _push(context, _pastDates(context, name)),
     );
   }
@@ -164,5 +189,8 @@ class _OnboardingFlow extends StatelessWidget {
 /// Builds the app with a fresh or injected database.
 RituApp createRituApp({AppDatabase? database}) {
   final db = database ?? AppDatabase();
-  return RituApp(profileRepository: ProfileRepository(db));
+  return RituApp(
+    profileRepository: ProfileRepository(db),
+    periodRepository: PeriodRepository(db),
+  );
 }

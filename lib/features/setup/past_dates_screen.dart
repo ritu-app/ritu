@@ -14,7 +14,7 @@ class PastDatesScreen extends StatefulWidget {
     this.onSkip,
   });
 
-  final VoidCallback? onContinue;
+  final void Function(List<DateTime> dates)? onContinue;
   final VoidCallback? onSkip;
 
   @override
@@ -133,6 +133,7 @@ class _PastDatesScreenState extends State<PastDatesScreen> {
                           month: _visibleMonth,
                           markedDates: _dates.toSet(),
                           selectionStyle: RituCalendarSelectionStyle.dotted,
+                          maxSelectableDate: DateTime.now(),
                           onMonthChanged: (month) {
                             setState(() => _visibleMonth = month);
                           },
@@ -164,9 +165,9 @@ class _PastDatesScreenState extends State<PastDatesScreen> {
               SetupFooter(
                 primaryLabel: 'Continue',
                 primaryEnabled: canContinue,
-                onPrimary: widget.onContinue,
+                onPrimary: () => widget.onContinue?.call(List.of(_dates)),
                 secondaryLabel: 'Skip – I’ll build from today',
-                onSecondary: widget.onSkip ?? widget.onContinue ?? () {},
+                onSecondary: widget.onSkip ?? () {},
               ),
               const SizedBox(height: 8),
             ],

@@ -9,12 +9,20 @@ import 'widgets/setup_footer.dart';
 
 enum PeriodDuration { twoToThree, fourToFive, sixToSeven, varies }
 
-extension on PeriodDuration {
+extension PeriodDurationX on PeriodDuration {
   String get label => switch (this) {
         PeriodDuration.twoToThree => '2-3 days',
         PeriodDuration.fourToFive => '4-5 days',
         PeriodDuration.sixToSeven => '6-7 days',
         PeriodDuration.varies => 'Varies',
+      };
+
+  /// Representative day count for estimates; null when length varies.
+  int? get typicalDays => switch (this) {
+        PeriodDuration.twoToThree => 3,
+        PeriodDuration.fourToFive => 5,
+        PeriodDuration.sixToSeven => 7,
+        PeriodDuration.varies => null,
       };
 }
 
@@ -25,7 +33,7 @@ class LastPeriodScreen extends StatefulWidget {
     this.onSkip,
   });
 
-  final VoidCallback? onContinue;
+  final void Function(DateTime startedOn, PeriodDuration duration)? onContinue;
   final VoidCallback? onSkip;
 
   @override
@@ -87,6 +95,7 @@ class _LastPeriodScreenState extends State<LastPeriodScreen> {
                       RituCalendar(
                         month: _visibleMonth,
                         selectedDate: _selectedDate,
+                        maxSelectableDate: DateTime.now(),
                         onMonthChanged: (month) {
                           setState(() => _visibleMonth = month);
                         },
@@ -129,9 +138,13 @@ class _LastPeriodScreenState extends State<LastPeriodScreen> {
               ),
               SetupFooter(
                 primaryLabel: 'This look right',
-                onPrimary: widget.onContinue,
+                onPrimary: () {
+                  final date = _selectedDate;
+                  if (date == null) return;
+                  widget.onContinue?.call(date, _duration);
+                },
                 secondaryLabel: 'Skip – I’ll log from today',
-                onSecondary: widget.onSkip ?? widget.onContinue ?? () {},
+                onSecondary: widget.onSkip ?? () {},
               ),
               const SizedBox(height: 8),
             ],
