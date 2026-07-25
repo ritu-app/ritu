@@ -38,7 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
   int? _daysSinceLastPeriod;
   String? _lastPeriodLabel;
   Set<DateTime> _periodDates = {};
-  int _periodCount = 0;
+  int _loggedDaysCount = 0;
   int _pastPeriodCount = 0;
   int _customSymptomCount = 0;
   bool _periodDataLoaded = false;
@@ -82,6 +82,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final customSymptoms = await symptoms.getAll();
     final todayLog = await dailyLogs.getByDate(DateTime.now());
     final streak = await dailyLogs.getCurrentStreak();
+    final loggedDaysCount = await dailyLogs.getTotalLoggedDays();
     if (!mounted) return;
     setState(() {
       _daysSinceLastPeriod = days;
@@ -89,7 +90,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ? null
           : formatDisplayDate(latest.startedOn);
       _periodDates = bleed;
-      _periodCount = all.length;
+      _loggedDaysCount = loggedDaysCount;
       _pastPeriodCount = past.length;
       _customSymptomCount = customSymptoms.length;
       _todayLog = todayLog;
@@ -120,7 +121,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   loggingSince: widget.loggingSince,
                   daysSinceLastPeriod: _daysSinceLastPeriod,
                   lastPeriodLabel: _lastPeriodLabel,
-                  patternDaysLogged: _periodCount.clamp(
+                  patternDaysLogged: _loggedDaysCount.clamp(
                     0,
                     widget.patternDaysRequired,
                   ),

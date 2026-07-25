@@ -154,6 +154,7 @@ One row per **calendar day**, filled in by the Home "Log today" flow (`DailyLogF
 **Derived in `DailyLogRepository` (not stored):**
 
 - `getCurrentStreak()` — consecutive days with an entry, counted backwards from today; if today isn't logged yet it counts back from yesterday instead (so the streak isn't considered broken until the day is over). Drives the flame counter in the Home header.
+- `getTotalLoggedDays()` — total count of calendar days with a saved entry (not necessarily consecutive). Drives the "Your patterns will appear here" progress bar on Home (`N of 14 days`) — deliberately counts logging days, not period entries, since patterns need repeated daily check-ins, not period history.
 
 ## Planned extensions (not implemented yet)
 

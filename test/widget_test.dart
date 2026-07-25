@@ -559,6 +559,49 @@ void main() {
     expect(find.text('Focused'), findsOneWidget);
   });
 
+  testWidgets(
+    'Patterns progress counts logged days, not past periods',
+    (tester) async {
+      final profiles = ProfileRepository(database);
+      final periods = PeriodRepository(database);
+      final dailyLogs = DailyLogRepository(database);
+      await profiles.upsertDisplayName('Maya');
+      await profiles.markOnboardingCompleted();
+      await periods.upsertPeriod(
+        startedOn: DateTime(2026, 6, 1),
+        endedOn: DateTime(2026, 6, 5),
+        source: PeriodSources.onboardingLast,
+      );
+      await periods.addPastStart(
+        startedOn: DateTime(2026, 5, 1),
+        typicalPeriodDays: 5,
+      );
+      await periods.addPastStart(
+        startedOn: DateTime(2026, 4, 1),
+        typicalPeriodDays: 5,
+      );
+
+      await tester.pumpWidget(createRituApp(database: database));
+      await tester.pumpAndSettle();
+
+      // Three periods logged, but zero daily logs yet.
+      expect(find.text('0 of 14 days – pattern unlock at 14'), findsOneWidget);
+
+      await dailyLogs.upsert(loggedOn: DateTime.now(), flowIntensity: 'Light');
+      await dailyLogs.upsert(
+        loggedOn: DateTime.now().subtract(const Duration(days: 1)),
+        flowIntensity: 'Light',
+      );
+
+      await tester.tap(find.byIcon(Icons.settings_outlined));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byIcon(Icons.chevron_left));
+      await tester.pumpAndSettle();
+
+      expect(find.text('2 of 14 days – pattern unlock at 14'), findsOneWidget);
+    },
+  );
+
   testWidgets('RituChoiceChip options in a Wrap lay out side by side', (
     tester,
   ) async {

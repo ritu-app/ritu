@@ -80,6 +80,16 @@ class DailyLogRepository {
     return await getByDate(date) != null;
   }
 
+  /// Total number of calendar days with a saved daily log entry, regardless
+  /// of whether they're consecutive. Used to drive the "pattern unlock"
+  /// progress on Home, which counts logging days, not periods.
+  Future<int> getTotalLoggedDays() async {
+    final countExp = _db.dailyLogs.id.count();
+    final query = _db.selectOnly(_db.dailyLogs)..addColumns([countExp]);
+    final row = await query.getSingle();
+    return row.read(countExp) ?? 0;
+  }
+
   /// Number of consecutive days (ending today, or yesterday if today hasn't
   /// been logged yet so the streak isn't broken mid-day) with a saved entry.
   Future<int> getCurrentStreak() async {
