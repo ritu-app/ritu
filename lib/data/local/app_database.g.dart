@@ -1061,12 +1061,751 @@ class CustomSymptomsCompanion extends UpdateCompanion<CustomSymptomRow> {
   }
 }
 
+class $DailyLogsTable extends DailyLogs
+    with TableInfo<$DailyLogsTable, DailyLogRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $DailyLogsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _loggedOnMeta = const VerificationMeta(
+    'loggedOn',
+  );
+  @override
+  late final GeneratedColumn<DateTime> loggedOn = GeneratedColumn<DateTime>(
+    'logged_on',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _flowIntensityMeta = const VerificationMeta(
+    'flowIntensity',
+  );
+  @override
+  late final GeneratedColumn<String> flowIntensity = GeneratedColumn<String>(
+    'flow_intensity',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _crampIntensityMeta = const VerificationMeta(
+    'crampIntensity',
+  );
+  @override
+  late final GeneratedColumn<int> crampIntensity = GeneratedColumn<int>(
+    'cramp_intensity',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _moodsMeta = const VerificationMeta('moods');
+  @override
+  late final GeneratedColumn<String> moods = GeneratedColumn<String>(
+    'moods',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _energyLevelMeta = const VerificationMeta(
+    'energyLevel',
+  );
+  @override
+  late final GeneratedColumn<String> energyLevel = GeneratedColumn<String>(
+    'energy_level',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _sleepQualityMeta = const VerificationMeta(
+    'sleepQuality',
+  );
+  @override
+  late final GeneratedColumn<String> sleepQuality = GeneratedColumn<String>(
+    'sleep_quality',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _wellbeingMeta = const VerificationMeta(
+    'wellbeing',
+  );
+  @override
+  late final GeneratedColumn<int> wellbeing = GeneratedColumn<int>(
+    'wellbeing',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _symptomsMeta = const VerificationMeta(
+    'symptoms',
+  );
+  @override
+  late final GeneratedColumn<String> symptoms = GeneratedColumn<String>(
+    'symptoms',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _notesMeta = const VerificationMeta('notes');
+  @override
+  late final GeneratedColumn<String> notes = GeneratedColumn<String>(
+    'notes',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    loggedOn,
+    flowIntensity,
+    crampIntensity,
+    moods,
+    energyLevel,
+    sleepQuality,
+    wellbeing,
+    symptoms,
+    notes,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'daily_logs';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<DailyLogRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('logged_on')) {
+      context.handle(
+        _loggedOnMeta,
+        loggedOn.isAcceptableOrUnknown(data['logged_on']!, _loggedOnMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_loggedOnMeta);
+    }
+    if (data.containsKey('flow_intensity')) {
+      context.handle(
+        _flowIntensityMeta,
+        flowIntensity.isAcceptableOrUnknown(
+          data['flow_intensity']!,
+          _flowIntensityMeta,
+        ),
+      );
+    }
+    if (data.containsKey('cramp_intensity')) {
+      context.handle(
+        _crampIntensityMeta,
+        crampIntensity.isAcceptableOrUnknown(
+          data['cramp_intensity']!,
+          _crampIntensityMeta,
+        ),
+      );
+    }
+    if (data.containsKey('moods')) {
+      context.handle(
+        _moodsMeta,
+        moods.isAcceptableOrUnknown(data['moods']!, _moodsMeta),
+      );
+    }
+    if (data.containsKey('energy_level')) {
+      context.handle(
+        _energyLevelMeta,
+        energyLevel.isAcceptableOrUnknown(
+          data['energy_level']!,
+          _energyLevelMeta,
+        ),
+      );
+    }
+    if (data.containsKey('sleep_quality')) {
+      context.handle(
+        _sleepQualityMeta,
+        sleepQuality.isAcceptableOrUnknown(
+          data['sleep_quality']!,
+          _sleepQualityMeta,
+        ),
+      );
+    }
+    if (data.containsKey('wellbeing')) {
+      context.handle(
+        _wellbeingMeta,
+        wellbeing.isAcceptableOrUnknown(data['wellbeing']!, _wellbeingMeta),
+      );
+    }
+    if (data.containsKey('symptoms')) {
+      context.handle(
+        _symptomsMeta,
+        symptoms.isAcceptableOrUnknown(data['symptoms']!, _symptomsMeta),
+      );
+    }
+    if (data.containsKey('notes')) {
+      context.handle(
+        _notesMeta,
+        notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {loggedOn},
+  ];
+  @override
+  DailyLogRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return DailyLogRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      loggedOn: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}logged_on'],
+      )!,
+      flowIntensity: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}flow_intensity'],
+      ),
+      crampIntensity: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}cramp_intensity'],
+      ),
+      moods: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}moods'],
+      ),
+      energyLevel: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}energy_level'],
+      ),
+      sleepQuality: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sleep_quality'],
+      ),
+      wellbeing: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}wellbeing'],
+      ),
+      symptoms: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}symptoms'],
+      ),
+      notes: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}notes'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $DailyLogsTable createAlias(String alias) {
+    return $DailyLogsTable(attachedDatabase, alias);
+  }
+}
+
+class DailyLogRow extends DataClass implements Insertable<DailyLogRow> {
+  final int id;
+
+  /// Calendar date the entry is for (time component ignored).
+  final DateTime loggedOn;
+
+  /// none / spotting / light / medium / heavy. Null = not answered.
+  final String? flowIntensity;
+
+  /// 0-10 slider value. Null = not answered.
+  final int? crampIntensity;
+
+  /// JSON-encoded list of selected mood labels.
+  final String? moods;
+  final String? energyLevel;
+  final String? sleepQuality;
+
+  /// 0-10 slider value. Null = not answered.
+  final int? wellbeing;
+
+  /// JSON-encoded list of selected body signal labels (preset + custom).
+  final String? symptoms;
+  final String? notes;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  const DailyLogRow({
+    required this.id,
+    required this.loggedOn,
+    this.flowIntensity,
+    this.crampIntensity,
+    this.moods,
+    this.energyLevel,
+    this.sleepQuality,
+    this.wellbeing,
+    this.symptoms,
+    this.notes,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['logged_on'] = Variable<DateTime>(loggedOn);
+    if (!nullToAbsent || flowIntensity != null) {
+      map['flow_intensity'] = Variable<String>(flowIntensity);
+    }
+    if (!nullToAbsent || crampIntensity != null) {
+      map['cramp_intensity'] = Variable<int>(crampIntensity);
+    }
+    if (!nullToAbsent || moods != null) {
+      map['moods'] = Variable<String>(moods);
+    }
+    if (!nullToAbsent || energyLevel != null) {
+      map['energy_level'] = Variable<String>(energyLevel);
+    }
+    if (!nullToAbsent || sleepQuality != null) {
+      map['sleep_quality'] = Variable<String>(sleepQuality);
+    }
+    if (!nullToAbsent || wellbeing != null) {
+      map['wellbeing'] = Variable<int>(wellbeing);
+    }
+    if (!nullToAbsent || symptoms != null) {
+      map['symptoms'] = Variable<String>(symptoms);
+    }
+    if (!nullToAbsent || notes != null) {
+      map['notes'] = Variable<String>(notes);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  DailyLogsCompanion toCompanion(bool nullToAbsent) {
+    return DailyLogsCompanion(
+      id: Value(id),
+      loggedOn: Value(loggedOn),
+      flowIntensity: flowIntensity == null && nullToAbsent
+          ? const Value.absent()
+          : Value(flowIntensity),
+      crampIntensity: crampIntensity == null && nullToAbsent
+          ? const Value.absent()
+          : Value(crampIntensity),
+      moods: moods == null && nullToAbsent
+          ? const Value.absent()
+          : Value(moods),
+      energyLevel: energyLevel == null && nullToAbsent
+          ? const Value.absent()
+          : Value(energyLevel),
+      sleepQuality: sleepQuality == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sleepQuality),
+      wellbeing: wellbeing == null && nullToAbsent
+          ? const Value.absent()
+          : Value(wellbeing),
+      symptoms: symptoms == null && nullToAbsent
+          ? const Value.absent()
+          : Value(symptoms),
+      notes: notes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(notes),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory DailyLogRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return DailyLogRow(
+      id: serializer.fromJson<int>(json['id']),
+      loggedOn: serializer.fromJson<DateTime>(json['loggedOn']),
+      flowIntensity: serializer.fromJson<String?>(json['flowIntensity']),
+      crampIntensity: serializer.fromJson<int?>(json['crampIntensity']),
+      moods: serializer.fromJson<String?>(json['moods']),
+      energyLevel: serializer.fromJson<String?>(json['energyLevel']),
+      sleepQuality: serializer.fromJson<String?>(json['sleepQuality']),
+      wellbeing: serializer.fromJson<int?>(json['wellbeing']),
+      symptoms: serializer.fromJson<String?>(json['symptoms']),
+      notes: serializer.fromJson<String?>(json['notes']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'loggedOn': serializer.toJson<DateTime>(loggedOn),
+      'flowIntensity': serializer.toJson<String?>(flowIntensity),
+      'crampIntensity': serializer.toJson<int?>(crampIntensity),
+      'moods': serializer.toJson<String?>(moods),
+      'energyLevel': serializer.toJson<String?>(energyLevel),
+      'sleepQuality': serializer.toJson<String?>(sleepQuality),
+      'wellbeing': serializer.toJson<int?>(wellbeing),
+      'symptoms': serializer.toJson<String?>(symptoms),
+      'notes': serializer.toJson<String?>(notes),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  DailyLogRow copyWith({
+    int? id,
+    DateTime? loggedOn,
+    Value<String?> flowIntensity = const Value.absent(),
+    Value<int?> crampIntensity = const Value.absent(),
+    Value<String?> moods = const Value.absent(),
+    Value<String?> energyLevel = const Value.absent(),
+    Value<String?> sleepQuality = const Value.absent(),
+    Value<int?> wellbeing = const Value.absent(),
+    Value<String?> symptoms = const Value.absent(),
+    Value<String?> notes = const Value.absent(),
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) => DailyLogRow(
+    id: id ?? this.id,
+    loggedOn: loggedOn ?? this.loggedOn,
+    flowIntensity: flowIntensity.present
+        ? flowIntensity.value
+        : this.flowIntensity,
+    crampIntensity: crampIntensity.present
+        ? crampIntensity.value
+        : this.crampIntensity,
+    moods: moods.present ? moods.value : this.moods,
+    energyLevel: energyLevel.present ? energyLevel.value : this.energyLevel,
+    sleepQuality: sleepQuality.present ? sleepQuality.value : this.sleepQuality,
+    wellbeing: wellbeing.present ? wellbeing.value : this.wellbeing,
+    symptoms: symptoms.present ? symptoms.value : this.symptoms,
+    notes: notes.present ? notes.value : this.notes,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  DailyLogRow copyWithCompanion(DailyLogsCompanion data) {
+    return DailyLogRow(
+      id: data.id.present ? data.id.value : this.id,
+      loggedOn: data.loggedOn.present ? data.loggedOn.value : this.loggedOn,
+      flowIntensity: data.flowIntensity.present
+          ? data.flowIntensity.value
+          : this.flowIntensity,
+      crampIntensity: data.crampIntensity.present
+          ? data.crampIntensity.value
+          : this.crampIntensity,
+      moods: data.moods.present ? data.moods.value : this.moods,
+      energyLevel: data.energyLevel.present
+          ? data.energyLevel.value
+          : this.energyLevel,
+      sleepQuality: data.sleepQuality.present
+          ? data.sleepQuality.value
+          : this.sleepQuality,
+      wellbeing: data.wellbeing.present ? data.wellbeing.value : this.wellbeing,
+      symptoms: data.symptoms.present ? data.symptoms.value : this.symptoms,
+      notes: data.notes.present ? data.notes.value : this.notes,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DailyLogRow(')
+          ..write('id: $id, ')
+          ..write('loggedOn: $loggedOn, ')
+          ..write('flowIntensity: $flowIntensity, ')
+          ..write('crampIntensity: $crampIntensity, ')
+          ..write('moods: $moods, ')
+          ..write('energyLevel: $energyLevel, ')
+          ..write('sleepQuality: $sleepQuality, ')
+          ..write('wellbeing: $wellbeing, ')
+          ..write('symptoms: $symptoms, ')
+          ..write('notes: $notes, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    loggedOn,
+    flowIntensity,
+    crampIntensity,
+    moods,
+    energyLevel,
+    sleepQuality,
+    wellbeing,
+    symptoms,
+    notes,
+    createdAt,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is DailyLogRow &&
+          other.id == this.id &&
+          other.loggedOn == this.loggedOn &&
+          other.flowIntensity == this.flowIntensity &&
+          other.crampIntensity == this.crampIntensity &&
+          other.moods == this.moods &&
+          other.energyLevel == this.energyLevel &&
+          other.sleepQuality == this.sleepQuality &&
+          other.wellbeing == this.wellbeing &&
+          other.symptoms == this.symptoms &&
+          other.notes == this.notes &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class DailyLogsCompanion extends UpdateCompanion<DailyLogRow> {
+  final Value<int> id;
+  final Value<DateTime> loggedOn;
+  final Value<String?> flowIntensity;
+  final Value<int?> crampIntensity;
+  final Value<String?> moods;
+  final Value<String?> energyLevel;
+  final Value<String?> sleepQuality;
+  final Value<int?> wellbeing;
+  final Value<String?> symptoms;
+  final Value<String?> notes;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  const DailyLogsCompanion({
+    this.id = const Value.absent(),
+    this.loggedOn = const Value.absent(),
+    this.flowIntensity = const Value.absent(),
+    this.crampIntensity = const Value.absent(),
+    this.moods = const Value.absent(),
+    this.energyLevel = const Value.absent(),
+    this.sleepQuality = const Value.absent(),
+    this.wellbeing = const Value.absent(),
+    this.symptoms = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  });
+  DailyLogsCompanion.insert({
+    this.id = const Value.absent(),
+    required DateTime loggedOn,
+    this.flowIntensity = const Value.absent(),
+    this.crampIntensity = const Value.absent(),
+    this.moods = const Value.absent(),
+    this.energyLevel = const Value.absent(),
+    this.sleepQuality = const Value.absent(),
+    this.wellbeing = const Value.absent(),
+    this.symptoms = const Value.absent(),
+    this.notes = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+  }) : loggedOn = Value(loggedOn),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<DailyLogRow> custom({
+    Expression<int>? id,
+    Expression<DateTime>? loggedOn,
+    Expression<String>? flowIntensity,
+    Expression<int>? crampIntensity,
+    Expression<String>? moods,
+    Expression<String>? energyLevel,
+    Expression<String>? sleepQuality,
+    Expression<int>? wellbeing,
+    Expression<String>? symptoms,
+    Expression<String>? notes,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (loggedOn != null) 'logged_on': loggedOn,
+      if (flowIntensity != null) 'flow_intensity': flowIntensity,
+      if (crampIntensity != null) 'cramp_intensity': crampIntensity,
+      if (moods != null) 'moods': moods,
+      if (energyLevel != null) 'energy_level': energyLevel,
+      if (sleepQuality != null) 'sleep_quality': sleepQuality,
+      if (wellbeing != null) 'wellbeing': wellbeing,
+      if (symptoms != null) 'symptoms': symptoms,
+      if (notes != null) 'notes': notes,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+    });
+  }
+
+  DailyLogsCompanion copyWith({
+    Value<int>? id,
+    Value<DateTime>? loggedOn,
+    Value<String?>? flowIntensity,
+    Value<int?>? crampIntensity,
+    Value<String?>? moods,
+    Value<String?>? energyLevel,
+    Value<String?>? sleepQuality,
+    Value<int?>? wellbeing,
+    Value<String?>? symptoms,
+    Value<String?>? notes,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+  }) {
+    return DailyLogsCompanion(
+      id: id ?? this.id,
+      loggedOn: loggedOn ?? this.loggedOn,
+      flowIntensity: flowIntensity ?? this.flowIntensity,
+      crampIntensity: crampIntensity ?? this.crampIntensity,
+      moods: moods ?? this.moods,
+      energyLevel: energyLevel ?? this.energyLevel,
+      sleepQuality: sleepQuality ?? this.sleepQuality,
+      wellbeing: wellbeing ?? this.wellbeing,
+      symptoms: symptoms ?? this.symptoms,
+      notes: notes ?? this.notes,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (loggedOn.present) {
+      map['logged_on'] = Variable<DateTime>(loggedOn.value);
+    }
+    if (flowIntensity.present) {
+      map['flow_intensity'] = Variable<String>(flowIntensity.value);
+    }
+    if (crampIntensity.present) {
+      map['cramp_intensity'] = Variable<int>(crampIntensity.value);
+    }
+    if (moods.present) {
+      map['moods'] = Variable<String>(moods.value);
+    }
+    if (energyLevel.present) {
+      map['energy_level'] = Variable<String>(energyLevel.value);
+    }
+    if (sleepQuality.present) {
+      map['sleep_quality'] = Variable<String>(sleepQuality.value);
+    }
+    if (wellbeing.present) {
+      map['wellbeing'] = Variable<int>(wellbeing.value);
+    }
+    if (symptoms.present) {
+      map['symptoms'] = Variable<String>(symptoms.value);
+    }
+    if (notes.present) {
+      map['notes'] = Variable<String>(notes.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DailyLogsCompanion(')
+          ..write('id: $id, ')
+          ..write('loggedOn: $loggedOn, ')
+          ..write('flowIntensity: $flowIntensity, ')
+          ..write('crampIntensity: $crampIntensity, ')
+          ..write('moods: $moods, ')
+          ..write('energyLevel: $energyLevel, ')
+          ..write('sleepQuality: $sleepQuality, ')
+          ..write('wellbeing: $wellbeing, ')
+          ..write('symptoms: $symptoms, ')
+          ..write('notes: $notes, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $ProfilesTable profiles = $ProfilesTable(this);
   late final $PeriodLogsTable periodLogs = $PeriodLogsTable(this);
   late final $CustomSymptomsTable customSymptoms = $CustomSymptomsTable(this);
+  late final $DailyLogsTable dailyLogs = $DailyLogsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -1075,6 +1814,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     profiles,
     periodLogs,
     customSymptoms,
+    dailyLogs,
   ];
 }
 
@@ -1650,6 +2390,341 @@ typedef $$CustomSymptomsTableProcessedTableManager =
       CustomSymptomRow,
       PrefetchHooks Function()
     >;
+typedef $$DailyLogsTableCreateCompanionBuilder =
+    DailyLogsCompanion Function({
+      Value<int> id,
+      required DateTime loggedOn,
+      Value<String?> flowIntensity,
+      Value<int?> crampIntensity,
+      Value<String?> moods,
+      Value<String?> energyLevel,
+      Value<String?> sleepQuality,
+      Value<int?> wellbeing,
+      Value<String?> symptoms,
+      Value<String?> notes,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+    });
+typedef $$DailyLogsTableUpdateCompanionBuilder =
+    DailyLogsCompanion Function({
+      Value<int> id,
+      Value<DateTime> loggedOn,
+      Value<String?> flowIntensity,
+      Value<int?> crampIntensity,
+      Value<String?> moods,
+      Value<String?> energyLevel,
+      Value<String?> sleepQuality,
+      Value<int?> wellbeing,
+      Value<String?> symptoms,
+      Value<String?> notes,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+    });
+
+class $$DailyLogsTableFilterComposer
+    extends Composer<_$AppDatabase, $DailyLogsTable> {
+  $$DailyLogsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get loggedOn => $composableBuilder(
+    column: $table.loggedOn,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get flowIntensity => $composableBuilder(
+    column: $table.flowIntensity,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get crampIntensity => $composableBuilder(
+    column: $table.crampIntensity,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get moods => $composableBuilder(
+    column: $table.moods,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get energyLevel => $composableBuilder(
+    column: $table.energyLevel,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sleepQuality => $composableBuilder(
+    column: $table.sleepQuality,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get wellbeing => $composableBuilder(
+    column: $table.wellbeing,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get symptoms => $composableBuilder(
+    column: $table.symptoms,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$DailyLogsTableOrderingComposer
+    extends Composer<_$AppDatabase, $DailyLogsTable> {
+  $$DailyLogsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get loggedOn => $composableBuilder(
+    column: $table.loggedOn,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get flowIntensity => $composableBuilder(
+    column: $table.flowIntensity,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get crampIntensity => $composableBuilder(
+    column: $table.crampIntensity,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get moods => $composableBuilder(
+    column: $table.moods,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get energyLevel => $composableBuilder(
+    column: $table.energyLevel,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sleepQuality => $composableBuilder(
+    column: $table.sleepQuality,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get wellbeing => $composableBuilder(
+    column: $table.wellbeing,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get symptoms => $composableBuilder(
+    column: $table.symptoms,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$DailyLogsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $DailyLogsTable> {
+  $$DailyLogsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get loggedOn =>
+      $composableBuilder(column: $table.loggedOn, builder: (column) => column);
+
+  GeneratedColumn<String> get flowIntensity => $composableBuilder(
+    column: $table.flowIntensity,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get crampIntensity => $composableBuilder(
+    column: $table.crampIntensity,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get moods =>
+      $composableBuilder(column: $table.moods, builder: (column) => column);
+
+  GeneratedColumn<String> get energyLevel => $composableBuilder(
+    column: $table.energyLevel,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get sleepQuality => $composableBuilder(
+    column: $table.sleepQuality,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get wellbeing =>
+      $composableBuilder(column: $table.wellbeing, builder: (column) => column);
+
+  GeneratedColumn<String> get symptoms =>
+      $composableBuilder(column: $table.symptoms, builder: (column) => column);
+
+  GeneratedColumn<String> get notes =>
+      $composableBuilder(column: $table.notes, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$DailyLogsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $DailyLogsTable,
+          DailyLogRow,
+          $$DailyLogsTableFilterComposer,
+          $$DailyLogsTableOrderingComposer,
+          $$DailyLogsTableAnnotationComposer,
+          $$DailyLogsTableCreateCompanionBuilder,
+          $$DailyLogsTableUpdateCompanionBuilder,
+          (
+            DailyLogRow,
+            BaseReferences<_$AppDatabase, $DailyLogsTable, DailyLogRow>,
+          ),
+          DailyLogRow,
+          PrefetchHooks Function()
+        > {
+  $$DailyLogsTableTableManager(_$AppDatabase db, $DailyLogsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$DailyLogsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$DailyLogsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$DailyLogsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<DateTime> loggedOn = const Value.absent(),
+                Value<String?> flowIntensity = const Value.absent(),
+                Value<int?> crampIntensity = const Value.absent(),
+                Value<String?> moods = const Value.absent(),
+                Value<String?> energyLevel = const Value.absent(),
+                Value<String?> sleepQuality = const Value.absent(),
+                Value<int?> wellbeing = const Value.absent(),
+                Value<String?> symptoms = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+              }) => DailyLogsCompanion(
+                id: id,
+                loggedOn: loggedOn,
+                flowIntensity: flowIntensity,
+                crampIntensity: crampIntensity,
+                moods: moods,
+                energyLevel: energyLevel,
+                sleepQuality: sleepQuality,
+                wellbeing: wellbeing,
+                symptoms: symptoms,
+                notes: notes,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required DateTime loggedOn,
+                Value<String?> flowIntensity = const Value.absent(),
+                Value<int?> crampIntensity = const Value.absent(),
+                Value<String?> moods = const Value.absent(),
+                Value<String?> energyLevel = const Value.absent(),
+                Value<String?> sleepQuality = const Value.absent(),
+                Value<int?> wellbeing = const Value.absent(),
+                Value<String?> symptoms = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+              }) => DailyLogsCompanion.insert(
+                id: id,
+                loggedOn: loggedOn,
+                flowIntensity: flowIntensity,
+                crampIntensity: crampIntensity,
+                moods: moods,
+                energyLevel: energyLevel,
+                sleepQuality: sleepQuality,
+                wellbeing: wellbeing,
+                symptoms: symptoms,
+                notes: notes,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$DailyLogsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $DailyLogsTable,
+      DailyLogRow,
+      $$DailyLogsTableFilterComposer,
+      $$DailyLogsTableOrderingComposer,
+      $$DailyLogsTableAnnotationComposer,
+      $$DailyLogsTableCreateCompanionBuilder,
+      $$DailyLogsTableUpdateCompanionBuilder,
+      (
+        DailyLogRow,
+        BaseReferences<_$AppDatabase, $DailyLogsTable, DailyLogRow>,
+      ),
+      DailyLogRow,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -1660,4 +2735,6 @@ class $AppDatabaseManager {
       $$PeriodLogsTableTableManager(_db, _db.periodLogs);
   $$CustomSymptomsTableTableManager get customSymptoms =>
       $$CustomSymptomsTableTableManager(_db, _db.customSymptoms);
+  $$DailyLogsTableTableManager get dailyLogs =>
+      $$DailyLogsTableTableManager(_db, _db.dailyLogs);
 }

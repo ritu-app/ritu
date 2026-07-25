@@ -3,9 +3,11 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../app/app_scope.dart';
 import '../../core/date_format.dart';
+import '../../data/repositories/daily_log_repository.dart';
 import '../../theme/ritu_colors.dart';
 import '../insights/insights_screen.dart';
 import '../journal/journal_screen.dart';
+import '../log/daily_log_flow.dart';
 import '../reports/reports_screen.dart';
 import '../settings/settings_screen.dart';
 import '../setup/widgets/ritu_calendar.dart';
@@ -40,6 +42,8 @@ class _HomeScreenState extends State<HomeScreen> {
   int _pastPeriodCount = 0;
   int _customSymptomCount = 0;
   bool _periodDataLoaded = false;
+  DailyLogEntry? _todayLog;
+  int _streak = 0;
 
   static const _moods = [
     ('😊', 'Radiant'),
@@ -69,23 +73,36 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _loadPeriodData() async {
     final periods = AppScope.periods(context);
     final symptoms = AppScope.symptoms(context);
+    final dailyLogs = AppScope.dailyLogs(context);
     final latest = await periods.getLatest();
     final days = await periods.daysSinceLastPeriod();
     final bleed = await periods.allBleedDays();
     final all = await periods.getAll();
     final past = await periods.getPastStartedOn();
     final customSymptoms = await symptoms.getAll();
+    final todayLog = await dailyLogs.getByDate(DateTime.now());
+    final streak = await dailyLogs.getCurrentStreak();
     if (!mounted) return;
     setState(() {
       _daysSinceLastPeriod = days;
-      _lastPeriodLabel =
-          latest == null ? null : formatDisplayDate(latest.startedOn);
+      _lastPeriodLabel = latest == null
+          ? null
+          : formatDisplayDate(latest.startedOn);
       _periodDates = bleed;
       _periodCount = all.length;
       _pastPeriodCount = past.length;
       _customSymptomCount = customSymptoms.length;
+      _todayLog = todayLog;
+      _streak = streak;
       _showSpeedUpBanner = all.length < 2;
     });
+  }
+
+  Future<void> _openDailyLog() async {
+    await Navigator.of(
+      context,
+    ).push<bool>(MaterialPageRoute<bool>(builder: (_) => DailyLogFlow()));
+    await _loadPeriodData();
   }
 
   @override
@@ -99,38 +116,43 @@ class _HomeScreenState extends State<HomeScreen> {
             Expanded(
               child: switch (_tabIndex) {
                 0 => _HomeTab(
-                    name: _name,
-                    loggingSince: widget.loggingSince,
-                    daysSinceLastPeriod: _daysSinceLastPeriod,
-                    lastPeriodLabel: _lastPeriodLabel,
-                    patternDaysLogged:
-                        _periodCount.clamp(0, widget.patternDaysRequired),
-                    patternDaysRequired: widget.patternDaysRequired,
-                    showSpeedUpBanner: _showSpeedUpBanner,
-                    selectedMood: _selectedMood,
-                    moods: _moods,
-                    calendarMonth: _calendarMonth,
-                    periodDates: _periodDates,
-                    onMoodSelected: (mood) {
-                      setState(() => _selectedMood = mood);
-                    },
-                    onDismissBanner: () {
-                      setState(() => _showSpeedUpBanner = false);
-                    },
-                    onMonthChanged: (month) {
-                      setState(() => _calendarMonth = month);
-                    },
-                    onNameUpdated: (name) {
-                      setState(() => _name = name);
-                    },
-                    onReturnedFromSettings: _loadPeriodData,
-                    periodStartedLabel: _lastPeriodLabel,
-                    pastPeriodCount: _pastPeriodCount,
-                    customSymptomCount: _customSymptomCount,
+                  name: _name,
+                  loggingSince: widget.loggingSince,
+                  daysSinceLastPeriod: _daysSinceLastPeriod,
+                  lastPeriodLabel: _lastPeriodLabel,
+                  patternDaysLogged: _periodCount.clamp(
+                    0,
+                    widget.patternDaysRequired,
                   ),
+                  patternDaysRequired: widget.patternDaysRequired,
+                  showSpeedUpBanner: _showSpeedUpBanner,
+                  selectedMood: _selectedMood,
+                  moods: _moods,
+                  calendarMonth: _calendarMonth,
+                  periodDates: _periodDates,
+                  onMoodSelected: (mood) {
+                    setState(() => _selectedMood = mood);
+                  },
+                  onDismissBanner: () {
+                    setState(() => _showSpeedUpBanner = false);
+                  },
+                  onMonthChanged: (month) {
+                    setState(() => _calendarMonth = month);
+                  },
+                  onNameUpdated: (name) {
+                    setState(() => _name = name);
+                  },
+                  onReturnedFromSettings: _loadPeriodData,
+                  periodStartedLabel: _lastPeriodLabel,
+                  pastPeriodCount: _pastPeriodCount,
+                  customSymptomCount: _customSymptomCount,
+                  todayLog: _todayLog,
+                  streak: _streak,
+                  onLogToday: _openDailyLog,
+                ),
                 1 => InsightsScreen(
-                    onLogToday: () => setState(() => _tabIndex = 0),
-                  ),
+                  onLogToday: () => setState(() => _tabIndex = 0),
+                ),
                 2 => const JournalScreen(),
                 3 => const ReportsScreen(),
                 _ => _PlaceholderTab(label: _tabLabel(_tabIndex)),
@@ -147,11 +169,11 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   String _tabLabel(int index) => switch (index) {
-        1 => 'Insights',
-        2 => 'Journal',
-        3 => 'Reports',
-        _ => 'Home',
-      };
+    1 => 'Insights',
+    2 => 'Journal',
+    3 => 'Reports',
+    _ => 'Home',
+  };
 }
 
 class _HomeTab extends StatelessWidget {
@@ -172,9 +194,12 @@ class _HomeTab extends StatelessWidget {
     required this.onMonthChanged,
     required this.onNameUpdated,
     required this.onReturnedFromSettings,
+    required this.onLogToday,
     this.periodStartedLabel,
     this.pastPeriodCount = 0,
     this.customSymptomCount = 0,
+    this.todayLog,
+    this.streak = 0,
   });
 
   final String name;
@@ -193,9 +218,12 @@ class _HomeTab extends StatelessWidget {
   final ValueChanged<DateTime> onMonthChanged;
   final ValueChanged<String> onNameUpdated;
   final Future<void> Function() onReturnedFromSettings;
+  final Future<void> Function() onLogToday;
   final String? periodStartedLabel;
   final int pastPeriodCount;
   final int customSymptomCount;
+  final DailyLogEntry? todayLog;
+  final int streak;
 
   @override
   Widget build(BuildContext context) {
@@ -204,6 +232,7 @@ class _HomeTab extends StatelessWidget {
       children: [
         _Header(
           name: name,
+          streak: streak,
           onSettingsTap: () async {
             final updated = await Navigator.of(context).push<String>(
               MaterialPageRoute<String>(
@@ -226,11 +255,14 @@ class _HomeTab extends StatelessWidget {
           lastPeriodLabel: lastPeriodLabel,
         ),
         const SizedBox(height: 12),
-        _CheckInCard(
-          moods: moods,
-          selectedMood: selectedMood,
-          onMoodSelected: onMoodSelected,
-        ),
+        todayLog == null
+            ? _CheckInCard(
+                moods: moods,
+                selectedMood: selectedMood,
+                onMoodSelected: onMoodSelected,
+                onLogToday: onLogToday,
+              )
+            : _LoggedTodayCard(entry: todayLog!, onEdit: onLogToday),
         const SizedBox(height: 12),
         _PatternsCard(
           daysLogged: patternDaysLogged,
@@ -275,10 +307,12 @@ class _Header extends StatelessWidget {
   const _Header({
     required this.name,
     required this.onSettingsTap,
+    this.streak = 0,
   });
 
   final String name;
   final VoidCallback onSettingsTap;
+  final int streak;
 
   @override
   Widget build(BuildContext context) {
@@ -312,18 +346,24 @@ class _Header extends StatelessWidget {
         ),
         Row(
           children: [
-            const Icon(
-              Icons.local_fire_department_outlined,
+            Icon(
+              streak > 0
+                  ? Icons.local_fire_department
+                  : Icons.local_fire_department_outlined,
               size: 20,
-              color: RituColors.textDisabled,
+              color: streak > 0
+                  ? RituColors.iconAttention
+                  : RituColors.textDisabled,
             ),
             const SizedBox(width: 4),
             Text(
-              '0',
+              '$streak',
               style: GoogleFonts.dmSans(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: RituColors.textDisabled,
+                color: streak > 0
+                    ? RituColors.iconAttention
+                    : RituColors.textDisabled,
               ),
             ),
             const SizedBox(width: 12),
@@ -396,10 +436,7 @@ class _StatusCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          Container(
-            height: 1,
-            color: RituColors.white.withValues(alpha: 0.35),
-          ),
+          Container(height: 1, color: RituColors.white.withValues(alpha: 0.35)),
           const SizedBox(height: 12),
           Row(
             children: [
@@ -438,11 +475,13 @@ class _CheckInCard extends StatelessWidget {
     required this.moods,
     required this.selectedMood,
     required this.onMoodSelected,
+    required this.onLogToday,
   });
 
   final List<(String, String)> moods;
   final String? selectedMood;
   final ValueChanged<String> onMoodSelected;
+  final Future<void> Function() onLogToday;
 
   @override
   Widget build(BuildContext context) {
@@ -506,7 +545,7 @@ class _CheckInCard extends StatelessWidget {
             width: double.infinity,
             height: 36,
             child: FilledButton(
-              onPressed: () {},
+              onPressed: onLogToday,
               style: FilledButton.styleFrom(
                 backgroundColor: RituColors.sage500,
                 foregroundColor: RituColors.white,
@@ -521,6 +560,120 @@ class _CheckInCard extends StatelessWidget {
               child: const Text('Log today'),
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Home summary card once today's daily log is saved (Figma Home →
+/// "New user after logged").
+class _LoggedTodayCard extends StatelessWidget {
+  const _LoggedTodayCard({required this.entry, required this.onEdit});
+
+  final DailyLogEntry entry;
+  final Future<void> Function() onEdit;
+
+  List<String> get _summaryChips {
+    return [
+      if (entry.flowIntensity != null && entry.flowIntensity != 'None')
+        '${entry.flowIntensity} flow',
+      ...entry.moods,
+      if (entry.energyLevel != null) '${entry.energyLevel} energy',
+      if (entry.sleepQuality != null) '${entry.sleepQuality} sleep',
+      ...entry.symptoms,
+    ];
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final chips = _summaryChips;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: RituColors.fillElevated,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: RituColors.borderSubtle),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.check_circle_outline,
+                size: 24,
+                color: RituColors.sage600,
+              ),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  'Logged today',
+                  style: GoogleFonts.dmSans(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    height: 24 / 15,
+                    color: RituColors.textPrimary,
+                  ),
+                ),
+              ),
+              GestureDetector(
+                onTap: onEdit,
+                behavior: HitTestBehavior.opaque,
+                child: Text(
+                  'Edit',
+                  style: GoogleFonts.dmSans(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    height: 20 / 13,
+                    color: RituColors.sage600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (chips.isEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              'No details added — tap Edit to fill them in',
+              style: GoogleFonts.dmSans(
+                fontSize: 13,
+                fontWeight: FontWeight.w400,
+                height: 20 / 13,
+                color: RituColors.textTertiary,
+              ),
+            ),
+          ] else ...[
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final chip in chips)
+                  Container(
+                    height: 28,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: RituColors.fillSubtle,
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      chip,
+                      style: GoogleFonts.dmSans(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w400,
+                        height: 20 / 13,
+                        color: RituColors.textSecondary,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ],
         ],
       ),
     );
@@ -579,10 +732,7 @@ class _MoodChip extends StatelessWidget {
 }
 
 class _PatternsCard extends StatelessWidget {
-  const _PatternsCard({
-    required this.daysLogged,
-    required this.daysRequired,
-  });
+  const _PatternsCard({required this.daysLogged, required this.daysRequired});
 
   final int daysLogged;
   final int daysRequired;
@@ -715,10 +865,7 @@ class _SpeedUpBanner extends StatelessWidget {
 }
 
 class _BottomNav extends StatelessWidget {
-  const _BottomNav({
-    required this.currentIndex,
-    required this.onTap,
-  });
+  const _BottomNav({required this.currentIndex, required this.onTap});
 
   final int currentIndex;
   final ValueChanged<int> onTap;
@@ -735,9 +882,7 @@ class _BottomNav extends StatelessWidget {
     return Container(
       decoration: const BoxDecoration(
         color: RituColors.fillElevated,
-        border: Border(
-          top: BorderSide(color: RituColors.borderSubtle),
-        ),
+        border: Border(top: BorderSide(color: RituColors.borderSubtle)),
       ),
       child: SafeArea(
         top: false,
@@ -753,9 +898,7 @@ class _BottomNav extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(
-                          currentIndex == i
-                              ? _items[i].$2
-                              : _items[i].$1,
+                          currentIndex == i ? _items[i].$2 : _items[i].$1,
                           size: 22,
                           color: currentIndex == i
                               ? RituColors.sage600

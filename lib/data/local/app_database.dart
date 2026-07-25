@@ -4,12 +4,13 @@ import 'package:drift_flutter/drift_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 
 import 'tables/custom_symptoms.dart';
+import 'tables/daily_logs.dart';
 import 'tables/period_logs.dart';
 import 'tables/profiles.dart';
 
 part 'app_database.g.dart';
 
-@DriftDatabase(tables: [Profiles, PeriodLogs, CustomSymptoms])
+@DriftDatabase(tables: [Profiles, PeriodLogs, CustomSymptoms, DailyLogs])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
@@ -17,7 +18,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.memory() : super(NativeDatabase.memory());
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -31,6 +32,9 @@ class AppDatabase extends _$AppDatabase {
           }
           if (from < 3) {
             await m.createTable(customSymptoms);
+          }
+          if (from < 4) {
+            await m.createTable(dailyLogs);
           }
         },
       );

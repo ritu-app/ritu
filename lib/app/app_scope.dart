@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../data/repositories/daily_log_repository.dart';
 import '../data/repositories/period_repository.dart';
 import '../data/repositories/profile_repository.dart';
 import '../data/repositories/symptom_repository.dart';
@@ -11,6 +12,7 @@ class AppScope extends InheritedWidget {
     required this.profileRepository,
     required this.periodRepository,
     required this.symptomRepository,
+    required this.dailyLogRepository,
     required this.restartApp,
     required super.child,
   });
@@ -18,6 +20,7 @@ class AppScope extends InheritedWidget {
   final ProfileRepository profileRepository;
   final PeriodRepository periodRepository;
   final SymptomRepository symptomRepository;
+  final DailyLogRepository dailyLogRepository;
 
   /// Remounts the root bootstrap (e.g. after wiping local data).
   final VoidCallback restartApp;
@@ -40,11 +43,16 @@ class AppScope extends InheritedWidget {
     return of(context).symptomRepository;
   }
 
+  static DailyLogRepository dailyLogs(BuildContext context) {
+    return of(context).dailyLogRepository;
+  }
+
   @override
   bool updateShouldNotify(AppScope oldWidget) {
     return profileRepository != oldWidget.profileRepository ||
         periodRepository != oldWidget.periodRepository ||
         symptomRepository != oldWidget.symptomRepository ||
+        dailyLogRepository != oldWidget.dailyLogRepository ||
         restartApp != oldWidget.restartApp;
   }
 }

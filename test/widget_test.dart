@@ -4,9 +4,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ritu/app/ritu_app.dart';
 import 'package:ritu/core/date_format.dart';
 import 'package:ritu/data/local/app_database.dart';
+import 'package:ritu/data/repositories/daily_log_repository.dart';
 import 'package:ritu/data/repositories/period_repository.dart';
 import 'package:ritu/data/repositories/profile_repository.dart';
 import 'package:ritu/data/repositories/symptom_repository.dart';
+import 'package:ritu/features/setup/widgets/choice_chips.dart';
 
 void main() {
   late AppDatabase database;
@@ -66,7 +68,9 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Maya'), findsOneWidget);
     expect(
-      find.text('Logging since ${formatDisplayDate(profile!.onboardingCompletedAt!)}'),
+      find.text(
+        'Logging since ${formatDisplayDate(profile!.onboardingCompletedAt!)}',
+      ),
       findsOneWidget,
     );
 
@@ -89,7 +93,9 @@ void main() {
     expect(await periods.getLatest(), isNotNull);
   });
 
-  testWidgets('Last period and past dates are stored from setup', (tester) async {
+  testWidgets('Last period and past dates are stored from setup', (
+    tester,
+  ) async {
     await tester.pumpWidget(createRituApp(database: database));
     await tester.pumpAndSettle();
 
@@ -136,7 +142,9 @@ void main() {
     expect(find.text('Maya ✨'), findsOneWidget);
   });
 
-  testWidgets('Delete Data clears profile and returns to splash', (tester) async {
+  testWidgets('Delete Data clears profile and returns to splash', (
+    tester,
+  ) async {
     final profiles = ProfileRepository(database);
     await profiles.upsertDisplayName('Maya');
     await profiles.markOnboardingCompleted();
@@ -295,10 +303,7 @@ void main() {
       'November',
       'December',
     ];
-    expect(
-      find.text('${months[now.month - 1]} ${now.year}'),
-      findsOneWidget,
-    );
+    expect(find.text('${months[now.month - 1]} ${now.year}'), findsOneWidget);
 
     if (now.day < 28) {
       final futureDay = find.text('${now.day + 1}');
@@ -370,9 +375,7 @@ void main() {
       DateTime(2026, 6, 20),
     );
 
-    await tester.tap(
-      find.widgetWithIcon(IconButton, Icons.chevron_left),
-    );
+    await tester.tap(find.widgetWithIcon(IconButton, Icons.chevron_left));
     await tester.pumpAndSettle();
 
     expect(find.text('View and edit past dates'), findsOneWidget);
@@ -429,11 +432,170 @@ void main() {
     expect(find.text('Leg pain'), findsNothing);
     expect(await symptomRepository.getAll(), hasLength(1));
 
-    await tester.tap(
-      find.widgetWithIcon(IconButton, Icons.chevron_left),
-    );
+    await tester.tap(find.widgetWithIcon(IconButton, Icons.chevron_left));
     await tester.pumpAndSettle();
 
     expect(find.text('1 added'), findsOneWidget);
+  });
+
+  testWidgets('Log today records a full daily log entry', (tester) async {
+    final profiles = ProfileRepository(database);
+    await profiles.upsertDisplayName('Maya');
+    await profiles.markOnboardingCompleted();
+
+    await tester.pumpWidget(createRituApp(database: database));
+    await tester.pumpAndSettle();
+
+    expect(find.text("Complete today's check-in"), findsOneWidget);
+    expect(find.byIcon(Icons.local_fire_department_outlined), findsOneWidget);
+    await tester.tap(find.text('Log today'));
+    await tester.pumpAndSettle();
+
+    // Step 1: flow.
+    expect(find.text('Any flow today?'), findsOneWidget);
+    await tester.tap(find.text('Spotting'));
+    await tester.pump();
+    await tester.tap(find.widgetWithText(FilledButton, 'Next'));
+    await tester.pumpAndSettle();
+
+    // Step 2: mood.
+    expect(find.text('How are you feeling?'), findsOneWidget);
+    await tester.tap(find.text('Calm'));
+    await tester.pump();
+    await tester.tap(find.text('Happy'));
+    await tester.pump();
+    await tester.ensureVisible(find.text('Moderate'));
+    await tester.tap(find.text('Moderate'));
+    await tester.pump();
+    await tester.ensureVisible(find.text('Okay'));
+    await tester.tap(find.text('Okay'));
+    await tester.pump();
+    await tester.ensureVisible(find.widgetWithText(FilledButton, 'Next'));
+    await tester.tap(find.widgetWithText(FilledButton, 'Next'));
+    await tester.pumpAndSettle();
+
+    // Step 3: body signals, including adding a brand-new one inline.
+    expect(find.text('Any body signals?'), findsOneWidget);
+    await tester.ensureVisible(find.text('Bloating'));
+    await tester.tap(find.text('Bloating'));
+    await tester.pump();
+
+    await tester.ensureVisible(find.text('Add your own'));
+    await tester.tap(find.text('Add your own'));
+    await tester.pumpAndSettle();
+    expect(find.text('Add your own body signal'), findsOneWidget);
+    await tester.enterText(find.byType(TextField), 'Custom ache');
+    await tester.pump();
+    await tester.tap(find.widgetWithText(FilledButton, 'Add'));
+    await tester.pumpAndSettle();
+    expect(find.text('Custom ache'), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(FilledButton, 'Next'));
+    await tester.pumpAndSettle();
+
+    // Step 4: notes + save.
+    expect(find.text('Notes'), findsOneWidget);
+    await tester.enterText(find.byType(TextField), 'Feeling okay today');
+    await tester.pump();
+    await tester.tap(find.widgetWithText(FilledButton, 'Save log'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Logged today'), findsOneWidget);
+    expect(find.text('Edit'), findsOneWidget);
+    expect(find.text('Spotting flow'), findsOneWidget);
+    expect(find.text('Calm'), findsOneWidget);
+    expect(find.text('Moderate energy'), findsOneWidget);
+    expect(find.text('Okay sleep'), findsOneWidget);
+    expect(find.text('Bloating'), findsOneWidget);
+    expect(find.text('Custom ache'), findsOneWidget);
+    expect(find.byIcon(Icons.local_fire_department), findsOneWidget);
+
+    final dailyLogs = DailyLogRepository(database);
+    final entry = await dailyLogs.getByDate(DateTime.now());
+    expect(entry, isNotNull);
+    expect(entry!.flowIntensity, 'Spotting');
+    expect(entry.moods, containsAll(['Calm', 'Happy']));
+    expect(entry.energyLevel, 'Moderate');
+    expect(entry.sleepQuality, 'Okay');
+    expect(entry.symptoms, containsAll(['Bloating', 'Custom ache']));
+    expect(entry.notes, 'Feeling okay today');
+    expect(await dailyLogs.getCurrentStreak(), 1);
+
+    final symptomRepository = SymptomRepository(database);
+    final storedSymptoms = await symptomRepository.getAll();
+    expect(storedSymptoms.map((s) => s.name), contains('Custom ache'));
+  });
+
+  testWidgets('Log today re-opens with previous answers pre-filled', (
+    tester,
+  ) async {
+    final profiles = ProfileRepository(database);
+    await profiles.upsertDisplayName('Maya');
+    await profiles.markOnboardingCompleted();
+    final dailyLogs = DailyLogRepository(database);
+    await dailyLogs.upsert(
+      loggedOn: DateTime.now(),
+      flowIntensity: 'Light',
+      moods: const ['Focused'],
+      notes: 'Already logged this morning',
+    );
+
+    await tester.pumpWidget(createRituApp(database: database));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Logged today'), findsOneWidget);
+    expect(find.text('Light flow'), findsOneWidget);
+    await tester.tap(find.text('Edit'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Any flow today?'), findsOneWidget);
+    final light = tester.widget<RituChoiceChip>(
+      find.widgetWithText(RituChoiceChip, 'Light'),
+    );
+    expect(light.selected, isTrue);
+
+    await tester.tap(find.widgetWithText(FilledButton, 'Next'));
+    await tester.pumpAndSettle();
+    expect(find.text('Focused'), findsOneWidget);
+  });
+
+  testWidgets('RituChoiceChip options in a Wrap lay out side by side', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              RituChoiceChip(label: 'None', selected: false, onTap: () {}),
+              RituChoiceChip(label: 'Spotting', selected: false, onTap: () {}),
+              RituChoiceChip(label: 'Light', selected: false, onTap: () {}),
+            ],
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final noneTopLeft = tester.getTopLeft(find.text('None'));
+    final spottingTopLeft = tester.getTopLeft(find.text('Spotting'));
+    final lightTopLeft = tester.getTopLeft(find.text('Light'));
+
+    // Chips should sit on the same row (equal dy) and flow left-to-right
+    // (increasing dx), not stack vertically full-width.
+    expect(spottingTopLeft.dy, noneTopLeft.dy);
+    expect(lightTopLeft.dy, noneTopLeft.dy);
+    expect(spottingTopLeft.dx, greaterThan(noneTopLeft.dx));
+    expect(lightTopLeft.dx, greaterThan(spottingTopLeft.dx));
+
+    final noneChipSize = tester.getSize(
+      find.ancestor(
+        of: find.text('None'),
+        matching: find.byType(Container),
+      ).first,
+    );
+    expect(noneChipSize.width, lessThan(200));
   });
 }

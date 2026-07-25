@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/local/app_database.dart';
+import '../data/repositories/daily_log_repository.dart';
 import '../data/repositories/period_repository.dart';
 import '../data/repositories/profile_repository.dart';
 import '../data/repositories/symptom_repository.dart';
@@ -20,11 +21,13 @@ class RituApp extends StatefulWidget {
     required this.profileRepository,
     required this.periodRepository,
     required this.symptomRepository,
+    required this.dailyLogRepository,
   });
 
   final ProfileRepository profileRepository;
   final PeriodRepository periodRepository;
   final SymptomRepository symptomRepository;
+  final DailyLogRepository dailyLogRepository;
 
   @override
   State<RituApp> createState() => _RituAppState();
@@ -43,24 +46,21 @@ class _RituAppState extends State<RituApp> {
       profileRepository: widget.profileRepository,
       periodRepository: widget.periodRepository,
       symptomRepository: widget.symptomRepository,
+      dailyLogRepository: widget.dailyLogRepository,
       restartApp: _restartApp,
       child: MaterialApp(
         key: _bootstrapKey,
         title: 'Ritu',
         debugShowCheckedModeBanner: false,
         theme: buildRituTheme(),
-        home: _AppBootstrap(
-          profileRepository: widget.profileRepository,
-        ),
+        home: _AppBootstrap(profileRepository: widget.profileRepository),
       ),
     );
   }
 }
 
 class _AppBootstrap extends StatefulWidget {
-  const _AppBootstrap({
-    required this.profileRepository,
-  });
+  const _AppBootstrap({required this.profileRepository});
 
   final ProfileRepository profileRepository;
 
@@ -69,8 +69,8 @@ class _AppBootstrap extends StatefulWidget {
 }
 
 class _AppBootstrapState extends State<_AppBootstrap> {
-  late final Future<Profile?> _profileFuture =
-      widget.profileRepository.getProfile();
+  late final Future<Profile?> _profileFuture = widget.profileRepository
+      .getProfile();
 
   @override
   Widget build(BuildContext context) {
@@ -101,14 +101,11 @@ class _OnboardingFlow extends StatelessWidget {
   const _OnboardingFlow();
 
   void _push(BuildContext context, Widget page) {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => page),
-    );
+    Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => page));
   }
 
   Future<void> _goHome(BuildContext context, String name) async {
-    final profile =
-        await AppScope.profiles(context).markOnboardingCompleted();
+    final profile = await AppScope.profiles(context).markOnboardingCompleted();
     if (!context.mounted) return;
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute<void>(
@@ -197,5 +194,6 @@ RituApp createRituApp({AppDatabase? database}) {
     profileRepository: ProfileRepository(db),
     periodRepository: PeriodRepository(db),
     symptomRepository: SymptomRepository(db),
+    dailyLogRepository: DailyLogRepository(db),
   );
 }

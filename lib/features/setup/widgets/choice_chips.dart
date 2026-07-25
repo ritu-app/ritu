@@ -32,7 +32,7 @@ class RituChoiceChip extends StatelessWidget {
             color: selected ? RituColors.sage600 : RituColors.borderDisabled,
           ),
         ),
-        alignment: Alignment.center,
+        alignment: width == null ? null : Alignment.center,
         child: Text(
           label,
           style: GoogleFonts.dmSans(

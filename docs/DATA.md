@@ -23,7 +23,7 @@ Ritu stores all user data **on-device only** (SQLite via [Drift](https://drift.s
 
 Database file name: **`ritu.sqlite`** (opened as `driftDatabase(name: 'ritu')`).
 
-Current **schema version:** `3`.
+Current **schema version:** `4`.
 
 ### Regenerating code
 
@@ -48,10 +48,12 @@ lib/data/
       profiles.dart
       period_logs.dart
       custom_symptoms.dart
+      daily_logs.dart
   repositories/
     profile_repository.dart
     period_repository.dart
     symptom_repository.dart
+    daily_log_repository.dart
 ```
 
 ```
@@ -121,16 +123,46 @@ User-defined body signals shown alongside the (not-yet-built) daily log. Managed
 **Lifecycle**
 
 1. Settings → **Custom Symptoms** → `addSymptom` / `deleteSymptom` as signals are added or removed (no separate Save)
+2. Also offered inline from the daily log's "Any body signals?" step (`+ Add your own`) — same repository call, so new signals immediately show up in both places
+
+### `daily_logs`
+
+One row per **calendar day**, filled in by the Home "Log today" flow (`DailyLogFlow`, 4 steps: flow, mood, body signals, notes). Managed via `DailyLogRepository`. Every field is optional — a step left untouched (or explicitly "Skip"ped) just stores `null`.
+
+| Column | Type | Notes |
+|--------|------|--------|
+| `id` | `INTEGER` PK auto | |
+| `logged_on` | `DATETIME` (date-only) | Unique |
+| `flow_intensity` | `TEXT` nullable | One of `None` / `Spotting` / `Light` / `Medium` / `Heavy` |
+| `cramp_intensity` | `INTEGER` nullable | 0–10 slider |
+| `moods` | `TEXT` nullable | JSON list of selected mood labels (multi-select) |
+| `energy_level` | `TEXT` nullable | One of `Drained` / `Low` / `Moderate` / `High` / `Vibrant` |
+| `sleep_quality` | `TEXT` nullable | One of `Poor` / `Restless` / `Okay` / `Good` / `Great` |
+| `wellbeing` | `INTEGER` nullable | 0–10 slider |
+| `symptoms` | `TEXT` nullable | JSON list of selected body signal labels (presets + `custom_symptoms`) |
+| `notes` | `TEXT` nullable | Free text, trimmed; empty string stored as `null` |
+| `created_at` | `DATETIME` | Set on first save for that day |
+| `updated_at` | `DATETIME` | Bumped on every save |
+
+**Lifecycle**
+
+1. Home → **Log today** → `DailyLogFlow` pre-fills from `getByDate(today)` if a log already exists for today (so re-opening edits in place)
+2. Each step's "Next"/"Skip" just advances the wizard locally — nothing is written until the final "Save log" step
+3. Final step → `upsert(...)` — single write for the whole day, no per-step persistence
+4. Home re-loads `getByDate(today)` after the flow closes: `null` → check-in card, non-null → "Logged today" summary card (moods/energy/sleep/symptoms rendered as read-only pills, "Edit" re-opens the flow pre-filled)
+
+**Derived in `DailyLogRepository` (not stored):**
+
+- `getCurrentStreak()` — consecutive days with an entry, counted backwards from today; if today isn't logged yet it counts back from yesterday instead (so the streak isn't considered broken until the day is over). Drives the flame counter in the Home header.
 
 ## Planned extensions (not implemented yet)
 
 | Table | Purpose |
 |--------|---------|
-| `journal_entries` | Free-text reflections from Journal |
-| `mood_logs` | Daily mood check-ins from Home |
+| `journal_entries` | Free-text reflections from Journal (daily log notes are stored in `daily_logs.notes` today, not yet mirrored into a dedicated Journal table) |
 | `settings` | Reminders, notification prefs, etc. |
 
-Custom symptoms are stored today but not yet surfaced in a daily log UI — that's still to be built (see `journal_entries` above).
+Daily logs don't yet feed back into `period_logs` (e.g. a logged "flow" doesn't start/extend a period episode) — that cross-linking is a candidate future extension.
 
 When adding a table:
 
