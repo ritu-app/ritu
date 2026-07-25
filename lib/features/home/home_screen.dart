@@ -38,6 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Set<DateTime> _periodDates = {};
   int _periodCount = 0;
   int _pastPeriodCount = 0;
+  int _customSymptomCount = 0;
   bool _periodDataLoaded = false;
 
   static const _moods = [
@@ -67,11 +68,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _loadPeriodData() async {
     final periods = AppScope.periods(context);
+    final symptoms = AppScope.symptoms(context);
     final latest = await periods.getLatest();
     final days = await periods.daysSinceLastPeriod();
     final bleed = await periods.allBleedDays();
     final all = await periods.getAll();
     final past = await periods.getPastStartedOn();
+    final customSymptoms = await symptoms.getAll();
     if (!mounted) return;
     setState(() {
       _daysSinceLastPeriod = days;
@@ -80,6 +83,7 @@ class _HomeScreenState extends State<HomeScreen> {
       _periodDates = bleed;
       _periodCount = all.length;
       _pastPeriodCount = past.length;
+      _customSymptomCount = customSymptoms.length;
       _showSpeedUpBanner = all.length < 2;
     });
   }
@@ -122,6 +126,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     onReturnedFromSettings: _loadPeriodData,
                     periodStartedLabel: _lastPeriodLabel,
                     pastPeriodCount: _pastPeriodCount,
+                    customSymptomCount: _customSymptomCount,
                   ),
                 1 => InsightsScreen(
                     onLogToday: () => setState(() => _tabIndex = 0),
@@ -169,6 +174,7 @@ class _HomeTab extends StatelessWidget {
     required this.onReturnedFromSettings,
     this.periodStartedLabel,
     this.pastPeriodCount = 0,
+    this.customSymptomCount = 0,
   });
 
   final String name;
@@ -189,6 +195,7 @@ class _HomeTab extends StatelessWidget {
   final Future<void> Function() onReturnedFromSettings;
   final String? periodStartedLabel;
   final int pastPeriodCount;
+  final int customSymptomCount;
 
   @override
   Widget build(BuildContext context) {
@@ -205,6 +212,7 @@ class _HomeTab extends StatelessWidget {
                   loggingSince: loggingSince,
                   periodStartedLabel: periodStartedLabel,
                   pastPeriodCount: pastPeriodCount,
+                  customSymptomCount: customSymptomCount,
                 ),
               ),
             );

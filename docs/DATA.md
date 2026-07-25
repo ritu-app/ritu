@@ -23,7 +23,7 @@ Ritu stores all user data **on-device only** (SQLite via [Drift](https://drift.s
 
 Database file name: **`ritu.sqlite`** (opened as `driftDatabase(name: 'ritu')`).
 
-Current **schema version:** `2`.
+Current **schema version:** `3`.
 
 ### Regenerating code
 
@@ -47,9 +47,11 @@ lib/data/
     tables/
       profiles.dart
       period_logs.dart
+      custom_symptoms.dart
   repositories/
     profile_repository.dart
     period_repository.dart
+    symptom_repository.dart
 ```
 
 ```
@@ -106,6 +108,20 @@ One row per **period episode** (not one row per bleed day).
 - Days since last period = today − latest `started_on`
 - When only a start + typical length is known, `ended_on = started_on + (typical_period_days - 1)`
 
+### `custom_symptoms`
+
+User-defined body signals shown alongside the (not-yet-built) daily log. Managed via `SymptomRepository`.
+
+| Column | Type | Notes |
+|--------|------|--------|
+| `id` | `INTEGER` PK auto | |
+| `name` | `TEXT` (1–40) | Unique (case-insensitive check in `SymptomRepository.addSymptom`) |
+| `created_at` | `DATETIME` | Insertion order = display order |
+
+**Lifecycle**
+
+1. Settings → **Custom Symptoms** → `addSymptom` / `deleteSymptom` as signals are added or removed (no separate Save)
+
 ## Planned extensions (not implemented yet)
 
 | Table | Purpose |
@@ -113,6 +129,8 @@ One row per **period episode** (not one row per bleed day).
 | `journal_entries` | Free-text reflections from Journal |
 | `mood_logs` | Daily mood check-ins from Home |
 | `settings` | Reminders, notification prefs, etc. |
+
+Custom symptoms are stored today but not yet surfaced in a daily log UI — that's still to be built (see `journal_entries` above).
 
 When adding a table:
 

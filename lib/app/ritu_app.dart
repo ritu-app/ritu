@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../data/local/app_database.dart';
 import '../data/repositories/period_repository.dart';
 import '../data/repositories/profile_repository.dart';
+import '../data/repositories/symptom_repository.dart';
 import '../features/home/home_screen.dart';
 import '../features/onboarding/confirmation_screen.dart';
 import '../features/onboarding/name_screen.dart';
@@ -18,10 +19,12 @@ class RituApp extends StatefulWidget {
     super.key,
     required this.profileRepository,
     required this.periodRepository,
+    required this.symptomRepository,
   });
 
   final ProfileRepository profileRepository;
   final PeriodRepository periodRepository;
+  final SymptomRepository symptomRepository;
 
   @override
   State<RituApp> createState() => _RituAppState();
@@ -39,6 +42,7 @@ class _RituAppState extends State<RituApp> {
     return AppScope(
       profileRepository: widget.profileRepository,
       periodRepository: widget.periodRepository,
+      symptomRepository: widget.symptomRepository,
       restartApp: _restartApp,
       child: MaterialApp(
         key: _bootstrapKey,
@@ -192,5 +196,6 @@ RituApp createRituApp({AppDatabase? database}) {
   return RituApp(
     profileRepository: ProfileRepository(db),
     periodRepository: PeriodRepository(db),
+    symptomRepository: SymptomRepository(db),
   );
 }

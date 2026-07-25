@@ -6,6 +6,7 @@ import 'package:ritu/core/date_format.dart';
 import 'package:ritu/data/local/app_database.dart';
 import 'package:ritu/data/repositories/period_repository.dart';
 import 'package:ritu/data/repositories/profile_repository.dart';
+import 'package:ritu/data/repositories/symptom_repository.dart';
 
 void main() {
   late AppDatabase database;
@@ -375,5 +376,64 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('View and edit past dates'), findsOneWidget);
+  });
+
+  testWidgets('Custom Symptoms from Settings adds and removes body signals', (
+    tester,
+  ) async {
+    final profiles = ProfileRepository(database);
+    await profiles.upsertDisplayName('Maya');
+    await profiles.markOnboardingCompleted();
+
+    await tester.pumpWidget(createRituApp(database: database));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.settings_outlined));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Add your own symptoms to track'), findsOneWidget);
+
+    await tester.tap(find.text('Custom Symptoms'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Add your own body signals'), findsOneWidget);
+    final addButton = find.widgetWithText(OutlinedButton, 'Add body signal');
+    expect(addButton, findsOneWidget);
+
+    await tester.enterText(find.byType(TextField), 'Leg pain');
+    await tester.pump();
+    await tester.tap(addButton);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Leg pain'), findsOneWidget);
+    expect(find.byType(TextField), findsOneWidget);
+    expect(
+      tester.widget<TextField>(find.byType(TextField)).controller!.text,
+      isEmpty,
+    );
+
+    await tester.enterText(find.byType(TextField), 'Bacne');
+    await tester.pump();
+    await tester.tap(addButton);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Bacne'), findsOneWidget);
+
+    final symptomRepository = SymptomRepository(database);
+    final stored = await symptomRepository.getAll();
+    expect(stored.map((s) => s.name), ['Leg pain', 'Bacne']);
+
+    await tester.tap(find.byIcon(Icons.close).first);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Leg pain'), findsNothing);
+    expect(await symptomRepository.getAll(), hasLength(1));
+
+    await tester.tap(
+      find.widgetWithIcon(IconButton, Icons.chevron_left),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('1 added'), findsOneWidget);
   });
 }

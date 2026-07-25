@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../app/app_scope.dart';
 import '../../core/date_format.dart';
 import '../../theme/ritu_colors.dart';
+import 'custom_symptoms_screen.dart';
 import 'edit_name_dialog.dart';
 import 'period_history_screen.dart';
 import 'period_started_screen.dart';
@@ -15,12 +16,14 @@ class SettingsScreen extends StatefulWidget {
     required this.loggingSince,
     this.periodStartedLabel,
     this.pastPeriodCount = 0,
+    this.customSymptomCount = 0,
   });
 
   final String name;
   final DateTime loggingSince;
   final String? periodStartedLabel;
   final int pastPeriodCount;
+  final int customSymptomCount;
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
@@ -30,6 +33,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   late String _name = widget.name;
   late String? _periodStartedLabel = widget.periodStartedLabel;
   late int _pastPeriodCount = widget.pastPeriodCount;
+  late int _customSymptomCount = widget.customSymptomCount;
 
   String get _initial {
     final trimmed = _name.trim();
@@ -41,6 +45,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   String get _periodHistorySubtitle =>
       _pastPeriodCount == 0 ? 'No dates added' : 'View and edit past dates';
+
+  String get _customSymptomsSubtitle => _customSymptomCount == 0
+      ? 'Add your own symptoms to track'
+      : '$_customSymptomCount added';
 
   void _popWithName() {
     Navigator.of(context).pop(_name);
@@ -78,6 +86,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (!mounted) return;
     if (count != null) {
       setState(() => _pastPeriodCount = count);
+    }
+  }
+
+  Future<void> _editCustomSymptoms() async {
+    final count = await Navigator.of(context).push<int>(
+      MaterialPageRoute<int>(
+        builder: (_) => const CustomSymptomsScreen(),
+      ),
+    );
+    if (!mounted) return;
+    if (count != null) {
+      setState(() => _customSymptomCount = count);
     }
   }
 
@@ -195,8 +215,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           iconBackground: RituColors.fillPositiveSecondary,
                           iconColor: RituColors.sage600,
                           title: 'Custom Symptoms',
-                          subtitle: 'Add your own symptoms to track',
+                          subtitle: _customSymptomsSubtitle,
                           showDivider: false,
+                          onTap: _editCustomSymptoms,
                         ),
                       ],
                     ),

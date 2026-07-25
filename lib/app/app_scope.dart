@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../data/repositories/period_repository.dart';
 import '../data/repositories/profile_repository.dart';
+import '../data/repositories/symptom_repository.dart';
 
 /// Provides repositories and app-level actions to the widget tree.
 class AppScope extends InheritedWidget {
@@ -9,12 +10,14 @@ class AppScope extends InheritedWidget {
     super.key,
     required this.profileRepository,
     required this.periodRepository,
+    required this.symptomRepository,
     required this.restartApp,
     required super.child,
   });
 
   final ProfileRepository profileRepository;
   final PeriodRepository periodRepository;
+  final SymptomRepository symptomRepository;
 
   /// Remounts the root bootstrap (e.g. after wiping local data).
   final VoidCallback restartApp;
@@ -33,10 +36,15 @@ class AppScope extends InheritedWidget {
     return of(context).periodRepository;
   }
 
+  static SymptomRepository symptoms(BuildContext context) {
+    return of(context).symptomRepository;
+  }
+
   @override
   bool updateShouldNotify(AppScope oldWidget) {
     return profileRepository != oldWidget.profileRepository ||
         periodRepository != oldWidget.periodRepository ||
+        symptomRepository != oldWidget.symptomRepository ||
         restartApp != oldWidget.restartApp;
   }
 }
