@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../theme/ritu_colors.dart';
@@ -23,15 +24,22 @@ class ConfirmationScreen extends StatelessWidget {
           child: Column(
             children: [
               const Spacer(),
-              Text(
-                'Hi, $name 👋',
-                textAlign: TextAlign.center,
-                style: GoogleFonts.dmSerifDisplay(
-                  fontSize: 38,
-                  fontWeight: FontWeight.w400,
-                  height: 42 / 38,
-                  color: RituColors.textPrimary,
-                ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Hi, $name',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.dmSerifDisplay(
+                      fontSize: 38,
+                      fontWeight: FontWeight.w400,
+                      height: 42 / 38,
+                      color: RituColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  const _WavingHand(),
+                ],
               ),
               const SizedBox(height: 8),
               Text(
@@ -70,5 +78,62 @@ class ConfirmationScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+/// A hand emoji that waves a couple of times, then pauses before looping —
+/// mimics a natural greeting rather than a constant robotic swing.
+class _WavingHand extends StatelessWidget {
+  const _WavingHand();
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+          '👋',
+          style: GoogleFonts.dmSerifDisplay(
+            fontSize: 38,
+            fontWeight: FontWeight.w400,
+            height: 42 / 38,
+            color: RituColors.textPrimary,
+          ),
+        )
+        .animate(onPlay: (controller) => controller.repeat())
+        // Pivot from the wrist (bottom of the glyph) rather than its center,
+        // and rotate in "turns" (1.0 = 360°) as flutter_animate expects.
+        .rotate(
+          alignment: Alignment.bottomCenter,
+          begin: 0,
+          end: 0.08,
+          duration: 150.ms,
+          curve: Curves.easeInOut,
+        )
+        .then()
+        .rotate(
+          alignment: Alignment.bottomCenter,
+          begin: 0.08,
+          end: -0.06,
+          duration: 150.ms,
+          curve: Curves.easeInOut,
+        )
+        .then()
+        .rotate(
+          alignment: Alignment.bottomCenter,
+          begin: -0.06,
+          end: 0.06,
+          duration: 150.ms,
+          curve: Curves.easeInOut,
+        )
+        .then()
+        .rotate(
+          alignment: Alignment.bottomCenter,
+          begin: 0.06,
+          end: 0,
+          duration: 150.ms,
+          curve: Curves.easeInOut,
+        )
+        .then()
+        // Rest at neutral before the wave repeats, so it reads as a
+        // deliberate greeting rather than a constant nervous twitch.
+        .rotate(begin: 0, end: 0, duration: 1200.ms);
   }
 }

@@ -41,9 +41,14 @@ void main() {
     await tester.enterText(find.byType(TextField), 'Maya');
     await tester.pump();
     await tester.tap(find.text('Continue'));
-    await tester.pumpAndSettle();
+    // The confirmation screen's waving hand loops forever, so pumpAndSettle
+    // would never see a settled frame — pump just enough for the route
+    // transition to finish instead.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
 
-    expect(find.text('Hi, Maya 👋'), findsOneWidget);
+    expect(find.text('Hi, Maya'), findsOneWidget);
+    expect(find.text('👋'), findsOneWidget);
     await tester.tap(find.text('Continue'));
     await tester.pumpAndSettle();
 
@@ -104,7 +109,11 @@ void main() {
     await tester.enterText(find.byType(TextField), 'Maya');
     await tester.pump();
     await tester.tap(find.text('Continue'));
-    await tester.pumpAndSettle();
+    // The confirmation screen's waving hand loops forever, so pumpAndSettle
+    // would never see a settled frame — pump just enough for the route
+    // transition to finish instead.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
     await tester.tap(find.text('Continue'));
     await tester.pumpAndSettle();
 
