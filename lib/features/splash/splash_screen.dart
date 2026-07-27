@@ -56,13 +56,13 @@ class _BrandBlock extends StatelessWidget {
           'Ritu',
           textAlign: TextAlign.center,
           style: GoogleFonts.dmSerifDisplay(
-            fontSize: 48,
+            fontSize: 56,
             fontWeight: FontWeight.w400,
             color: RituColors.sage600,
             height: 1,
           ),
         ),
-        const SizedBox(height: 7),
+        const SizedBox(height: 4),
         Text(
           'CYCLE JOURNAL',
           textAlign: TextAlign.center,
@@ -74,21 +74,24 @@ class _BrandBlock extends StatelessWidget {
             height: 1,
           ),
         ),
-        const SizedBox(height: 7),
+        const SizedBox(height: 4),
         Container(
           width: 114,
           height: 1,
           color: RituColors.divider,
         ),
-        const SizedBox(height: 7),
-        Text(
-          'A private journal for your cycle',
-          textAlign: TextAlign.center,
-          style: GoogleFonts.dmSans(
-            fontSize: 12,
-            fontWeight: FontWeight.w400,
-            color: RituColors.neutral500,
-            height: 1.25,
+        const SizedBox(height: 4),
+        SizedBox(
+          width: 113,
+          child: Text(
+            'A private journal for your cycle',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.dmSans(
+              fontSize: 12,
+              fontWeight: FontWeight.w400,
+              color: RituColors.neutral500,
+              height: 1.25,
+            ),
           ),
         ),
       ],
