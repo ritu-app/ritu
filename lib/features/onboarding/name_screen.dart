@@ -66,7 +66,7 @@ class _NameScreenState extends State<NameScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Just your first name—stays on your phone, never shared anywhere',
+                'Just your first name-stays on your phone, never shared anywhere',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.dmSans(
                   fontSize: 15,

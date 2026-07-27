@@ -42,6 +42,18 @@ flutter run
 
 While the app is running: `r` hot reload, `R` hot restart, `q` quit.
 
+## Run the tests
+
+```bash
+flutter test
+```
+
+This runs the widget tests ([test/widget_test.dart](test/widget_test.dart)) and repository unit tests ([test/daily_log_repository_test.dart](test/daily_log_repository_test.dart)). To run a single file:
+
+```bash
+flutter test test/widget_test.dart
+```
+
 ## Generate an iOS test build (TestFlight)
 
 You need an [Apple Developer Program](https://developer.apple.com/programs/) membership and an app record in [App Store Connect](https://appstoreconnect.apple.com) with bundle ID `care.ritu.ritu`.
