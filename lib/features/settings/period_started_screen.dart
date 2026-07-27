@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../app/app_scope.dart';
 import '../../core/date_format.dart';
@@ -98,7 +99,7 @@ class _PeriodStartedScreenState extends State<PeriodStartedScreen> {
               child: IconButton(
                 onPressed: _cancel,
                 icon: const Icon(
-                  Icons.chevron_left,
+                  LucideIcons.chevronLeft,
                   size: 28,
                   color: RituColors.textPrimary,
                 ),

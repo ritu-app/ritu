@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../theme/ritu_colors.dart';
 
@@ -16,28 +17,28 @@ class InsightsScreen extends StatelessWidget {
 
   static const _unlockItems = [
     (
-      Icons.trending_up,
+      LucideIcons.trendingUp,
       RituColors.fillPositiveSecondary,
       RituColors.textPositive,
       'Energy trends',
       'See how your energy changes over time',
     ),
     (
-      Icons.graphic_eq,
+      LucideIcons.audioLines,
       RituColors.fillInfoSecondary,
       RituColors.iconInfo,
       'Symptom patterns',
       'Discover what triggers and affects you',
     ),
     (
-      Icons.star_outline,
+      LucideIcons.star,
       RituColors.fillCriticalSecondary,
       RituColors.iconCritical,
       'Cycle insights',
       'Get personalised predictions and phase insights',
     ),
     (
-      Icons.notes_outlined,
+      LucideIcons.notebookText,
       RituColors.fillAttentionSecondary,
       RituColors.iconAttention,
       'Monthly summaries',

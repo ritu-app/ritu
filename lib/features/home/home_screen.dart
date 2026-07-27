@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../app/app_scope.dart';
 import '../../core/date_format.dart';
@@ -287,7 +288,7 @@ class _HomeTab extends StatelessWidget {
             ),
             const Spacer(),
             const Icon(
-              Icons.edit_outlined,
+              LucideIcons.pencil,
               size: 18,
               color: RituColors.textDisabled,
             ),
@@ -348,9 +349,7 @@ class _Header extends StatelessWidget {
         Row(
           children: [
             Icon(
-              streak > 0
-                  ? Icons.local_fire_department
-                  : Icons.local_fire_department_outlined,
+              LucideIcons.flame,
               size: 20,
               color: streak > 0
                   ? RituColors.iconAttention
@@ -374,7 +373,7 @@ class _Header extends StatelessWidget {
               child: const Padding(
                 padding: EdgeInsets.all(4),
                 child: Icon(
-                  Icons.settings_outlined,
+                  LucideIcons.settings,
                   size: 22,
                   color: RituColors.textDisabled,
                 ),
@@ -603,7 +602,7 @@ class _LoggedTodayCard extends StatelessWidget {
           Row(
             children: [
               const Icon(
-                Icons.check_circle_outline,
+                LucideIcons.circleCheck,
                 size: 24,
                 color: RituColors.sage600,
               ),
@@ -832,7 +831,7 @@ class _SpeedUpBanner extends StatelessWidget {
               GestureDetector(
                 onTap: onDismiss,
                 child: const Icon(
-                  Icons.close,
+                  LucideIcons.x,
                   size: 18,
                   color: RituColors.textDisabled,
                 ),
@@ -872,10 +871,10 @@ class _BottomNav extends StatelessWidget {
   final ValueChanged<int> onTap;
 
   static const _items = [
-    (Icons.home_outlined, Icons.home, 'Home'),
-    (Icons.monitor_heart_outlined, Icons.monitor_heart, 'Insights'),
-    (Icons.menu_book_outlined, Icons.menu_book, 'Journal'),
-    (Icons.assignment_outlined, Icons.assignment, 'Reports'),
+    (LucideIcons.house, 'Home'),
+    (LucideIcons.activity, 'Insights'),
+    (LucideIcons.bookOpen, 'Journal'),
+    (LucideIcons.notepadText, 'Reports'),
   ];
 
   @override
@@ -899,7 +898,7 @@ class _BottomNav extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(
-                          currentIndex == i ? _items[i].$2 : _items[i].$1,
+                          _items[i].$1,
                           size: 22,
                           color: currentIndex == i
                               ? RituColors.sage600
@@ -907,7 +906,7 @@ class _BottomNav extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          _items[i].$3,
+                          _items[i].$2,
                           style: GoogleFonts.dmSans(
                             fontSize: 10,
                             fontWeight: FontWeight.w500,

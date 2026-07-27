@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../app/app_scope.dart';
 import '../../core/date_format.dart';
@@ -84,7 +85,7 @@ class _PeriodHistoryScreenState extends State<PeriodHistoryScreen> {
                 child: IconButton(
                   onPressed: _pop,
                   icon: const Icon(
-                    Icons.chevron_left,
+                    LucideIcons.chevronLeft,
                     size: 28,
                     color: RituColors.textPrimary,
                   ),

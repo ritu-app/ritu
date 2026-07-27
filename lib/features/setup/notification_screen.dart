@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../theme/ritu_colors.dart';
 import 'widgets/progress_dots.dart';
@@ -28,7 +29,7 @@ class NotificationScreen extends StatelessWidget {
               const ProgressDots(currentStep: 3),
               const Spacer(),
               const Icon(
-                Icons.notifications_none_rounded,
+                LucideIcons.bell,
                 size: 64,
                 color: RituColors.sage500,
               ),

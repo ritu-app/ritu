@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'package:ritu/app/ritu_app.dart';
 import 'package:ritu/core/date_format.dart';
@@ -9,6 +10,7 @@ import 'package:ritu/data/repositories/period_repository.dart';
 import 'package:ritu/data/repositories/profile_repository.dart';
 import 'package:ritu/data/repositories/symptom_repository.dart';
 import 'package:ritu/features/setup/widgets/choice_chips.dart';
+import 'package:ritu/theme/ritu_colors.dart';
 
 void main() {
   late AppDatabase database;
@@ -73,7 +75,7 @@ void main() {
     expect(profile?.displayName, 'Maya');
     expect(profile?.hasCompletedOnboarding, isTrue);
 
-    await tester.tap(find.byIcon(Icons.settings_outlined));
+    await tester.tap(find.byIcon(LucideIcons.settings));
     await tester.pumpAndSettle();
     expect(find.text('Maya'), findsOneWidget);
     expect(
@@ -83,7 +85,7 @@ void main() {
       findsOneWidget,
     );
 
-    await tester.tap(find.byIcon(Icons.chevron_left));
+    await tester.tap(find.byIcon(LucideIcons.chevronLeft));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Insights'));
@@ -169,7 +171,7 @@ void main() {
     await tester.pumpWidget(createRituApp(database: database));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byIcon(Icons.settings_outlined));
+    await tester.tap(find.byIcon(LucideIcons.settings));
     await tester.pumpAndSettle();
 
     await tester.scrollUntilVisible(
@@ -200,7 +202,7 @@ void main() {
     await tester.pumpWidget(createRituApp(database: database));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byIcon(Icons.settings_outlined));
+    await tester.tap(find.byIcon(LucideIcons.settings));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Maya'));
@@ -217,7 +219,7 @@ void main() {
     expect(find.text('Nora'), findsOneWidget);
     expect((await profiles.getProfile())?.displayName, 'Nora');
 
-    await tester.tap(find.byIcon(Icons.chevron_left));
+    await tester.tap(find.byIcon(LucideIcons.chevronLeft));
     await tester.pumpAndSettle();
 
     expect(find.text('Nora ✨'), findsOneWidget);
@@ -240,7 +242,7 @@ void main() {
     await tester.pumpWidget(createRituApp(database: database));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byIcon(Icons.settings_outlined));
+    await tester.tap(find.byIcon(LucideIcons.settings));
     await tester.pumpAndSettle();
 
     expect(find.text(formatDisplayDate(DateTime(2026, 6, 1))), findsOneWidget);
@@ -271,7 +273,7 @@ void main() {
     expect(dateOnly(latest.endedOn!), DateTime(2026, 6, 19));
     expect(latest.source, PeriodSources.settings);
 
-    await tester.tap(find.byIcon(Icons.chevron_left));
+    await tester.tap(find.byIcon(LucideIcons.chevronLeft));
     await tester.pumpAndSettle();
 
     expect(find.text('Last period $updatedLabel'), findsOneWidget);
@@ -292,7 +294,7 @@ void main() {
     await tester.pumpWidget(createRituApp(database: database));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byIcon(Icons.settings_outlined));
+    await tester.tap(find.byIcon(LucideIcons.settings));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Period Started'));
     await tester.pumpAndSettle();
@@ -300,7 +302,7 @@ void main() {
     expect(find.byType(Dialog), findsNothing);
 
     // Move to next month (should be blocked) and try a late day in current month.
-    final forward = find.byIcon(Icons.chevron_right);
+    final forward = find.byIcon(LucideIcons.chevronRight);
     await tester.tap(forward);
     await tester.pumpAndSettle();
 
@@ -358,7 +360,7 @@ void main() {
     await tester.pumpWidget(createRituApp(database: database));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byIcon(Icons.settings_outlined));
+    await tester.tap(find.byIcon(LucideIcons.settings));
     await tester.pumpAndSettle();
 
     expect(find.text('No dates added'), findsOneWidget);
@@ -392,7 +394,7 @@ void main() {
       DateTime(2026, 6, 20),
     );
 
-    await tester.tap(find.widgetWithIcon(IconButton, Icons.chevron_left));
+    await tester.tap(find.widgetWithIcon(IconButton, LucideIcons.chevronLeft));
     await tester.pumpAndSettle();
 
     expect(find.text('View and edit past dates'), findsOneWidget);
@@ -408,7 +410,7 @@ void main() {
     await tester.pumpWidget(createRituApp(database: database));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byIcon(Icons.settings_outlined));
+    await tester.tap(find.byIcon(LucideIcons.settings));
     await tester.pumpAndSettle();
 
     expect(find.text('Add your own symptoms to track'), findsOneWidget);
@@ -443,13 +445,13 @@ void main() {
     final stored = await symptomRepository.getAll();
     expect(stored.map((s) => s.name), ['Leg pain', 'Bacne']);
 
-    await tester.tap(find.byIcon(Icons.close).first);
+    await tester.tap(find.byIcon(LucideIcons.x).first);
     await tester.pumpAndSettle();
 
     expect(find.text('Leg pain'), findsNothing);
     expect(await symptomRepository.getAll(), hasLength(1));
 
-    await tester.tap(find.widgetWithIcon(IconButton, Icons.chevron_left));
+    await tester.tap(find.widgetWithIcon(IconButton, LucideIcons.chevronLeft));
     await tester.pumpAndSettle();
 
     expect(find.text('1 added'), findsOneWidget);
@@ -464,7 +466,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text("Complete today's check-in"), findsOneWidget);
-    expect(find.byIcon(Icons.local_fire_department_outlined), findsOneWidget);
+    expect(
+      tester.widget<Icon>(find.byIcon(LucideIcons.flame)).color,
+      RituColors.textDisabled,
+    );
     await tester.tap(find.text('Log today'));
     await tester.pumpAndSettle();
 
@@ -525,7 +530,10 @@ void main() {
     expect(find.text('Okay sleep'), findsOneWidget);
     expect(find.text('Bloating'), findsOneWidget);
     expect(find.text('Custom ache'), findsOneWidget);
-    expect(find.byIcon(Icons.local_fire_department), findsOneWidget);
+    expect(
+      tester.widget<Icon>(find.byIcon(LucideIcons.flame)).color,
+      RituColors.iconAttention,
+    );
 
     final dailyLogs = DailyLogRepository(database);
     final entry = await dailyLogs.getByDate(DateTime.now());
@@ -610,9 +618,9 @@ void main() {
         flowIntensity: 'Light',
       );
 
-      await tester.tap(find.byIcon(Icons.settings_outlined));
+      await tester.tap(find.byIcon(LucideIcons.settings));
       await tester.pumpAndSettle();
-      await tester.tap(find.byIcon(Icons.chevron_left));
+      await tester.tap(find.byIcon(LucideIcons.chevronLeft));
       await tester.pumpAndSettle();
 
       expect(find.text('2 of 14 days – pattern unlock at 14'), findsOneWidget);

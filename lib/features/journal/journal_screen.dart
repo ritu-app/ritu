@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../theme/ritu_colors.dart';
 
@@ -20,28 +21,28 @@ class _JournalScreenState extends State<JournalScreen> {
 
   static const _helpItems = [
     (
-      Icons.sentiment_satisfied_alt_outlined,
+      LucideIcons.smile,
       RituColors.fillCriticalSecondary,
       RituColors.iconCritical,
       'Reduce stress',
       'Writing helps you release your thoughts',
     ),
     (
-      Icons.auto_awesome,
+      LucideIcons.sparkles,
       RituColors.fillPositiveSecondary,
       RituColors.textPositive,
       'Increase clarity',
       'Journaling helps you think more clearly',
     ),
     (
-      Icons.hub_outlined,
+      LucideIcons.network,
       RituColors.fillInfoSecondary,
       RituColors.iconInfo,
       'Improve well-being',
       'Boost your mood and support daily balance',
     ),
     (
-      Icons.psychology_outlined,
+      LucideIcons.brain,
       RituColors.fillAttentionSecondary,
       RituColors.iconAttention,
       'Build self awareness',

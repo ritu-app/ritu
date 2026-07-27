@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../theme/ritu_colors.dart';
 
@@ -81,7 +82,7 @@ class _AddSymptomDialogState extends State<_AddSymptomDialog> {
                     onTap: () => Navigator.of(context).pop(),
                     behavior: HitTestBehavior.opaque,
                     child: const Icon(
-                      Icons.close,
+                      LucideIcons.x,
                       size: 24,
                       color: RituColors.textPrimary,
                     ),

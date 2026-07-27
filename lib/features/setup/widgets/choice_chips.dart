@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../theme/ritu_colors.dart';
 
@@ -86,7 +87,7 @@ class RituDateChip extends StatelessWidget {
             child: const Padding(
               padding: EdgeInsets.all(2),
               child: Icon(
-                Icons.close,
+                LucideIcons.x,
                 size: 16,
                 color: RituColors.sage600,
               ),

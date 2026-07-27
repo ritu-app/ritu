@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../theme/ritu_colors.dart';
 
@@ -12,28 +13,28 @@ class ReportsScreen extends StatelessWidget {
 
   static const _valueItems = [
     (
-      Icons.sticky_note_2_outlined,
+      LucideIcons.stickyNote,
       RituColors.fillAttentionSecondary,
       RituColors.iconAttention,
       'Generate professional reports',
       'Export your health data in a clear format',
     ),
     (
-      Icons.medical_services_outlined,
+      LucideIcons.stethoscope,
       RituColors.fillInfoSecondary,
       RituColors.iconInfo,
       'Share with healthcare professionals',
       'Support more informed health conversations',
     ),
     (
-      Icons.thumb_up_outlined,
+      LucideIcons.thumbsUp,
       RituColors.fillPositiveSecondary,
       RituColors.textPositive,
       'Make more informed decisions',
       'Use insights to support your well-being',
     ),
     (
-      Icons.local_library_outlined,
+      LucideIcons.library,
       RituColors.fillCriticalSecondary,
       RituColors.iconCritical,
       'Keep everything in one place',

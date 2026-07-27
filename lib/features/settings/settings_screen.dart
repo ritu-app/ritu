@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../app/app_scope.dart';
 import '../../core/date_format.dart';
@@ -188,7 +189,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     _SettingsGroup(
                       children: [
                         _SettingsRow(
-                          icon: Icons.calendar_today_outlined,
+                          icon: LucideIcons.calendar,
                           iconBackground: RituColors.fillPositiveSecondary,
                           iconColor: RituColors.sage600,
                           title: 'Period Started',
@@ -196,7 +197,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           onTap: _editPeriodStarted,
                         ),
                         _SettingsRow(
-                          icon: Icons.history,
+                          icon: LucideIcons.history,
                           iconBackground: RituColors.fillPositiveSecondary,
                           iconColor: RituColors.sage600,
                           title: 'Period History',
@@ -204,14 +205,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           onTap: _editPeriodHistory,
                         ),
                         _SettingsRow(
-                          icon: Icons.schedule_outlined,
+                          icon: LucideIcons.clock,
                           iconBackground: RituColors.fillPositiveSecondary,
                           iconColor: RituColors.sage600,
                           title: 'Cycle Learning',
                           subtitle: 'Unclassified – needs 3 cycles',
                         ),
                         _SettingsRow(
-                          icon: Icons.add_circle_outline,
+                          icon: LucideIcons.circlePlus,
                           iconBackground: RituColors.fillPositiveSecondary,
                           iconColor: RituColors.sage600,
                           title: 'Custom Symptoms',
@@ -227,21 +228,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     const _SettingsGroup(
                       children: [
                         _SettingsRow(
-                          icon: Icons.notifications_none_rounded,
+                          icon: LucideIcons.bell,
                           iconBackground: RituColors.fillAttentionSecondary,
                           iconColor: RituColors.iconAttention,
                           title: 'Daily Reminder',
                           subtitle: '8:00 AM',
                         ),
                         _SettingsRow(
-                          icon: Icons.auto_awesome,
+                          icon: LucideIcons.sparkles,
                           iconBackground: RituColors.fillAttentionSecondary,
                           iconColor: RituColors.iconAttention,
                           title: 'Insight Alerts',
                           subtitle: 'When Ritu spots something new',
                         ),
                         _SettingsRow(
-                          icon: Icons.nightlight_round,
+                          icon: LucideIcons.moon,
                           iconBackground: RituColors.fillAttentionSecondary,
                           iconColor: RituColors.iconAttention,
                           title: 'Period Reminder',
@@ -256,28 +257,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     _SettingsGroup(
                       children: [
                         const _SettingsRow(
-                          icon: Icons.cloud_upload_outlined,
+                          icon: LucideIcons.cloudUpload,
                           iconBackground: RituColors.fillInfoSecondary,
                           iconColor: RituColors.iconInfo,
                           title: 'iCloud Backup',
                           subtitle: 'Off',
                         ),
                         const _SettingsRow(
-                          icon: Icons.ios_share_outlined,
+                          icon: LucideIcons.share,
                           iconBackground: RituColors.fillPositiveSecondary,
                           iconColor: RituColors.sage600,
                           title: 'Export Data',
                           subtitle: 'Download a complete copy of everything',
                         ),
                         const _SettingsRow(
-                          icon: Icons.bar_chart_rounded,
+                          icon: LucideIcons.chartColumn,
                           iconBackground: RituColors.fillAttentionSecondary,
                           iconColor: RituColors.iconAttention,
                           title: 'Usage Analytics',
                           subtitle: 'Helps improve Ritu – no personal data',
                         ),
                         _SettingsRow(
-                          icon: Icons.delete_outline,
+                          icon: LucideIcons.trash2,
                           iconBackground: RituColors.fillCriticalSecondary,
                           iconColor: RituColors.iconCritical,
                           title: 'Delete Data',
@@ -293,25 +294,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     const _SettingsGroup(
                       children: [
                         _SettingsRow(
-                          icon: Icons.help_outline,
+                          icon: LucideIcons.circleHelp,
                           iconBackground: RituColors.fillInfoSecondary,
                           iconColor: RituColors.iconInfo,
                           title: 'Help & Support',
                         ),
                         _SettingsRow(
-                          icon: Icons.lock_outline,
+                          icon: LucideIcons.lock,
                           iconBackground: RituColors.fillInfoSecondary,
                           iconColor: RituColors.iconInfo,
                           title: 'Privacy Policy',
                         ),
                         _SettingsRow(
-                          icon: Icons.description_outlined,
+                          icon: LucideIcons.fileText,
                           iconBackground: RituColors.fillInfoSecondary,
                           iconColor: RituColors.iconInfo,
                           title: 'Terms of Service',
                         ),
                         _SettingsRow(
-                          icon: Icons.info_outline,
+                          icon: LucideIcons.info,
                           iconBackground: RituColors.fillInfoSecondary,
                           iconColor: RituColors.iconInfo,
                           title: 'About Ritu',
@@ -346,7 +347,7 @@ class _SettingsAppBar extends StatelessWidget {
           IconButton(
             onPressed: onBack,
             icon: const Icon(
-              Icons.chevron_left,
+              LucideIcons.chevronLeft,
               size: 28,
               color: RituColors.textPrimary,
             ),
@@ -567,7 +568,7 @@ class _SettingsRow extends StatelessWidget {
                   ),
                 ),
                 const Icon(
-                  Icons.chevron_right,
+                  LucideIcons.chevronRight,
                   size: 16,
                   color: RituColors.textDisabled,
                 ),

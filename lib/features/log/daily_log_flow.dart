@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../app/app_scope.dart';
 import '../../core/date_format.dart';
@@ -532,7 +533,11 @@ class _BodySignalsStep extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.add, size: 16, color: RituColors.textPositive),
+              const Icon(
+                LucideIcons.plus,
+                size: 16,
+                color: RituColors.textPositive,
+              ),
               const SizedBox(width: 4),
               Text(
                 'Add your own',

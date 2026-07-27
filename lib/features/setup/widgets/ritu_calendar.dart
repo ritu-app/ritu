@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/date_format.dart';
 import '../../../theme/ritu_colors.dart';
@@ -113,7 +114,7 @@ class RituCalendar extends StatelessWidget {
           Row(
             children: [
               _NavIcon(
-                icon: Icons.chevron_left,
+                icon: LucideIcons.chevronLeft,
                 onTap: () => onMonthChanged(
                   DateTime(firstOfMonth.year, firstOfMonth.month - 1),
                 ),
@@ -131,7 +132,7 @@ class RituCalendar extends StatelessWidget {
                 ),
               ),
               _NavIcon(
-                icon: Icons.chevron_right,
+                icon: LucideIcons.chevronRight,
                 enabled: canGoForward,
                 onTap: () => onMonthChanged(
                   DateTime(firstOfMonth.year, firstOfMonth.month + 1),
