@@ -14,6 +14,34 @@ flutter pub get
 flutter run -d macos    # or: flutter run -d chrome / -d <ios-simulator-id>
 ```
 
+### Running in a browser
+
+To launch it in Chrome with hot reload:
+
+```bash
+cd widgetbook
+flutter run -d chrome
+```
+
+Once it's running, use the keys printed in the terminal: `r` for hot reload,
+`R` for hot restart, `q` to quit.
+
+If you'd rather use a different browser (or don't want a dedicated Chrome
+window to pop up), run it as a plain web server instead and open the printed
+URL yourself:
+
+```bash
+cd widgetbook
+flutter run -d web-server
+# then open the printed http://localhost:<port> URL in any browser
+```
+
+To see which browsers/devices Flutter can already target on your machine:
+
+```bash
+flutter devices
+```
+
 To build a deployable web bundle (e.g. for GitHub Pages or Widgetbook Cloud):
 
 ```bash
