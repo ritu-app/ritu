@@ -25,7 +25,7 @@ class NotificationScreen extends StatelessWidget {
           child: Column(
             children: [
               const SizedBox(height: 16),
-              const ProgressDots(currentStep: 4),
+              const ProgressDots(currentStep: 3),
               const Spacer(),
               const Icon(
                 Icons.notifications_none_rounded,

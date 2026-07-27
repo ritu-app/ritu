@@ -43,7 +43,7 @@ class LastPeriodScreen extends StatefulWidget {
 class _LastPeriodScreenState extends State<LastPeriodScreen> {
   late DateTime _visibleMonth;
   DateTime? _selectedDate;
-  PeriodDuration _duration = PeriodDuration.fourToFive;
+  PeriodDuration? _duration;
 
   @override
   void initState() {
@@ -138,10 +138,12 @@ class _LastPeriodScreenState extends State<LastPeriodScreen> {
               ),
               SetupFooter(
                 primaryLabel: 'This look right',
+                primaryEnabled: _selectedDate != null && _duration != null,
                 onPrimary: () {
                   final date = _selectedDate;
-                  if (date == null) return;
-                  widget.onContinue?.call(date, _duration);
+                  final duration = _duration;
+                  if (date == null || duration == null) return;
+                  widget.onContinue?.call(date, duration);
                 },
                 secondaryLabel: 'Skip – I’ll log from today',
                 onSecondary: widget.onSkip ?? () {},

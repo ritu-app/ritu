@@ -6,7 +6,7 @@ class ProgressDots extends StatelessWidget {
   const ProgressDots({
     super.key,
     required this.currentStep,
-    this.totalSteps = 4,
+    this.totalSteps = 3,
   });
 
   /// 1-based step index.

@@ -34,7 +34,7 @@ class _PastDatesScreenState extends State<PastDatesScreen> {
           child: Column(
             children: [
               const SizedBox(height: 16),
-              const ProgressDots(currentStep: 3),
+              const ProgressDots(currentStep: 2),
               const SizedBox(height: 24),
               Expanded(
                 child: SingleChildScrollView(

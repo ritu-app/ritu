@@ -52,6 +52,10 @@ void main() {
     await tester.tap(find.text('Continue'));
     await tester.pumpAndSettle();
 
+    await tester.ensureVisible(find.text('4-5 days'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('4-5 days'));
+    await tester.pump();
     await tester.tap(find.text('This look right'));
     await tester.pumpAndSettle();
 
@@ -117,6 +121,10 @@ void main() {
     await tester.tap(find.text('Continue'));
     await tester.pumpAndSettle();
 
+    await tester.ensureVisible(find.text('4-5 days'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('4-5 days'));
+    await tester.pump();
     await tester.tap(find.text('This look right'));
     await tester.pumpAndSettle();
 
