@@ -1,8 +1,8 @@
 import 'package:drift/drift.dart';
-import 'package:drift/native.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 
+import 'memory_executor.dart';
 import 'tables/custom_symptoms.dart';
 import 'tables/daily_logs.dart';
 import 'tables/period_logs.dart';
@@ -14,8 +14,9 @@ part 'app_database.g.dart';
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
-  /// In-memory database for widget/unit tests.
-  AppDatabase.memory() : super(NativeDatabase.memory());
+  /// In-memory database for widget/unit tests. Native platforms only — see
+  /// `memory_executor.dart`.
+  AppDatabase.memory() : super(createMemoryExecutor());
 
   @override
   int get schemaVersion => 4;

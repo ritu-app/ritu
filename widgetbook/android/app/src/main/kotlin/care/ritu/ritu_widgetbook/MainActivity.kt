@@ -1,0 +1,5 @@
+package care.ritu.ritu_widgetbook
+
+import io.flutter.embedding.android.FlutterActivity
+
+class MainActivity : FlutterActivity()
