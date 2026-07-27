@@ -188,7 +188,8 @@ class RituCalendar extends StatelessWidget {
     final isMarked = selectable && _isMarked(date);
     final isPeriod = _isPeriod(date);
     final isPreview = !isSelected && selectable && _isPreview(date);
-    final showTodayDot = isPeriod && _isToday(date);
+    final isToday = selectable && _isToday(date);
+    final showTodayDot = isPeriod && isToday;
     final dayColor = !selectable
         ? RituColors.textDisabled
         : isPeriod
@@ -284,10 +285,11 @@ class RituCalendar extends StatelessWidget {
                         ),
                       ),
                       if (isMarked ||
+                          isToday ||
                           (selectionStyle ==
                                   RituCalendarSelectionStyle.dotted &&
                               isSelected))
-                        const Positioned(
+                        Positioned(
                           bottom: 0,
                           child: SizedBox(
                             width: 4,
@@ -295,7 +297,11 @@ class RituCalendar extends StatelessWidget {
                             child: DecoratedBox(
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: RituColors.sage500,
+                                color: isToday
+                                    ? RituColors.sage600
+                                    : isMarked
+                                        ? RituColors.cycleMenstrual
+                                        : RituColors.sage500,
                               ),
                             ),
                           ),

@@ -153,7 +153,6 @@ class PastPeriodDatesEditorState extends State<PastPeriodDatesEditor> {
           month: _visibleMonth,
           selectedDate: _pendingDate,
           markedDates: _dates.toSet(),
-          selectionStyle: RituCalendarSelectionStyle.dotted,
           maxSelectableDate: _maxDate,
           onMonthChanged: (month) {
             setState(() => _visibleMonth = month);
