@@ -6,7 +6,6 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../providers/app_restart_provider.dart';
 import '../../providers/period_providers.dart';
 import '../../providers/profile_providers.dart';
-import '../../providers/repository_access.dart';
 import '../../providers/repository_providers.dart';
 import '../../providers/symptom_providers.dart';
 import '../../core/date_format.dart';
@@ -121,7 +120,7 @@ class SettingsScreen extends ConsumerWidget {
   }
 }
 
-class _SettingsBody extends StatelessWidget {
+class _SettingsBody extends ConsumerWidget {
   const _SettingsBody({
     required this.name,
     required this.loggingSince,
@@ -157,11 +156,11 @@ class _SettingsBody extends StatelessWidget {
     Navigator.of(context).pop(name);
   }
 
-  Future<void> _editName(BuildContext context) async {
+  Future<void> _editName(BuildContext context, WidgetRef ref) async {
     final updated = await showEditNameDialog(context, currentName: name);
     if (updated == null || !context.mounted) return;
     if (updated == name) return;
-    await context.profiles.upsertDisplayName(updated);
+    await ref.read(profileRepositoryProvider).upsertDisplayName(updated);
   }
 
   Future<void> _editPeriodStarted(BuildContext context) async {
@@ -189,7 +188,7 @@ class _SettingsBody extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
@@ -210,7 +209,7 @@ class _SettingsBody extends StatelessWidget {
                       initial: _initial,
                       name: name,
                       loggingSinceLabel: _loggingSinceLabel,
-                      onNameTap: () => _editName(context),
+                      onNameTap: () => _editName(context, ref),
                     ),
                     const SizedBox(height: 20),
                     const _SectionLabel('Cycle & Tracking'),

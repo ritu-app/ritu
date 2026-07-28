@@ -5,7 +5,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../providers/profile_providers.dart';
 import '../../providers/period_providers.dart';
-import '../../providers/repository_access.dart';
+import '../../providers/repository_providers.dart';
 import '../../core/date_format.dart';
 import '../../data/repositories/period_repository.dart';
 import '../../theme/ritu_colors.dart';
@@ -65,7 +65,7 @@ class _PeriodStartedScreenState extends ConsumerState<PeriodStartedScreen> {
     if (selected == null || _saving) return;
 
     setState(() => _saving = true);
-    await context.periods.updateLatestStartedOn(
+    await ref.read(periodRepositoryProvider).updateLatestStartedOn(
       newStartedOn: selected,
       typicalPeriodDays: _typicalPeriodDays,
     );

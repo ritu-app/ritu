@@ -8,8 +8,8 @@ import 'package:widgetbook/widgetbook.dart';
 import 'package:widgetbook_annotation/widgetbook_annotation.dart' as widgetbook;
 
 // These onboarding screens take plain callbacks rather than reading from
-// Onboarding screens don't read repositories via `context.profiles` until
-// later steps, so — unlike the Home/Settings use-cases — they don't need
+// Onboarding screens don't touch repositories until later steps, so —
+// unlike the Home/Settings use-cases — they don't need
 // `SeededAppScope`/an in-memory database.
 
 @widgetbook.UseCase(

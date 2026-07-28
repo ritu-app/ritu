@@ -81,7 +81,7 @@ touch the database and render normally on web.
      `object.dropdown`, etc.) to make props interactive instead of
      hardcoding example values.
 4. If the widget/screen reads repositories via Riverpod (i.e. it uses
-   `context.profiles` / `context.periods` / etc., directly or transitively),
+   `ref.watch` / `ref.read` on repository providers, directly or transitively),
    wrap it in `SeededAppScope` (see
    [lib/support/seeded_app_scope.dart](lib/support/seeded_app_scope.dart))
    and seed whatever fake data the use-case needs:

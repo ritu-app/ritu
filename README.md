@@ -54,6 +54,20 @@ This runs the widget tests ([test/widget_test.dart](test/widget_test.dart)) and 
 flutter test test/widget_test.dart
 ```
 
+Widget tests that mount the app use `rituTestWidgets`, which unmounts the widget tree before each test ends so Drift stream subscriptions cancel cleanly.
+
+## Code generation
+
+After changing Drift tables or the `@DriftDatabase` annotation:
+
+```bash
+dart run build_runner build
+```
+
+Generated output: `lib/data/local/app_database.g.dart` (committed to the repo).
+
+Riverpod `@riverpod` codegen is **not** wired up yet — `riverpod_generator` currently conflicts with `drift_dev` on the shared `build_runner` / `analyzer` versions. Providers in `lib/providers/` are hand-written `Provider` / `StreamProvider` declarations for now.
+
 ## Generate an iOS test build (TestFlight)
 
 You need an [Apple Developer Program](https://developer.apple.com/programs/) membership and an app record in [App Store Connect](https://appstoreconnect.apple.com) with bundle ID `care.ritu.ritu`.

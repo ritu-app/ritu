@@ -5,7 +5,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../providers/period_providers.dart';
 import '../../providers/profile_providers.dart';
-import '../../providers/repository_access.dart';
+import '../../providers/repository_providers.dart';
 import '../../core/date_format.dart';
 import '../../theme/ritu_colors.dart';
 import '../setup/widgets/past_period_dates_editor.dart';
@@ -102,12 +102,15 @@ class PeriodHistoryScreen extends ConsumerWidget {
                           PastPeriodDatesEditor(
                             initialDates: pastDates,
                             maxSelectableDate: maxSelectableDate,
-                            onDateAdded: (date) => context.periods.addPastStart(
+                            onDateAdded: (date) => ref
+                                .read(periodRepositoryProvider)
+                                .addPastStart(
                               startedOn: date,
                               typicalPeriodDays: typicalDays,
                             ),
-                            onDateRemoved: (date) =>
-                                context.periods.deleteByStartedOn(date),
+                            onDateRemoved: (date) => ref
+                                .read(periodRepositoryProvider)
+                                .deleteByStartedOn(date),
                           ),
                         ],
                       ),

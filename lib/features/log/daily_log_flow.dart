@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../providers/daily_log_providers.dart';
-import '../../providers/repository_access.dart';
+import '../../providers/repository_providers.dart';
 import '../../providers/symptom_providers.dart';
 import '../../core/date_format.dart';
 import '../../data/models/custom_symptom.dart';
@@ -132,7 +132,7 @@ class _DailyLogFlowState extends ConsumerState<DailyLogFlow> {
   Future<void> _addOwnSymptom() async {
     final name = await showAddSymptomDialog(context);
     if (name == null || name.trim().isEmpty || !mounted) return;
-    final added = await context.symptoms.addSymptom(name);
+    final added = await ref.read(symptomRepositoryProvider).addSymptom(name);
     if (!mounted || added == null) return;
     setState(() {
       if (!_customSymptomNames.contains(added.name)) {
@@ -145,7 +145,7 @@ class _DailyLogFlowState extends ConsumerState<DailyLogFlow> {
   Future<void> _save() async {
     if (_saving) return;
     setState(() => _saving = true);
-    await context.dailyLogs.upsert(
+    await ref.read(dailyLogRepositoryProvider).upsert(
       loggedOn: widget.date,
       flowIntensity: _flowIntensity,
       crampIntensity: _crampIntensity,

@@ -10,10 +10,10 @@ import '../features/setup/notification_screen.dart';
 import '../features/setup/past_dates_screen.dart';
 import '../features/splash/splash_screen.dart';
 import '../providers/app_restart_provider.dart';
-import '../providers/profile_providers.dart';
-import '../providers/repository_access.dart';
-import '../theme/ritu_theme.dart';
 import '../providers/database_provider.dart';
+import '../providers/profile_providers.dart';
+import '../providers/repository_providers.dart';
+import '../theme/ritu_theme.dart';
 
 class RituApp extends ConsumerWidget {
   const RituApp({super.key});
@@ -59,50 +59,48 @@ class _AppBootstrap extends ConsumerWidget {
   }
 }
 
-class _OnboardingFlow extends StatelessWidget {
+class _OnboardingFlow extends ConsumerWidget {
   const _OnboardingFlow();
 
   void _push(BuildContext context, Widget page) {
     Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => page));
   }
 
-  Future<void> _goHome(BuildContext context, String name) async {
-    await context.profiles.markOnboardingCompleted();
-    if (!context.mounted) return;
-    final container = ProviderScope.containerOf(context);
-    container.invalidate(profileProvider);
-    container.read(appRestartProvider.notifier).state++;
+  Future<void> _goHome(WidgetRef ref) async {
+    await ref.read(profileRepositoryProvider).markOnboardingCompleted();
+    ref.invalidate(profileProvider);
+    ref.read(appRestartProvider.notifier).state++;
   }
 
-  Widget _pastDates(BuildContext context, String name) {
+  Widget _pastDates(BuildContext context, WidgetRef ref, String name) {
     return PastDatesScreen(
       onContinue: (dates) async {
-        final profiles = context.profiles;
-        final periods = context.periods;
+        final profiles = ref.read(profileRepositoryProvider);
+        final periods = ref.read(periodRepositoryProvider);
         final typical = (await profiles.getProfile())?.typicalPeriodDays;
         await periods.recordPastStarts(
           startedOnDates: dates,
           typicalPeriodDays: typical,
         );
         if (!context.mounted) return;
-        _push(context, _notifications(context, name));
+        _push(context, _notifications(context, ref, name));
       },
-      onSkip: () => _push(context, _notifications(context, name)),
+      onSkip: () => _push(context, _notifications(context, ref, name)),
     );
   }
 
-  Widget _notifications(BuildContext context, String name) {
+  Widget _notifications(BuildContext context, WidgetRef ref, String name) {
     return NotificationScreen(
-      onTurnOn: () => _goHome(context, name),
-      onSkip: () => _goHome(context, name),
+      onTurnOn: () => _goHome(ref),
+      onSkip: () => _goHome(ref),
     );
   }
 
-  Widget _lastPeriod(BuildContext context, String name) {
+  Widget _lastPeriod(BuildContext context, WidgetRef ref, String name) {
     return LastPeriodScreen(
       onContinue: (startedOn, duration) async {
-        final profiles = context.profiles;
-        final periods = context.periods;
+        final profiles = ref.read(profileRepositoryProvider);
+        final periods = ref.read(periodRepositoryProvider);
         final days = duration.typicalDays;
         await profiles.setTypicalPeriodDays(days);
         await periods.recordLastPeriod(
@@ -110,28 +108,30 @@ class _OnboardingFlow extends StatelessWidget {
           typicalPeriodDays: days,
         );
         if (!context.mounted) return;
-        _push(context, _pastDates(context, name));
+        _push(context, _pastDates(context, ref, name));
       },
-      onSkip: () => _push(context, _pastDates(context, name)),
+      onSkip: () => _push(context, _pastDates(context, ref, name)),
     );
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return SplashScreen(
       onGetStarted: () {
         _push(
           context,
           NameScreen(
             onContinue: (name) async {
-              await context.profiles.upsertDisplayName(name);
+              await ref
+                  .read(profileRepositoryProvider)
+                  .upsertDisplayName(name);
               if (!context.mounted) return;
               _push(
                 context,
                 ConfirmationScreen(
                   name: name,
                   onContinue: () {
-                    _push(context, _lastPeriod(context, name));
+                    _push(context, _lastPeriod(context, ref, name));
                   },
                 ),
               );

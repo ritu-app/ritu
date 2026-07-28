@@ -83,7 +83,7 @@ Domain models in `lib/data/models/` have no Drift imports. Row mapping lives in 
 
 ## Riverpod providers (`lib/providers/`)
 
-Screens read data via `ref.watch` on StreamProviders; writes still go through repository `ref.read` / `context.profiles` etc.
+Screens read data via `ref.watch` on StreamProviders; writes use `ref.read` on the repository providers below.
 
 | Provider | Source |
 |----------|--------|
@@ -98,6 +98,8 @@ Screens read data via `ref.watch` on StreamProviders; writes still go through re
 | `dailyLogByDateProvider(date)` | `watchByDate(date)` |
 | `totalLoggedDaysProvider` | `watchTotalLoggedDays()` |
 | `currentStreakProvider` | `watchCurrentStreak()` |
+
+Providers are hand-written today. `@riverpod` codegen is deferred until `riverpod_generator` can coexist with `drift_dev` on the same `build_runner` toolchain.
 
 ## Schema
 

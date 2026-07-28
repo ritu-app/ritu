@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '../../providers/repository_access.dart';
+import '../../providers/repository_providers.dart';
 import '../../providers/symptom_providers.dart';
 import '../../data/repositories/symptom_repository.dart';
 import '../../theme/ritu_colors.dart';
@@ -38,7 +38,7 @@ class _CustomSymptomsScreenState extends ConsumerState<CustomSymptomsScreen> {
     if (name.isEmpty || _busy) return;
 
     setState(() => _busy = true);
-    await context.symptoms.addSymptom(name);
+    await ref.read(symptomRepositoryProvider).addSymptom(name);
     if (!mounted) return;
     setState(() {
       _busy = false;
@@ -49,7 +49,7 @@ class _CustomSymptomsScreenState extends ConsumerState<CustomSymptomsScreen> {
   Future<void> _removeSymptom(CustomSymptom symptom) async {
     if (_busy) return;
     setState(() => _busy = true);
-    await context.symptoms.deleteSymptom(symptom.id);
+    await ref.read(symptomRepositoryProvider).deleteSymptom(symptom.id);
     if (!mounted) return;
     setState(() => _busy = false);
   }
