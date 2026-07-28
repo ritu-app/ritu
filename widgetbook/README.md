@@ -50,13 +50,9 @@ flutter build web
 # output in widgetbook/build/web — serve it with any static file host
 ```
 
-**Note on web:** screen-level use-cases (anything under `[Screens]/...`) spin
-up an in-memory Drift database via `AppDatabase.memory()`, which uses drift's
-native (FFI-based) sqlite backend — not available on web. So the app *builds
-and runs* on web, but those specific use-cases show a "Not available on web"
-placeholder ([lib/support/seeded_app_scope.dart](lib/support/seeded_app_scope.dart))
-instead of crashing. Component-level use-cases (`[Components]/...`) don't
-touch the database and render normally on web.
+**Note on web:** screen-level use-cases use in-memory repository fakes (no
+SQLite), so Home, Settings, and related screens preview normally on web.
+Component-level use-cases also render normally.
 
 ## Deploy to Vercel (GitHub Actions)
 
@@ -84,6 +80,10 @@ The workflow builds on GitHub (which has Flutter) and uploads
 
 The workflow runs when files under `widgetbook/`, `lib/`, or root `pubspec.yaml` change.
 
+Screen use-cases on the deployed site use in-memory repository fakes (see
+[lib/support/seeded_app_scope.dart](lib/support/seeded_app_scope.dart)), so
+Home and Settings previews work on web without SQLite.
+
 ### Local preview of the production bundle
 
 ```bash
@@ -93,11 +93,6 @@ cd build/web
 python3 -m http.server 8080
 # open http://localhost:8080
 ```
-
-### Web limitations (reminder)
-
-`[Screens]/...` use-cases show a placeholder on web because in-memory Drift needs native SQLite.
-`[Components]/...` render normally — enough for a shared design-system link.
 
 ## Adding a use-case
 
@@ -135,7 +130,7 @@ python3 -m http.server 8080
          await seedOnboardedProfile(repos);
          await repos.dailyLogs.upsert(loggedOn: DateTime.now(), flowIntensity: 'Light');
        },
-       builder: (context) => HomeScreen(name: 'Maya', loggingSince: DateTime.now()),
+       builder: (context) => const HomeScreen(),
      );
    }
    ```
@@ -170,7 +165,7 @@ lib/
   main.dart                     Entry point + addon configuration
   main.directories.g.dart       Generated navigation tree (commit this)
   support/
-    seeded_app_scope.dart       ProviderScope + in-memory DB helper for screen use-cases
+    seeded_app_scope.dart       In-memory repo fakes + ProviderScope for screen use-cases
   use_cases/
     components/                 Chips, buttons, progress dots, slider, calendar
     screens/                    Home, Settings, Onboarding

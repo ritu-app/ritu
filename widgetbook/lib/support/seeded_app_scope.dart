@@ -1,16 +1,15 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:ritu/data/local/app_database.dart';
 import 'package:ritu/data/repositories/daily_log_repository.dart';
-import 'package:ritu/data/repositories/drift/drift_daily_log_repository.dart';
-import 'package:ritu/data/repositories/drift/drift_period_repository.dart';
-import 'package:ritu/data/repositories/drift/drift_profile_repository.dart';
-import 'package:ritu/data/repositories/drift/drift_symptom_repository.dart';
+import 'package:ritu/data/repositories/memory/memory_daily_log_repository.dart';
+import 'package:ritu/data/repositories/memory/memory_period_repository.dart';
+import 'package:ritu/data/repositories/memory/memory_profile_repository.dart';
+import 'package:ritu/data/repositories/memory/memory_ritu_store.dart';
+import 'package:ritu/data/repositories/memory/memory_symptom_repository.dart';
 import 'package:ritu/data/repositories/period_repository.dart';
 import 'package:ritu/data/repositories/profile_repository.dart';
 import 'package:ritu/data/repositories/symptom_repository.dart';
-import 'package:ritu/providers/database_provider.dart';
+import 'package:ritu/providers/repository_providers.dart';
 
 /// The four repositories a use-case's [SeededAppScope.seed] callback can use
 /// to fake data before the wrapped screen is shown.
@@ -23,15 +22,11 @@ class RituRepos {
   final DailyLogRepository dailyLogs;
 }
 
-/// Wraps [builder] in a [ProviderScope] backed by a fresh in-memory
-/// [AppDatabase], after running [seed] against it — the same pattern
-/// `test/widget_test.dart` uses for widget tests, reused here so screens that
-/// read repositories via [ProviderScope] can be previewed with fake data.
+/// Wraps [builder] in a [ProviderScope] backed by in-memory repository fakes,
+/// after running [seed] — works on web and native without Drift/SQLite.
 ///
-/// [AppDatabase.memory] relies on drift's native (FFI) sqlite backend, which
-/// isn't available on web, so on web this shows a placeholder instead of
-/// crashing. Component-level use-cases (which don't need [SeededAppScope])
-/// are unaffected and render normally on web.
+/// Screens read data through Riverpod stream providers; the memory repos emit
+/// the same reactive updates as the Drift implementations used in tests.
 class SeededAppScope extends StatefulWidget {
   const SeededAppScope({super.key, required this.seed, required this.builder});
 
@@ -43,85 +38,58 @@ class SeededAppScope extends StatefulWidget {
 }
 
 class _SeededAppScopeState extends State<SeededAppScope> {
-  AppDatabase? _db;
+  MemoryRituStore? _store;
+  RituRepos? _repos;
+  var _ready = false;
 
   @override
   void initState() {
     super.initState();
-    if (!kIsWeb) _init();
+    _init();
   }
 
-  // Deliberately seeds once in [initState] rather than reacting to prop
-  // changes: each use-case in the navigation tree is its own distinct route,
-  // so switching use-cases disposes/recreates this widget (and reseeds)
-  // naturally. Knobs that should vary the seed belong on a per-use-case
-  // `ValueKey` instead of comparing closures, which are never `==`.
   Future<void> _init() async {
-    final db = AppDatabase.memory();
+    final store = MemoryRituStore();
     final repos = RituRepos(
-      DriftProfileRepository(db),
-      DriftPeriodRepository(db),
-      DriftSymptomRepository(db),
-      DriftDailyLogRepository(db),
+      MemoryProfileRepository(store),
+      MemoryPeriodRepository(store),
+      MemorySymptomRepository(store),
+      MemoryDailyLogRepository(store),
     );
     await widget.seed(repos);
-    if (!mounted) return;
-    setState(() => _db = db);
+    if (!mounted) {
+      store.dispose();
+      return;
+    }
+    setState(() {
+      _store = store;
+      _repos = repos;
+      _ready = true;
+    });
   }
 
   @override
   void dispose() {
-    _db?.close();
+    _store?.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (kIsWeb) {
-      return const _WebUnsupportedPlaceholder();
-    }
-
-    final db = _db;
-    if (db == null) {
+    if (!_ready) {
       return const Center(child: CircularProgressIndicator());
     }
 
+    final repos = _repos!;
+
     return ProviderScope(
-      overrides: [databaseProvider.overrideWithValue(db)],
+      overrides: [
+        profileRepositoryProvider.overrideWithValue(repos.profiles),
+        periodRepositoryProvider.overrideWithValue(repos.periods),
+        symptomRepositoryProvider.overrideWithValue(repos.symptoms),
+        dailyLogRepositoryProvider.overrideWithValue(repos.dailyLogs),
+      ],
       child: Builder(builder: widget.builder),
-    );
-  }
-}
-
-class _WebUnsupportedPlaceholder extends StatelessWidget {
-  const _WebUnsupportedPlaceholder();
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.desktop_mac_outlined, size: 32),
-            const SizedBox(height: 12),
-            Text(
-              'Not available on web',
-              style: Theme.of(context).textTheme.titleMedium,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'This use-case needs an in-memory database, which relies on '
-              'native (FFI) sqlite. Run this catalog on macOS, iOS, or '
-              'Android to preview it.',
-              style: Theme.of(context).textTheme.bodyMedium,
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
