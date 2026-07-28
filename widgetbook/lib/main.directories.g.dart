@@ -22,6 +22,8 @@ import 'package:ritu_widgetbook/use_cases/components/progress_dots_use_cases.dar
     as _ritu_widgetbook_use_cases_components_progress_dots_use_cases;
 import 'package:ritu_widgetbook/use_cases/screens/home_use_cases.dart'
     as _ritu_widgetbook_use_cases_screens_home_use_cases;
+import 'package:ritu_widgetbook/use_cases/screens/journal_use_cases.dart'
+    as _ritu_widgetbook_use_cases_screens_journal_use_cases;
 import 'package:ritu_widgetbook/use_cases/screens/onboarding_use_cases.dart'
     as _ritu_widgetbook_use_cases_screens_onboarding_use_cases;
 import 'package:ritu_widgetbook/use_cases/screens/settings_use_cases.dart'
@@ -173,6 +175,21 @@ final directories = <_widgetbook.WidgetbookNode>[
                 name: 'Not logged today',
                 builder: _ritu_widgetbook_use_cases_screens_home_use_cases
                     .homeNotLoggedUseCase,
+              ),
+            ],
+          ),
+        ],
+      ),
+      _widgetbook.WidgetbookFolder(
+        name: 'Journal',
+        children: [
+          _widgetbook.WidgetbookComponent(
+            name: 'JournalScreen',
+            useCases: [
+              _widgetbook.WidgetbookUseCase(
+                name: 'New user',
+                builder: _ritu_widgetbook_use_cases_screens_journal_use_cases
+                    .journalNewUserUseCase,
               ),
             ],
           ),

@@ -28,14 +28,14 @@ class _JournalScreenState extends State<JournalScreen> {
       'Writing helps you release your thoughts',
     ),
     (
-      LucideIcons.sparkles,
+      LucideIcons.sparkle,
       RituColors.fillPositiveSecondary,
       RituColors.textPositive,
       'Increase clarity',
       'Journaling helps you think more clearly',
     ),
     (
-      LucideIcons.network,
+      LucideIcons.orbit,
       RituColors.fillInfoSecondary,
       RituColors.iconInfo,
       'Improve well-being',
@@ -160,9 +160,22 @@ class _HeroCard extends StatelessWidget {
           SizedBox(
             width: 116,
             height: 118,
-            child: Image.asset(
-              'assets/images/journal_reflection.png',
-              fit: BoxFit.contain,
+            child: ClipRect(
+              child: Stack(
+                clipBehavior: Clip.hardEdge,
+                children: [
+                  Positioned(
+                    left: -116 * 0.1767,
+                    top: -118 * 0.089,
+                    width: 116 * 1.3578,
+                    height: 118 * 1.3347,
+                    child: Image.asset(
+                      'assets/images/journal_reflection.png',
+                      fit: BoxFit.fill,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 12),
@@ -273,7 +286,14 @@ class _ReflectionCard extends StatelessWidget {
               ),
               decoration: InputDecoration(
                 isCollapsed: true,
+                filled: false,
                 border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                disabledBorder: InputBorder.none,
+                errorBorder: InputBorder.none,
+                focusedErrorBorder: InputBorder.none,
+                contentPadding: EdgeInsets.zero,
                 hintText: 'Write freely......',
                 hintStyle: GoogleFonts.dmSans(
                   fontSize: 13,
