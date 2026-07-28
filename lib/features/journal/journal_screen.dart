@@ -3,11 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '../../core/date_format.dart';
+import '../../core/cycle_context.dart';
 import '../../data/repositories/journal_entry_repository.dart';
 import '../../providers/journal_entry_providers.dart';
+import '../../providers/period_providers.dart';
 import '../../providers/repository_providers.dart';
 import '../../theme/ritu_colors.dart';
+import 'journal_all_entries_screen.dart';
+import 'journal_entry_card.dart';
+import 'journal_entry_modal.dart';
 
 /// Journal tab: daily reflection with persisted entries.
 class JournalScreen extends ConsumerStatefulWidget {
@@ -20,7 +24,6 @@ class JournalScreen extends ConsumerStatefulWidget {
 class _JournalScreenState extends ConsumerState<JournalScreen> {
   final _controller = TextEditingController();
   var _editingToday = false;
-  var _showAllPast = false;
   JournalEntry? _loadedTodayEntry;
 
   static const _heroBackground = Color(0xFFFDF2ED);
@@ -96,15 +99,33 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
     FocusScope.of(context).unfocus();
   }
 
-  void _startEditingToday(JournalEntry entry) {
-    setState(() {
-      _editingToday = true;
-      _controller.text = entry.body;
-    });
+  Future<void> _editTodayViaModal(JournalEntry entry) async {
+    final periods = ref.read(allPeriodsProvider).valueOrNull ?? const [];
+    final contextLine = formatJournalEntryContextLine(
+      entry.loggedOn,
+      periods,
+    );
+
+    final updatedBody = await showJournalEntryModal(
+      context,
+      entry: entry,
+      mode: JournalEntryModalMode.edit,
+      contextLine: contextLine,
+    );
+    if (updatedBody == null || !mounted) return;
+
+    await ref.read(journalEntryRepositoryProvider).upsert(
+          loggedOn: entry.loggedOn,
+          body: updatedBody,
+        );
   }
 
-  Future<void> _deleteEntry(JournalEntry entry) async {
-    await ref.read(journalEntryRepositoryProvider).delete(entry.id);
+  void _openAllEntries() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => const JournalAllEntriesScreen(),
+      ),
+    );
   }
 
   @override
@@ -119,8 +140,7 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
         hasPastEntries || todayEntry == null || _editingToday;
     final showSavedCard = !showInput;
     final showHelp = !hasPastEntries;
-    final previewCount = _showAllPast ? pastEntries.length : 2;
-    final visiblePast = pastEntries.take(previewCount).toList();
+    final previewPast = pastEntries.take(2).toList();
 
     ref.listen(todayJournalEntryProvider, (previous, next) {
       final entry = next.valueOrNull;
@@ -165,22 +185,15 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
         if (showSavedCard)
           _SavedReflectionCard(
             entry: todayEntry,
-            onEdit: () => _startEditingToday(todayEntry),
+            onEdit: () => _editTodayViaModal(todayEntry),
           ),
         if (hasPastEntries) ...[
           const SizedBox(height: 20),
-          _PastEntriesHeader(
-            showAll: _showAllPast,
-            canExpand: pastEntries.length > 2,
-            onViewAll: () => setState(() => _showAllPast = true),
-          ),
+          _PastEntriesHeader(onViewAll: _openAllEntries),
           const SizedBox(height: 16),
-          for (var i = 0; i < visiblePast.length; i++) ...[
+          for (var i = 0; i < previewPast.length; i++) ...[
             if (i > 0) const SizedBox(height: 16),
-            _PastEntryCard(
-              entry: visiblePast[i],
-              onDelete: () => _deleteEntry(visiblePast[i]),
-            ),
+            JournalEntryCard(entry: previewPast[i]),
           ],
         ],
         if (showHelp) ...[
@@ -486,14 +499,8 @@ class _SavedReflectionCard extends StatelessWidget {
 }
 
 class _PastEntriesHeader extends StatelessWidget {
-  const _PastEntriesHeader({
-    required this.showAll,
-    required this.canExpand,
-    required this.onViewAll,
-  });
+  const _PastEntriesHeader({required this.onViewAll});
 
-  final bool showAll;
-  final bool canExpand;
   final VoidCallback onViewAll;
 
   @override
@@ -511,9 +518,8 @@ class _PastEntriesHeader extends StatelessWidget {
             ),
           ),
         ),
-        if (canExpand && !showAll)
-          TextButton(
-            onPressed: onViewAll,
+        TextButton(
+          onPressed: onViewAll,
             style: TextButton.styleFrom(
               padding: EdgeInsets.zero,
               minimumSize: Size.zero,
@@ -530,82 +536,6 @@ class _PastEntriesHeader extends StatelessWidget {
             ),
           ),
       ],
-    );
-  }
-}
-
-class _PastEntryCard extends StatelessWidget {
-  const _PastEntryCard({
-    required this.entry,
-    required this.onDelete,
-  });
-
-  final JournalEntry entry;
-  final VoidCallback onDelete;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: RituColors.fillElevated,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: RituColors.borderSubtle),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  formatJournalEntryDate(entry.loggedOn),
-                  style: GoogleFonts.dmSans(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    height: 20 / 13,
-                    color: RituColors.textSecondary,
-                  ),
-                ),
-              ),
-              PopupMenuButton<String>(
-                icon: const Icon(
-                  LucideIcons.ellipsis,
-                  size: 24,
-                  color: RituColors.textSecondary,
-                ),
-                padding: EdgeInsets.zero,
-                onSelected: (value) {
-                  if (value == 'delete') onDelete();
-                },
-                itemBuilder: (context) => [
-                  PopupMenuItem(
-                    value: 'delete',
-                    child: Text(
-                      'Delete',
-                      style: GoogleFonts.dmSans(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            entry.body,
-            style: GoogleFonts.dmSans(
-              fontSize: 13,
-              fontWeight: FontWeight.w400,
-              height: 20 / 13,
-              color: RituColors.textPrimary,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

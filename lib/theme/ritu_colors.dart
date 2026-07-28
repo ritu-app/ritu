@@ -29,6 +29,7 @@ abstract final class RituColors {
   static const Color iconAttention = Color(0xFFC49A3A);
   static const Color iconInfo = Color(0xFF8B7BB5);
   static const Color iconCritical = Color(0xFFC45C5C);
+  static const Color textCritical = Color(0xFF945959);
   static const Color fillBrandPressed = Color(0xFF416252);
   static const Color cycleMenstrual = Color(0xFFC98A8A);
   static const Color rosewood900 = Color(0xFF583333);
