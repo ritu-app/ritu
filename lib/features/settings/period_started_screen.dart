@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '../../app/app_scope.dart';
+import '../../providers/repository_access.dart';
 import '../../core/date_format.dart';
 import '../../data/repositories/period_repository.dart';
 import '../../theme/ritu_colors.dart';
@@ -34,8 +34,8 @@ class _PeriodStartedScreenState extends State<PeriodStartedScreen> {
   }
 
   Future<void> _load() async {
-    final periods = AppScope.periods(context);
-    final profiles = AppScope.profiles(context);
+    final periods = context.periods;
+    final profiles = context.profiles;
     final latest = await periods.getLatest();
     final profile = await profiles.getProfile();
     if (!mounted) return;
@@ -76,7 +76,7 @@ class _PeriodStartedScreenState extends State<PeriodStartedScreen> {
     if (selected == null || _saving) return;
 
     setState(() => _saving = true);
-    await AppScope.periods(context).updateLatestStartedOn(
+    await context.periods.updateLatestStartedOn(
       newStartedOn: selected,
       typicalPeriodDays: _typicalPeriodDays,
     );

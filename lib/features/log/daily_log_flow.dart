@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '../../app/app_scope.dart';
+import '../../providers/repository_access.dart';
 import '../../core/date_format.dart';
 import '../../theme/ritu_colors.dart';
 import '../setup/widgets/choice_chips.dart';
@@ -94,8 +94,8 @@ class _DailyLogFlowState extends State<DailyLogFlow> {
   }
 
   Future<void> _load() async {
-    final dailyLogs = AppScope.dailyLogs(context);
-    final symptoms = AppScope.symptoms(context);
+    final dailyLogs = context.dailyLogs;
+    final symptoms = context.symptoms;
     final existing = await dailyLogs.getByDate(widget.date);
     final customSymptoms = await symptoms.getAll();
     if (!mounted) return;
@@ -137,7 +137,7 @@ class _DailyLogFlowState extends State<DailyLogFlow> {
   Future<void> _addOwnSymptom() async {
     final name = await showAddSymptomDialog(context);
     if (name == null || name.trim().isEmpty || !mounted) return;
-    final added = await AppScope.symptoms(context).addSymptom(name);
+    final added = await context.symptoms.addSymptom(name);
     if (!mounted || added == null) return;
     setState(() {
       if (!_customSymptomNames.contains(added.name)) {
@@ -150,7 +150,7 @@ class _DailyLogFlowState extends State<DailyLogFlow> {
   Future<void> _save() async {
     if (_saving) return;
     setState(() => _saving = true);
-    await AppScope.dailyLogs(context).upsert(
+    await context.dailyLogs.upsert(
       loggedOn: widget.date,
       flowIntensity: _flowIntensity,
       crampIntensity: _crampIntensity,

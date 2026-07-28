@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '../../app/app_scope.dart';
+import '../../providers/repository_access.dart';
 import '../../core/date_format.dart';
 import '../../theme/ritu_colors.dart';
 import '../setup/widgets/past_period_dates_editor.dart';
@@ -32,8 +32,8 @@ class _PeriodHistoryScreenState extends State<PeriodHistoryScreen> {
   }
 
   Future<void> _load() async {
-    final periods = AppScope.periods(context);
-    final profiles = AppScope.profiles(context);
+    final periods = context.periods;
+    final profiles = context.profiles;
     final latest = await periods.getLatest();
     final past = await periods.getPastStartedOn();
     final profile = await profiles.getProfile();
@@ -50,18 +50,18 @@ class _PeriodHistoryScreenState extends State<PeriodHistoryScreen> {
   }
 
   Future<void> _onDateAdded(DateTime date) async {
-    await AppScope.periods(context).addPastStart(
+    await context.periods.addPastStart(
       startedOn: date,
       typicalPeriodDays: _typicalPeriodDays,
     );
   }
 
   Future<void> _onDateRemoved(DateTime date) async {
-    await AppScope.periods(context).deleteByStartedOn(date);
+    await context.periods.deleteByStartedOn(date);
   }
 
   Future<void> _pop() async {
-    final count = await AppScope.periods(context).getPastStartedOn();
+    final count = await context.periods.getPastStartedOn();
     if (!mounted) return;
     Navigator.of(context).pop(count.length);
   }

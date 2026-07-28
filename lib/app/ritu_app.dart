@@ -1,14 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/local/app_database.dart';
-import '../data/repositories/daily_log_repository.dart';
-import '../data/repositories/drift/drift_daily_log_repository.dart';
-import '../data/repositories/drift/drift_period_repository.dart';
-import '../data/repositories/drift/drift_profile_repository.dart';
-import '../data/repositories/drift/drift_symptom_repository.dart';
-import '../data/repositories/period_repository.dart';
-import '../data/repositories/profile_repository.dart';
-import '../data/repositories/symptom_repository.dart';
 import '../features/home/home_screen.dart';
 import '../features/onboarding/confirmation_screen.dart';
 import '../features/onboarding/name_screen.dart';
@@ -16,78 +9,46 @@ import '../features/setup/last_period_screen.dart';
 import '../features/setup/notification_screen.dart';
 import '../features/setup/past_dates_screen.dart';
 import '../features/splash/splash_screen.dart';
+import '../providers/app_restart_provider.dart';
+import '../providers/profile_providers.dart';
+import '../providers/repository_access.dart';
 import '../theme/ritu_theme.dart';
-import 'app_scope.dart';
+import '../providers/database_provider.dart';
 
-class RituApp extends StatefulWidget {
-  const RituApp({
-    super.key,
-    required this.profileRepository,
-    required this.periodRepository,
-    required this.symptomRepository,
-    required this.dailyLogRepository,
-  });
-
-  final ProfileRepository profileRepository;
-  final PeriodRepository periodRepository;
-  final SymptomRepository symptomRepository;
-  final DailyLogRepository dailyLogRepository;
+class RituApp extends ConsumerWidget {
+  const RituApp({super.key});
 
   @override
-  State<RituApp> createState() => _RituAppState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final restartKey = ref.watch(appRestartProvider);
 
-class _RituAppState extends State<RituApp> {
-  Key _bootstrapKey = UniqueKey();
-
-  void _restartApp() {
-    setState(() => _bootstrapKey = UniqueKey());
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AppScope(
-      profileRepository: widget.profileRepository,
-      periodRepository: widget.periodRepository,
-      symptomRepository: widget.symptomRepository,
-      dailyLogRepository: widget.dailyLogRepository,
-      restartApp: _restartApp,
-      child: MaterialApp(
-        key: _bootstrapKey,
-        title: 'Ritu',
-        debugShowCheckedModeBanner: false,
-        theme: buildRituTheme(),
-        home: _AppBootstrap(profileRepository: widget.profileRepository),
-      ),
+    return MaterialApp(
+      key: ValueKey(restartKey),
+      title: 'Ritu',
+      debugShowCheckedModeBanner: false,
+      theme: buildRituTheme(),
+      home: const _AppBootstrap(),
     );
   }
 }
 
-class _AppBootstrap extends StatefulWidget {
-  const _AppBootstrap({required this.profileRepository});
-
-  final ProfileRepository profileRepository;
+class _AppBootstrap extends ConsumerWidget {
+  const _AppBootstrap();
 
   @override
-  State<_AppBootstrap> createState() => _AppBootstrapState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final profileAsync = ref.watch(profileProvider);
 
-class _AppBootstrapState extends State<_AppBootstrap> {
-  late final Future<Profile?> _profileFuture = widget.profileRepository
-      .getProfile();
-
-  @override
-  Widget build(BuildContext context) {
-    return FutureBuilder<Profile?>(
-      future: _profileFuture,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState != ConnectionState.done) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
-        }
-
-        final profile = snapshot.data;
+    return profileAsync.when(
+      loading: () => const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      ),
+      error: (error, _) => Scaffold(
+        body: Center(
+          child: Text('Something went wrong: $error'),
+        ),
+      ),
+      data: (profile) {
         if (profile != null && profile.hasCompletedOnboarding) {
           return HomeScreen(
             name: profile.displayName,
@@ -109,7 +70,7 @@ class _OnboardingFlow extends StatelessWidget {
   }
 
   Future<void> _goHome(BuildContext context, String name) async {
-    final profile = await AppScope.profiles(context).markOnboardingCompleted();
+    final profile = await context.profiles.markOnboardingCompleted();
     if (!context.mounted) return;
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute<void>(
@@ -125,8 +86,8 @@ class _OnboardingFlow extends StatelessWidget {
   Widget _pastDates(BuildContext context, String name) {
     return PastDatesScreen(
       onContinue: (dates) async {
-        final profiles = AppScope.profiles(context);
-        final periods = AppScope.periods(context);
+        final profiles = context.profiles;
+        final periods = context.periods;
         final typical = (await profiles.getProfile())?.typicalPeriodDays;
         await periods.recordPastStarts(
           startedOnDates: dates,
@@ -149,8 +110,8 @@ class _OnboardingFlow extends StatelessWidget {
   Widget _lastPeriod(BuildContext context, String name) {
     return LastPeriodScreen(
       onContinue: (startedOn, duration) async {
-        final profiles = AppScope.profiles(context);
-        final periods = AppScope.periods(context);
+        final profiles = context.profiles;
+        final periods = context.periods;
         final days = duration.typicalDays;
         await profiles.setTypicalPeriodDays(days);
         await periods.recordLastPeriod(
@@ -172,7 +133,7 @@ class _OnboardingFlow extends StatelessWidget {
           context,
           NameScreen(
             onContinue: (name) async {
-              await AppScope.profiles(context).upsertDisplayName(name);
+              await context.profiles.upsertDisplayName(name);
               if (!context.mounted) return;
               _push(
                 context,
@@ -191,13 +152,13 @@ class _OnboardingFlow extends StatelessWidget {
   }
 }
 
-/// Builds the app with a fresh or injected database.
-RituApp createRituApp({AppDatabase? database}) {
-  final db = database ?? AppDatabase();
-  return RituApp(
-    profileRepository: DriftProfileRepository(db),
-    periodRepository: DriftPeriodRepository(db),
-    symptomRepository: DriftSymptomRepository(db),
-    dailyLogRepository: DriftDailyLogRepository(db),
+/// Root widget for tests and Widgetbook. Wraps [RituApp] in a [ProviderScope],
+/// optionally overriding the shared [AppDatabase].
+Widget createRituApp({AppDatabase? database}) {
+  return ProviderScope(
+    overrides: [
+      if (database != null) databaseProvider.overrideWithValue(database),
+    ],
+    child: const RituApp(),
   );
 }

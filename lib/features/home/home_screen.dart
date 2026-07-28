@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '../../app/app_scope.dart';
+import '../../providers/repository_access.dart';
 import '../../core/date_format.dart';
 import '../../data/repositories/daily_log_repository.dart';
 import '../../theme/ritu_colors.dart';
@@ -72,9 +72,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _loadPeriodData() async {
-    final periods = AppScope.periods(context);
-    final symptoms = AppScope.symptoms(context);
-    final dailyLogs = AppScope.dailyLogs(context);
+    final periods = context.periods;
+    final symptoms = context.symptoms;
+    final dailyLogs = context.dailyLogs;
     final latest = await periods.getLatest();
     final days = await periods.daysSinceLastPeriod();
     final bleed = await periods.allBleedDays();

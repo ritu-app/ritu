@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '../../app/app_scope.dart';
+import '../../providers/repository_access.dart';
 import '../../data/repositories/symptom_repository.dart';
 import '../../theme/ritu_colors.dart';
 import '../setup/widgets/choice_chips.dart';
@@ -41,7 +41,7 @@ class _CustomSymptomsScreenState extends State<CustomSymptomsScreen> {
   }
 
   Future<void> _load() async {
-    final symptoms = await AppScope.symptoms(context).getAll();
+    final symptoms = await context.symptoms.getAll();
     if (!mounted) return;
     setState(() {
       _symptoms = symptoms;
@@ -56,7 +56,7 @@ class _CustomSymptomsScreenState extends State<CustomSymptomsScreen> {
     if (name.isEmpty || _busy) return;
 
     setState(() => _busy = true);
-    final added = await AppScope.symptoms(context).addSymptom(name);
+    final added = await context.symptoms.addSymptom(name);
     if (!mounted) return;
     setState(() {
       _busy = false;
@@ -73,7 +73,7 @@ class _CustomSymptomsScreenState extends State<CustomSymptomsScreen> {
       _busy = true;
       _symptoms = _symptoms.where((s) => s.id != symptom.id).toList();
     });
-    await AppScope.symptoms(context).deleteSymptom(symptom.id);
+    await context.symptoms.deleteSymptom(symptom.id);
     if (!mounted) return;
     setState(() => _busy = false);
   }

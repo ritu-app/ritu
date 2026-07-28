@@ -80,9 +80,9 @@ touch the database and render normally on web.
    - Use `context.knobs.*` (`string`, `boolean`, `int.slider`,
      `object.dropdown`, etc.) to make props interactive instead of
      hardcoding example values.
-4. If the widget/screen reads from `AppScope` (i.e. it calls
-   `AppScope.of(context)` / `AppScope.periods(context)` / etc., directly or
-   transitively), wrap it in `SeededAppScope` (see
+4. If the widget/screen reads repositories via Riverpod (i.e. it uses
+   `context.profiles` / `context.periods` / etc., directly or transitively),
+   wrap it in `SeededAppScope` (see
    [lib/support/seeded_app_scope.dart](lib/support/seeded_app_scope.dart))
    and seed whatever fake data the use-case needs:
 
@@ -129,7 +129,7 @@ lib/
   main.dart                     Entry point + addon configuration
   main.directories.g.dart       Generated navigation tree (commit this)
   support/
-    seeded_app_scope.dart       AppScope + in-memory DB helper for screen use-cases
+    seeded_app_scope.dart       ProviderScope + in-memory DB helper for screen use-cases
   use_cases/
     components/                 Chips, buttons, progress dots, slider, calendar
     screens/                    Home, Settings, Onboarding

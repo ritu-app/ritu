@@ -2,7 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '../../app/app_scope.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../providers/app_restart_provider.dart';
+import '../../providers/profile_providers.dart';
+import '../../providers/repository_access.dart';
+import '../../providers/repository_providers.dart';
 import '../../core/date_format.dart';
 import '../../theme/ritu_colors.dart';
 import 'custom_symptoms_screen.dart';
@@ -63,7 +68,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (updated == null || !mounted) return;
     if (updated == _name) return;
 
-    await AppScope.profiles(context).upsertDisplayName(updated);
+    await context.profiles.upsertDisplayName(updated);
     if (!mounted) return;
     setState(() => _name = updated);
   }
@@ -153,10 +158,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     if (confirmed != true || !mounted) return;
 
-    final scope = AppScope.of(context);
-    await scope.profileRepository.clearAllData();
+    final container = ProviderScope.containerOf(context);
+    await container.read(profileRepositoryProvider).clearAllData();
     if (!mounted) return;
-    scope.restartApp();
+    container.invalidate(profileProvider);
+    container.read(appRestartProvider.notifier).state++;
   }
 
   @override

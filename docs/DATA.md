@@ -19,7 +19,7 @@ Ritu stores all user data **on-device only** (SQLite via [Drift](https://drift.s
 | Database class | `lib/data/local/app_database.dart` |
 | Table definitions | `lib/data/local/tables/` |
 | Repositories | `lib/data/repositories/` |
-| DI into UI | `AppScope` (`lib/app/app_scope.dart`) |
+| DI into UI | Riverpod (`lib/providers/`) |
 
 Database file name: **`ritu.sqlite`** (opened as `driftDatabase(name: 'ritu')`).
 

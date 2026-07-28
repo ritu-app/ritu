@@ -36,6 +36,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   ritu:
     path: ..
+  flutter_riverpod: ^2.6.1
   widgetbook: ^3.25.0
   widgetbook_annotation: ^3.11.0
   device_frame: ^1.4.0

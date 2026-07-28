@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:ritu/app/app_scope.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ritu/data/local/app_database.dart';
 import 'package:ritu/data/repositories/daily_log_repository.dart';
 import 'package:ritu/data/repositories/drift/drift_daily_log_repository.dart';
@@ -10,6 +10,7 @@ import 'package:ritu/data/repositories/drift/drift_symptom_repository.dart';
 import 'package:ritu/data/repositories/period_repository.dart';
 import 'package:ritu/data/repositories/profile_repository.dart';
 import 'package:ritu/data/repositories/symptom_repository.dart';
+import 'package:ritu/providers/database_provider.dart';
 
 /// The four repositories a use-case's [SeededAppScope.seed] callback can use
 /// to fake data before the wrapped screen is shown.
@@ -22,10 +23,10 @@ class RituRepos {
   final DailyLogRepository dailyLogs;
 }
 
-/// Wraps [builder] in an [AppScope] backed by a fresh in-memory [AppDatabase],
-/// after running [seed] against it — the same pattern `test/widget_test.dart`
-/// uses for widget tests, reused here so screens that read from `AppScope`
-/// (e.g. `HomeScreen`, `PeriodStartedScreen`) can be previewed with fake data.
+/// Wraps [builder] in a [ProviderScope] backed by a fresh in-memory
+/// [AppDatabase], after running [seed] against it — the same pattern
+/// `test/widget_test.dart` uses for widget tests, reused here so screens that
+/// read repositories via [ProviderScope] can be previewed with fake data.
 ///
 /// [AppDatabase.memory] relies on drift's native (FFI) sqlite backend, which
 /// isn't available on web, so on web this shows a placeholder instead of
@@ -42,7 +43,6 @@ class SeededAppScope extends StatefulWidget {
 }
 
 class _SeededAppScopeState extends State<SeededAppScope> {
-  RituRepos? _repos;
   AppDatabase? _db;
 
   @override
@@ -66,10 +66,7 @@ class _SeededAppScopeState extends State<SeededAppScope> {
     );
     await widget.seed(repos);
     if (!mounted) return;
-    setState(() {
-      _db = db;
-      _repos = repos;
-    });
+    setState(() => _db = db);
   }
 
   @override
@@ -84,17 +81,13 @@ class _SeededAppScopeState extends State<SeededAppScope> {
       return const _WebUnsupportedPlaceholder();
     }
 
-    final repos = _repos;
-    if (repos == null) {
+    final db = _db;
+    if (db == null) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    return AppScope(
-      profileRepository: repos.profiles,
-      periodRepository: repos.periods,
-      symptomRepository: repos.symptoms,
-      dailyLogRepository: repos.dailyLogs,
-      restartApp: () {},
+    return ProviderScope(
+      overrides: [databaseProvider.overrideWithValue(db)],
       child: Builder(builder: widget.builder),
     );
   }
@@ -134,8 +127,7 @@ class _WebUnsupportedPlaceholder extends StatelessWidget {
 }
 
 /// Creates a profile that has already completed onboarding — the baseline
-/// most screen-level use-cases need, since `AppScope`-backed screens assume
-/// a profile already exists.
+/// most screen-level use-cases need.
 Future<void> seedOnboardedProfile(
   RituRepos repos, {
   String name = 'Maya',
