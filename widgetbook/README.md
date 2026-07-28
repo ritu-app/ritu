@@ -58,6 +58,47 @@ placeholder ([lib/support/seeded_app_scope.dart](lib/support/seeded_app_scope.da
 instead of crashing. Component-level use-cases (`[Components]/...`) don't
 touch the database and render normally on web.
 
+## Deploy to Vercel (GitHub Actions)
+
+Widgetbook is deployed as a static Flutter web app via
+[.github/workflows/widgetbook-vercel.yml](../.github/workflows/widgetbook-vercel.yml).
+The workflow builds on GitHub (which has Flutter) and uploads
+`widgetbook/build/web` to Vercel — Vercel itself does not need Flutter installed.
+
+### One-time setup
+
+1. **Create a Vercel project** linked to this GitHub repo.
+   - Framework preset: **Other**
+   - Root directory: **repository root** (not `widgetbook/`) — the catalog depends on the parent `ritu` package via `path: ..`
+   - You can disable Vercel's own builds; GitHub Actions performs the build.
+
+2. **Collect three values** for GitHub Actions secrets (repo → Settings → Secrets and variables → Actions):
+
+   | Secret | Where to find it |
+   |--------|------------------|
+   | `VERCEL_TOKEN` | [vercel.com/account/tokens](https://vercel.com/account/tokens) → Create Token |
+   | `VERCEL_ORG_ID` | Vercel project → Settings → General, or run `vercel link` locally and read `.vercel/project.json` |
+   | `VERCEL_PROJECT_ID` | Same as above |
+
+3. **Push to `main`** (or run the workflow manually via **Actions → Deploy Widgetbook to Vercel → Run workflow**).
+
+The workflow runs when files under `widgetbook/`, `lib/`, or root `pubspec.yaml` change.
+
+### Local preview of the production bundle
+
+```bash
+cd widgetbook
+flutter build web --release
+cd build/web
+python3 -m http.server 8080
+# open http://localhost:8080
+```
+
+### Web limitations (reminder)
+
+`[Screens]/...` use-cases show a placeholder on web because in-memory Drift needs native SQLite.
+`[Components]/...` render normally — enough for a shared design-system link.
+
 ## Adding a use-case
 
 1. Pick (or create) a file under `lib/use_cases/components/` or
