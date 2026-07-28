@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ritu/data/repositories/daily_log_repository.dart';
+import 'package:ritu/data/repositories/journal_entry_repository.dart';
 import 'package:ritu/data/repositories/memory/memory_daily_log_repository.dart';
+import 'package:ritu/data/repositories/memory/memory_journal_entry_repository.dart';
 import 'package:ritu/data/repositories/memory/memory_period_repository.dart';
 import 'package:ritu/data/repositories/memory/memory_profile_repository.dart';
 import 'package:ritu/data/repositories/memory/memory_ritu_store.dart';
@@ -14,12 +16,19 @@ import 'package:ritu/providers/repository_providers.dart';
 /// The four repositories a use-case's [SeededAppScope.seed] callback can use
 /// to fake data before the wrapped screen is shown.
 class RituRepos {
-  RituRepos(this.profiles, this.periods, this.symptoms, this.dailyLogs);
+  RituRepos(
+    this.profiles,
+    this.periods,
+    this.symptoms,
+    this.dailyLogs,
+    this.journalEntries,
+  );
 
   final ProfileRepository profiles;
   final PeriodRepository periods;
   final SymptomRepository symptoms;
   final DailyLogRepository dailyLogs;
+  final JournalEntryRepository journalEntries;
 }
 
 /// Wraps [builder] in a [ProviderScope] backed by in-memory repository fakes,
@@ -55,6 +64,7 @@ class _SeededAppScopeState extends State<SeededAppScope> {
       MemoryPeriodRepository(store),
       MemorySymptomRepository(store),
       MemoryDailyLogRepository(store),
+      MemoryJournalEntryRepository(store),
     );
     await widget.seed(repos);
     if (!mounted) {
@@ -88,6 +98,7 @@ class _SeededAppScopeState extends State<SeededAppScope> {
         periodRepositoryProvider.overrideWithValue(repos.periods),
         symptomRepositoryProvider.overrideWithValue(repos.symptoms),
         dailyLogRepositoryProvider.overrideWithValue(repos.dailyLogs),
+        journalEntryRepositoryProvider.overrideWithValue(repos.journalEntries),
       ],
       child: Builder(builder: widget.builder),
     );

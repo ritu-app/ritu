@@ -2,9 +2,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/repositories/daily_log_repository.dart';
 import '../data/repositories/drift/drift_daily_log_repository.dart';
+import '../data/repositories/drift/drift_journal_entry_repository.dart';
 import '../data/repositories/drift/drift_period_repository.dart';
 import '../data/repositories/drift/drift_profile_repository.dart';
 import '../data/repositories/drift/drift_symptom_repository.dart';
+import '../data/repositories/journal_entry_repository.dart';
 import '../data/repositories/period_repository.dart';
 import '../data/repositories/profile_repository.dart';
 import '../data/repositories/symptom_repository.dart';
@@ -24,4 +26,8 @@ final symptomRepositoryProvider = Provider<SymptomRepository>((ref) {
 
 final dailyLogRepositoryProvider = Provider<DailyLogRepository>((ref) {
   return DriftDailyLogRepository(ref.watch(databaseProvider));
+});
+
+final journalEntryRepositoryProvider = Provider<JournalEntryRepository>((ref) {
+  return DriftJournalEntryRepository(ref.watch(databaseProvider));
 });

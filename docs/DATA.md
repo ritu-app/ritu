@@ -191,11 +191,25 @@ One row per **calendar day**, filled in by the Home "Log today" flow (`DailyLogF
 - `getCurrentStreak()` — consecutive days with an entry, counted backwards from today; if today isn't logged yet it counts back from yesterday instead (so the streak isn't considered broken until the day is over). Drives the flame counter in the Home header.
 - `getTotalLoggedDays()` — total count of calendar days with a saved entry (not necessarily consecutive). Drives the "Your patterns will appear here" progress bar on Home (`N of 14 days`) — deliberately counts logging days, not period entries, since patterns need repeated daily check-ins, not period history.
 
+## Journal entries
+
+| Table | Purpose |
+|--------|---------|
+| `journal_entries` | Free-text reflections from the Journal tab — one row per calendar day (`logged_on` unique) |
+
+**Lifecycle:**
+
+1. User writes in Journal → `JournalEntryRepository.upsert(loggedOn: today, body: ...)`
+2. UI reads `todayJournalEntryProvider` and `pastJournalEntriesProvider` (entries before today, newest first)
+3. First save only: green "Today's reflection saved" card with Edit
+4. Once past days exist: editable today's card + "Past entries" preview list
+
+Daily log `notes` are stored separately in `daily_logs.notes` and are not yet mirrored into Journal.
+
 ## Planned extensions (not implemented yet)
 
 | Table | Purpose |
 |--------|---------|
-| `journal_entries` | Free-text reflections from Journal (daily log notes are stored in `daily_logs.notes` today, not yet mirrored into a dedicated Journal table) |
 | `settings` | Reminders, notification prefs, etc. |
 
 Daily logs don't yet feed back into `period_logs` (e.g. a logged "flow" doesn't start/extend a period episode) — that cross-linking is a candidate future extension.

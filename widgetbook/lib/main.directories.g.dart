@@ -187,9 +187,19 @@ final directories = <_widgetbook.WidgetbookNode>[
             name: 'JournalScreen',
             useCases: [
               _widgetbook.WidgetbookUseCase(
+                name: 'After first save',
+                builder: _ritu_widgetbook_use_cases_screens_journal_use_cases
+                    .journalAfterFirstSaveUseCase,
+              ),
+              _widgetbook.WidgetbookUseCase(
                 name: 'New user',
                 builder: _ritu_widgetbook_use_cases_screens_journal_use_cases
                     .journalNewUserUseCase,
+              ),
+              _widgetbook.WidgetbookUseCase(
+                name: 'With past entries',
+                builder: _ritu_widgetbook_use_cases_screens_journal_use_cases
+                    .journalWithPastEntriesUseCase,
               ),
             ],
           ),

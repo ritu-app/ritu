@@ -1,20 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../core/date_format.dart';
+import '../../data/repositories/journal_entry_repository.dart';
+import '../../providers/journal_entry_providers.dart';
+import '../../providers/repository_providers.dart';
 import '../../theme/ritu_colors.dart';
 
-/// New-user Journal tab: prompt to write plus benefits list.
-class JournalScreen extends StatefulWidget {
+/// Journal tab: daily reflection with persisted entries.
+class JournalScreen extends ConsumerStatefulWidget {
   const JournalScreen({super.key});
 
   @override
-  State<JournalScreen> createState() => _JournalScreenState();
+  ConsumerState<JournalScreen> createState() => _JournalScreenState();
 }
 
-class _JournalScreenState extends State<JournalScreen> {
+class _JournalScreenState extends ConsumerState<JournalScreen> {
   final _controller = TextEditingController();
-  bool _hasText = false;
+  var _editingToday = false;
+  var _showAllPast = false;
+  JournalEntry? _loadedTodayEntry;
 
   static const _heroBackground = Color(0xFFFDF2ED);
   static const _heroBorder = Color(0xFFE2DDD8);
@@ -51,38 +58,78 @@ class _JournalScreenState extends State<JournalScreen> {
   ];
 
   @override
-  void initState() {
-    super.initState();
-    _controller.addListener(() {
-      final next = _controller.text.trim().isNotEmpty;
-      if (next != _hasText) setState(() => _hasText = next);
-    });
-  }
-
-  @override
   void dispose() {
     _controller.dispose();
     super.dispose();
   }
 
-  void _saveEntry() {
-    if (!_hasText) return;
-    _controller.clear();
+  void _syncControllerFromRepo(JournalEntry? todayEntry, {required bool showInput}) {
+    if (!showInput || _editingToday) return;
+    if (todayEntry?.id == _loadedTodayEntry?.id &&
+        todayEntry?.body == _loadedTodayEntry?.body) {
+      return;
+    }
+    _loadedTodayEntry = todayEntry;
+    _controller.text = todayEntry?.body ?? '';
+  }
+
+  bool _canSave(JournalEntry? todayEntry) {
+    final text = _controller.text.trim();
+    if (text.isEmpty) return false;
+    return todayEntry == null || text != todayEntry.body;
+  }
+
+  Future<void> _saveEntry() async {
+    final text = _controller.text.trim();
+    if (text.isEmpty) return;
+
+    await ref.read(journalEntryRepositoryProvider).upsert(
+          loggedOn: DateTime.now(),
+          body: text,
+        );
+
+    if (!mounted) return;
+    setState(() {
+      _editingToday = false;
+      _loadedTodayEntry = null;
+    });
     FocusScope.of(context).unfocus();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Entry saved',
-          style: GoogleFonts.dmSans(fontWeight: FontWeight.w500),
-        ),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: RituColors.sage600,
-      ),
-    );
+  }
+
+  void _startEditingToday(JournalEntry entry) {
+    setState(() {
+      _editingToday = true;
+      _controller.text = entry.body;
+    });
+  }
+
+  Future<void> _deleteEntry(JournalEntry entry) async {
+    await ref.read(journalEntryRepositoryProvider).delete(entry.id);
   }
 
   @override
   Widget build(BuildContext context) {
+    final todayAsync = ref.watch(todayJournalEntryProvider);
+    final pastAsync = ref.watch(pastJournalEntriesProvider);
+
+    final todayEntry = todayAsync.valueOrNull;
+    final pastEntries = pastAsync.valueOrNull ?? const [];
+    final hasPastEntries = pastEntries.isNotEmpty;
+    final showInput =
+        hasPastEntries || todayEntry == null || _editingToday;
+    final showSavedCard = !showInput;
+    final showHelp = !hasPastEntries;
+    final previewCount = _showAllPast ? pastEntries.length : 2;
+    final visiblePast = pastEntries.take(previewCount).toList();
+
+    ref.listen(todayJournalEntryProvider, (previous, next) {
+      final entry = next.valueOrNull;
+      final past = ref.read(pastJournalEntriesProvider).valueOrNull ?? [];
+      final input = past.isNotEmpty || entry == null || _editingToday;
+      _syncControllerFromRepo(entry, showInput: input);
+    });
+    _syncControllerFromRepo(todayEntry, showInput: showInput);
+
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
       children: [
@@ -108,31 +155,56 @@ class _JournalScreenState extends State<JournalScreen> {
         const SizedBox(height: 20),
         const _HeroCard(),
         const SizedBox(height: 20),
-        _ReflectionCard(
-          controller: _controller,
-          canSave: _hasText,
-          onSave: _saveEntry,
-        ),
-        const SizedBox(height: 20),
-        Text(
-          'Journal helps you',
-          style: GoogleFonts.dmSans(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            height: 24 / 15,
-            color: RituColors.textPrimary,
+        if (showInput)
+          _ReflectionCard(
+            controller: _controller,
+            canSave: _canSave(todayEntry),
+            onSave: _saveEntry,
+            onChanged: () => setState(() {}),
           ),
-        ),
-        const SizedBox(height: 16),
-        for (var i = 0; i < _helpItems.length; i++) ...[
-          if (i > 0) const SizedBox(height: 16),
-          _HelpRow(
-            icon: _helpItems[i].$1,
-            iconBackground: _helpItems[i].$2,
-            iconColor: _helpItems[i].$3,
-            title: _helpItems[i].$4,
-            subtitle: _helpItems[i].$5,
+        if (showSavedCard)
+          _SavedReflectionCard(
+            entry: todayEntry,
+            onEdit: () => _startEditingToday(todayEntry),
           ),
+        if (hasPastEntries) ...[
+          const SizedBox(height: 20),
+          _PastEntriesHeader(
+            showAll: _showAllPast,
+            canExpand: pastEntries.length > 2,
+            onViewAll: () => setState(() => _showAllPast = true),
+          ),
+          const SizedBox(height: 16),
+          for (var i = 0; i < visiblePast.length; i++) ...[
+            if (i > 0) const SizedBox(height: 16),
+            _PastEntryCard(
+              entry: visiblePast[i],
+              onDelete: () => _deleteEntry(visiblePast[i]),
+            ),
+          ],
+        ],
+        if (showHelp) ...[
+          const SizedBox(height: 20),
+          Text(
+            'Journal helps you',
+            style: GoogleFonts.dmSans(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              height: 24 / 15,
+              color: RituColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 16),
+          for (var i = 0; i < _helpItems.length; i++) ...[
+            if (i > 0) const SizedBox(height: 16),
+            _HelpRow(
+              icon: _helpItems[i].$1,
+              iconBackground: _helpItems[i].$2,
+              iconColor: _helpItems[i].$3,
+              title: _helpItems[i].$4,
+              subtitle: _helpItems[i].$5,
+            ),
+          ],
         ],
       ],
     );
@@ -227,11 +299,13 @@ class _ReflectionCard extends StatelessWidget {
     required this.controller,
     required this.canSave,
     required this.onSave,
+    required this.onChanged,
   });
 
   final TextEditingController controller;
   final bool canSave;
   final VoidCallback onSave;
+  final VoidCallback onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -275,6 +349,7 @@ class _ReflectionCard extends StatelessWidget {
             ),
             child: TextField(
               controller: controller,
+              onChanged: (_) => onChanged(),
               maxLines: null,
               expands: true,
               textAlignVertical: TextAlignVertical.top,
@@ -326,6 +401,207 @@ class _ReflectionCard extends StatelessWidget {
                 ),
               ),
               child: const Text('Save entry'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SavedReflectionCard extends StatelessWidget {
+  const _SavedReflectionCard({
+    required this.entry,
+    required this.onEdit,
+  });
+
+  final JournalEntry entry;
+  final VoidCallback onEdit;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: RituColors.fillSecondary,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: RituColors.borderSubtle),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                LucideIcons.circleCheck,
+                size: 24,
+                color: RituColors.sage600,
+              ),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  'Today’s reflection saved',
+                  style: GoogleFonts.dmSans(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    height: 24 / 15,
+                    color: RituColors.textPrimary,
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: onEdit,
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  foregroundColor: RituColors.sage600,
+                ),
+                child: Text(
+                  'Edit',
+                  style: GoogleFonts.dmSans(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    height: 20 / 13,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            entry.body,
+            style: GoogleFonts.dmSans(
+              fontSize: 13,
+              fontWeight: FontWeight.w400,
+              height: 20 / 13,
+              color: RituColors.textPrimary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PastEntriesHeader extends StatelessWidget {
+  const _PastEntriesHeader({
+    required this.showAll,
+    required this.canExpand,
+    required this.onViewAll,
+  });
+
+  final bool showAll;
+  final bool canExpand;
+  final VoidCallback onViewAll;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            'Past entries',
+            style: GoogleFonts.dmSans(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              height: 24 / 15,
+              color: RituColors.textPrimary,
+            ),
+          ),
+        ),
+        if (canExpand && !showAll)
+          TextButton(
+            onPressed: onViewAll,
+            style: TextButton.styleFrom(
+              padding: EdgeInsets.zero,
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              foregroundColor: RituColors.sage600,
+            ),
+            child: Text(
+              'View all',
+              style: GoogleFonts.dmSans(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                height: 20 / 13,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _PastEntryCard extends StatelessWidget {
+  const _PastEntryCard({
+    required this.entry,
+    required this.onDelete,
+  });
+
+  final JournalEntry entry;
+  final VoidCallback onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: RituColors.fillElevated,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: RituColors.borderSubtle),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  formatJournalEntryDate(entry.loggedOn),
+                  style: GoogleFonts.dmSans(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    height: 20 / 13,
+                    color: RituColors.textSecondary,
+                  ),
+                ),
+              ),
+              PopupMenuButton<String>(
+                icon: const Icon(
+                  LucideIcons.ellipsis,
+                  size: 24,
+                  color: RituColors.textSecondary,
+                ),
+                padding: EdgeInsets.zero,
+                onSelected: (value) {
+                  if (value == 'delete') onDelete();
+                },
+                itemBuilder: (context) => [
+                  PopupMenuItem(
+                    value: 'delete',
+                    child: Text(
+                      'Delete',
+                      style: GoogleFonts.dmSans(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            entry.body,
+            style: GoogleFonts.dmSans(
+              fontSize: 13,
+              fontWeight: FontWeight.w400,
+              height: 20 / 13,
+              color: RituColors.textPrimary,
             ),
           ),
         ],

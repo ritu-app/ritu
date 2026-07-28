@@ -5,12 +5,13 @@ import 'package:path_provider/path_provider.dart';
 import 'memory_executor.dart';
 import 'tables/custom_symptoms.dart';
 import 'tables/daily_logs.dart';
+import 'tables/journal_entries.dart';
 import 'tables/period_logs.dart';
 import 'tables/profiles.dart';
 
 part 'app_database.g.dart';
 
-@DriftDatabase(tables: [Profiles, PeriodLogs, CustomSymptoms, DailyLogs])
+@DriftDatabase(tables: [Profiles, PeriodLogs, CustomSymptoms, DailyLogs, JournalEntries])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
@@ -19,7 +20,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.memory() : super(createMemoryExecutor());
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -36,6 +37,9 @@ class AppDatabase extends _$AppDatabase {
           }
           if (from < 4) {
             await m.createTable(dailyLogs);
+          }
+          if (from < 5) {
+            await m.createTable(journalEntries);
           }
         },
       );
