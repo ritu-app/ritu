@@ -50,10 +50,7 @@ class _AppBootstrap extends ConsumerWidget {
       ),
       data: (profile) {
         if (profile != null && profile.hasCompletedOnboarding) {
-          return HomeScreen(
-            name: profile.displayName,
-            loggingSince: profile.onboardingCompletedAt!,
-          );
+          return const HomeScreen();
         }
 
         return const _OnboardingFlow();
@@ -70,17 +67,11 @@ class _OnboardingFlow extends StatelessWidget {
   }
 
   Future<void> _goHome(BuildContext context, String name) async {
-    final profile = await context.profiles.markOnboardingCompleted();
+    await context.profiles.markOnboardingCompleted();
     if (!context.mounted) return;
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute<void>(
-        builder: (_) => HomeScreen(
-          name: name,
-          loggingSince: profile.onboardingCompletedAt!,
-        ),
-      ),
-      (route) => false,
-    );
+    final container = ProviderScope.containerOf(context);
+    container.invalidate(profileProvider);
+    container.read(appRestartProvider.notifier).state++;
   }
 
   Widget _pastDates(BuildContext context, String name) {

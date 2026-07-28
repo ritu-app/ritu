@@ -13,6 +13,23 @@ import 'package:ritu/data/repositories/period_repository.dart';
 import 'package:ritu/features/setup/widgets/choice_chips.dart';
 import 'package:ritu/theme/ritu_colors.dart';
 
+/// Widget tests that mount [createRituApp] must unmount before the test ends
+/// so Drift stream subscriptions can cancel without leaving pending timers.
+void rituTestWidgets(
+  String description,
+  Future<void> Function(WidgetTester tester) body,
+) {
+  testWidgets(description, (tester) async {
+    try {
+      await body(tester);
+    } finally {
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 10));
+    }
+  });
+}
+
 void main() {
   late AppDatabase database;
 
@@ -24,7 +41,7 @@ void main() {
     await database.close();
   });
 
-  testWidgets('Splash screen shows Ritu branding and CTA', (tester) async {
+  rituTestWidgets('Splash screen shows Ritu branding and CTA', (tester) async {
     await tester.pumpWidget(createRituApp(database: database));
     await tester.pumpAndSettle();
 
@@ -32,7 +49,7 @@ void main() {
     expect(find.text('Get started'), findsOneWidget);
   });
 
-  testWidgets('Onboarding completes into homepage and persists name', (
+  rituTestWidgets('Onboarding completes into homepage and persists name', (
     tester,
   ) async {
     await tester.pumpWidget(createRituApp(database: database));
@@ -105,7 +122,7 @@ void main() {
     expect(await periods.getLatest(), isNotNull);
   });
 
-  testWidgets('Last period and past dates are stored from setup', (
+  rituTestWidgets('Last period and past dates are stored from setup', (
     tester,
   ) async {
     await tester.pumpWidget(createRituApp(database: database));
@@ -147,7 +164,7 @@ void main() {
     expect(find.text('days since last period'), findsOneWidget);
   });
 
-  testWidgets('Returning user skips onboarding when profile is complete', (
+  rituTestWidgets('Returning user skips onboarding when profile is complete', (
     tester,
   ) async {
     final profiles = DriftProfileRepository(database);
@@ -162,7 +179,7 @@ void main() {
     expect(find.text('Maya ✨'), findsOneWidget);
   });
 
-  testWidgets('Delete Data clears profile and returns to splash', (
+  rituTestWidgets('Delete Data clears profile and returns to splash', (
     tester,
   ) async {
     final profiles = DriftProfileRepository(database);
@@ -193,7 +210,7 @@ void main() {
     expect(await profiles.getProfile(), isNull);
   });
 
-  testWidgets('Editing name from Settings updates profile and Home', (
+  rituTestWidgets('Editing name from Settings updates profile and Home', (
     tester,
   ) async {
     final profiles = DriftProfileRepository(database);
@@ -226,7 +243,7 @@ void main() {
     expect(find.text('Nora ✨'), findsOneWidget);
   });
 
-  testWidgets('Editing period started from Settings updates latest log', (
+  rituTestWidgets('Editing period started from Settings updates latest log', (
     tester,
   ) async {
     final profiles = DriftProfileRepository(database);
@@ -280,7 +297,7 @@ void main() {
     expect(find.text('Last period $updatedLabel'), findsOneWidget);
   });
 
-  testWidgets('Period start calendar does not accept future dates', (
+  rituTestWidgets('Period start calendar does not accept future dates', (
     tester,
   ) async {
     final profiles = DriftProfileRepository(database);
@@ -346,7 +363,7 @@ void main() {
     );
   });
 
-  testWidgets('Period History from Settings adds past dates', (tester) async {
+  rituTestWidgets('Period History from Settings adds past dates', (tester) async {
     final profiles = DriftProfileRepository(database);
     final periods = DriftPeriodRepository(database);
     await profiles.upsertDisplayName('Maya');
@@ -401,7 +418,7 @@ void main() {
     expect(find.text('View and edit past dates'), findsOneWidget);
   });
 
-  testWidgets('Custom Symptoms from Settings adds and removes body signals', (
+  rituTestWidgets('Custom Symptoms from Settings adds and removes body signals', (
     tester,
   ) async {
     final profiles = DriftProfileRepository(database);
@@ -458,7 +475,7 @@ void main() {
     expect(find.text('1 added'), findsOneWidget);
   });
 
-  testWidgets('Log today records a full daily log entry', (tester) async {
+  rituTestWidgets('Log today records a full daily log entry', (tester) async {
     final profiles = DriftProfileRepository(database);
     await profiles.upsertDisplayName('Maya');
     await profiles.markOnboardingCompleted();
@@ -552,7 +569,7 @@ void main() {
     expect(storedSymptoms.map((s) => s.name), contains('Custom ache'));
   });
 
-  testWidgets('Log today re-opens with previous answers pre-filled', (
+  rituTestWidgets('Log today re-opens with previous answers pre-filled', (
     tester,
   ) async {
     final profiles = DriftProfileRepository(database);
@@ -585,7 +602,7 @@ void main() {
     expect(find.text('Focused'), findsOneWidget);
   });
 
-  testWidgets(
+  rituTestWidgets(
     'Patterns progress counts logged days, not past periods',
     (tester) async {
       final profiles = DriftProfileRepository(database);
@@ -619,10 +636,7 @@ void main() {
         flowIntensity: 'Light',
       );
 
-      await tester.tap(find.byIcon(LucideIcons.settings));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byIcon(LucideIcons.chevronLeft));
-      await tester.pumpAndSettle();
+      await tester.pump();
 
       expect(find.text('2 of 14 days – pattern unlock at 14'), findsOneWidget);
     },

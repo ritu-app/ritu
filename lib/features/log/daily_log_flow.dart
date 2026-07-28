@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../providers/daily_log_providers.dart';
 import '../../providers/repository_access.dart';
+import '../../providers/symptom_providers.dart';
 import '../../core/date_format.dart';
+import '../../data/models/custom_symptom.dart';
+import '../../data/models/daily_log_entry.dart';
 import '../../theme/ritu_colors.dart';
 import '../setup/widgets/choice_chips.dart';
 import '../setup/widgets/progress_dots.dart';
@@ -46,20 +51,19 @@ const _totalSteps = 4;
 /// Home "Log today" daily check-in — a 4-step wizard (flow, mood, body
 /// signals, notes) that upserts a single [lib/data/local/tables/daily_logs.dart]
 /// row for the given day (Figma node-id 293-407 / 293-485 / 293-624 / 308-762).
-class DailyLogFlow extends StatefulWidget {
+class DailyLogFlow extends ConsumerStatefulWidget {
   DailyLogFlow({super.key, DateTime? date})
     : date = dateOnly(date ?? DateTime.now());
 
   final DateTime date;
 
   @override
-  State<DailyLogFlow> createState() => _DailyLogFlowState();
+  ConsumerState<DailyLogFlow> createState() => _DailyLogFlowState();
 }
 
-class _DailyLogFlowState extends State<DailyLogFlow> {
+class _DailyLogFlowState extends ConsumerState<DailyLogFlow> {
   int _step = 0;
-  var _loading = true;
-  var _loadStarted = false;
+  var _hydrated = false;
   var _saving = false;
 
   String? _flowIntensity;
@@ -79,40 +83,31 @@ class _DailyLogFlowState extends State<DailyLogFlow> {
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (!_loadStarted) {
-      _loadStarted = true;
-      _load();
-    }
-  }
-
-  @override
   void dispose() {
     _notesController.dispose();
     super.dispose();
   }
 
-  Future<void> _load() async {
-    final dailyLogs = context.dailyLogs;
-    final symptoms = context.symptoms;
-    final existing = await dailyLogs.getByDate(widget.date);
-    final customSymptoms = await symptoms.getAll();
-    if (!mounted) return;
-    setState(() {
-      _customSymptomNames = customSymptoms.map((s) => s.name).toList();
-      if (existing != null) {
-        _flowIntensity = existing.flowIntensity;
-        _crampIntensity = existing.crampIntensity ?? 0;
-        _moods.addAll(existing.moods);
-        _energyLevel = existing.energyLevel;
-        _sleepQuality = existing.sleepQuality;
-        _wellbeing = existing.wellbeing ?? 0;
-        _symptoms.addAll(existing.symptoms);
-        _notesController.text = existing.notes ?? '';
-      }
-      _loading = false;
-    });
+  void _maybeHydrate(
+    AsyncValue<DailyLogEntry?> logAsync,
+    AsyncValue<List<CustomSymptom>> symptomsAsync,
+  ) {
+    if (_hydrated || logAsync.isLoading || symptomsAsync.isLoading) return;
+    _hydrated = true;
+
+    _customSymptomNames =
+        symptomsAsync.valueOrNull?.map((s) => s.name).toList() ?? [];
+    final existing = logAsync.valueOrNull;
+    if (existing != null) {
+      _flowIntensity = existing.flowIntensity;
+      _crampIntensity = existing.crampIntensity ?? 0;
+      _moods.addAll(existing.moods);
+      _energyLevel = existing.energyLevel;
+      _sleepQuality = existing.sleepQuality;
+      _wellbeing = existing.wellbeing ?? 0;
+      _symptoms.addAll(existing.symptoms);
+      _notesController.text = existing.notes ?? '';
+    }
   }
 
   List<String> get _symptomOptions => [
@@ -167,6 +162,10 @@ class _DailyLogFlowState extends State<DailyLogFlow> {
 
   @override
   Widget build(BuildContext context) {
+    final logAsync = ref.watch(dailyLogByDateProvider(widget.date));
+    final symptomsAsync = ref.watch(customSymptomsProvider);
+    _maybeHydrate(logAsync, symptomsAsync);
+
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
@@ -176,7 +175,7 @@ class _DailyLogFlowState extends State<DailyLogFlow> {
       child: Scaffold(
         backgroundColor: RituColors.backgroundPage,
         body: SafeArea(
-          child: _loading
+          child: !_hydrated
               ? const Center(
                   child: CircularProgressIndicator(color: RituColors.sage500),
                 )

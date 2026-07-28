@@ -81,6 +81,24 @@ AppDatabase (Drift / SQLite)
 
 Domain models in `lib/data/models/` have no Drift imports. Row mapping lives in the `drift/` repository implementations. Abstract repositories expose both one-shot `Future` methods and reactive `Stream` watchers (Drift `.watch()` under the hood).
 
+## Riverpod providers (`lib/providers/`)
+
+Screens read data via `ref.watch` on StreamProviders; writes still go through repository `ref.read` / `context.profiles` etc.
+
+| Provider | Source |
+|----------|--------|
+| `profileProvider` | `watchProfile()` |
+| `latestPeriodProvider` | `watchLatest()` |
+| `allPeriodsProvider` | `watchAll()` |
+| `bleedDaysProvider` | derived from `allPeriodsProvider` |
+| `daysSinceLastPeriodProvider` | derived from `latestPeriodProvider` |
+| `pastPeriodStartsProvider` | derived from `allPeriodsProvider` |
+| `customSymptomsProvider` | `watchAll()` |
+| `todayLogProvider` | `watchByDate(today)` |
+| `dailyLogByDateProvider(date)` | `watchByDate(date)` |
+| `totalLoggedDaysProvider` | `watchTotalLoggedDays()` |
+| `currentStreakProvider` | `watchCurrentStreak()` |
+
 ## Schema
 
 ### `profiles`
@@ -164,7 +182,7 @@ One row per **calendar day**, filled in by the Home "Log today" flow (`DailyLogF
 1. Home → **Log today** → `DailyLogFlow` pre-fills from `getByDate(today)` if a log already exists for today (so re-opening edits in place)
 2. Each step's "Next"/"Skip" just advances the wizard locally — nothing is written until the final "Save log" step
 3. Final step → `upsert(...)` — single write for the whole day, no per-step persistence
-4. Home re-loads `getByDate(today)` after the flow closes: `null` → check-in card, non-null → "Logged today" summary card (moods/energy/sleep/symptoms rendered as read-only pills, "Edit" re-opens the flow pre-filled)
+4. Home re-reads `watchByDate(today)` via Riverpod: `null` → check-in card, non-null → "Logged today" summary card (moods/energy/sleep/symptoms rendered as read-only pills, "Edit" re-opens the flow pre-filled)
 
 **Derived in `DailyLogRepository` (not stored):**
 

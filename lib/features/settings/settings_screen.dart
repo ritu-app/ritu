@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import '../../providers/app_restart_provider.dart';
+import '../../providers/period_providers.dart';
 import '../../providers/profile_providers.dart';
 import '../../providers/repository_access.dart';
 import '../../providers/repository_providers.dart';
+import '../../providers/symptom_providers.dart';
 import '../../core/date_format.dart';
 import '../../theme/ritu_colors.dart';
 import 'custom_symptoms_screen.dart';
@@ -15,99 +16,54 @@ import 'edit_name_dialog.dart';
 import 'period_history_screen.dart';
 import 'period_started_screen.dart';
 
-class SettingsScreen extends StatefulWidget {
-  const SettingsScreen({
-    super.key,
-    required this.name,
-    required this.loggingSince,
-    this.periodStartedLabel,
-    this.pastPeriodCount = 0,
-    this.customSymptomCount = 0,
-  });
-
-  final String name;
-  final DateTime loggingSince;
-  final String? periodStartedLabel;
-  final int pastPeriodCount;
-  final int customSymptomCount;
+class SettingsScreen extends ConsumerWidget {
+  const SettingsScreen({super.key});
 
   @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final profileAsync = ref.watch(profileProvider);
+    final latestAsync = ref.watch(latestPeriodProvider);
+    final pastAsync = ref.watch(pastPeriodStartsProvider);
+    final symptomsAsync = ref.watch(customSymptomsProvider);
 
-class _SettingsScreenState extends State<SettingsScreen> {
-  late String _name = widget.name;
-  late String? _periodStartedLabel = widget.periodStartedLabel;
-  late int _pastPeriodCount = widget.pastPeriodCount;
-  late int _customSymptomCount = widget.customSymptomCount;
-
-  String get _initial {
-    final trimmed = _name.trim();
-    if (trimmed.isEmpty) return '?';
-    return trimmed.substring(0, 1).toUpperCase();
-  }
-
-  String get _loggingSinceLabel => formatDisplayDate(widget.loggingSince);
-
-  String get _periodHistorySubtitle =>
-      _pastPeriodCount == 0 ? 'No dates added' : 'View and edit past dates';
-
-  String get _customSymptomsSubtitle => _customSymptomCount == 0
-      ? 'Add your own symptoms to track'
-      : '$_customSymptomCount added';
-
-  void _popWithName() {
-    Navigator.of(context).pop(_name);
-  }
-
-  Future<void> _editName() async {
-    final updated = await showEditNameDialog(
-      context,
-      currentName: _name,
-    );
-    if (updated == null || !mounted) return;
-    if (updated == _name) return;
-
-    await context.profiles.upsertDisplayName(updated);
-    if (!mounted) return;
-    setState(() => _name = updated);
-  }
-
-  Future<void> _editPeriodStarted() async {
-    final selected = await Navigator.of(context).push<DateTime>(
-      MaterialPageRoute<DateTime>(
-        builder: (_) => const PeriodStartedScreen(),
+    return profileAsync.when(
+      loading: () => const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(color: RituColors.sage500),
+        ),
       ),
+      error: (error, _) => Scaffold(body: Center(child: Text('$error'))),
+      data: (profile) {
+        if (profile == null) {
+          return const Scaffold(
+            body: Center(child: Text('No profile found')),
+          );
+        }
+
+        final name = profile.displayName;
+        final loggingSince = profile.onboardingCompletedAt!;
+        final periodStartedLabel = latestAsync.valueOrNull == null
+            ? null
+            : formatDisplayDate(latestAsync.valueOrNull!.startedOn);
+        final pastPeriodCount = pastAsync.valueOrNull?.length ?? 0;
+        final customSymptomCount = symptomsAsync.valueOrNull?.length ?? 0;
+
+        return _SettingsBody(
+          name: name,
+          loggingSince: loggingSince,
+          periodStartedLabel: periodStartedLabel,
+          pastPeriodCount: pastPeriodCount,
+          customSymptomCount: customSymptomCount,
+          onDeleteData: () => _confirmAndDeleteData(context, ref),
+        );
+      },
     );
-    if (selected == null || !mounted) return;
-    setState(() => _periodStartedLabel = formatDisplayDate(selected));
   }
 
-  Future<void> _editPeriodHistory() async {
-    final count = await Navigator.of(context).push<int>(
-      MaterialPageRoute<int>(
-        builder: (_) => const PeriodHistoryScreen(),
-      ),
-    );
-    if (!mounted) return;
-    if (count != null) {
-      setState(() => _pastPeriodCount = count);
-    }
-  }
-
-  Future<void> _editCustomSymptoms() async {
-    final count = await Navigator.of(context).push<int>(
-      MaterialPageRoute<int>(
-        builder: (_) => const CustomSymptomsScreen(),
-      ),
-    );
-    if (!mounted) return;
-    if (count != null) {
-      setState(() => _customSymptomCount = count);
-    }
-  }
-
-  Future<void> _confirmAndDeleteData() async {
+  Future<void> _confirmAndDeleteData(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
@@ -156,13 +112,80 @@ class _SettingsScreenState extends State<SettingsScreen> {
       },
     );
 
-    if (confirmed != true || !mounted) return;
+    if (confirmed != true || !context.mounted) return;
 
-    final container = ProviderScope.containerOf(context);
-    await container.read(profileRepositoryProvider).clearAllData();
-    if (!mounted) return;
-    container.invalidate(profileProvider);
-    container.read(appRestartProvider.notifier).state++;
+    await ref.read(profileRepositoryProvider).clearAllData();
+    if (!context.mounted) return;
+    ref.invalidate(profileProvider);
+    ref.read(appRestartProvider.notifier).state++;
+  }
+}
+
+class _SettingsBody extends StatelessWidget {
+  const _SettingsBody({
+    required this.name,
+    required this.loggingSince,
+    required this.periodStartedLabel,
+    required this.pastPeriodCount,
+    required this.customSymptomCount,
+    required this.onDeleteData,
+  });
+
+  final String name;
+  final DateTime loggingSince;
+  final String? periodStartedLabel;
+  final int pastPeriodCount;
+  final int customSymptomCount;
+  final VoidCallback onDeleteData;
+
+  String get _initial {
+    final trimmed = name.trim();
+    if (trimmed.isEmpty) return '?';
+    return trimmed.substring(0, 1).toUpperCase();
+  }
+
+  String get _loggingSinceLabel => formatDisplayDate(loggingSince);
+
+  String get _periodHistorySubtitle =>
+      pastPeriodCount == 0 ? 'No dates added' : 'View and edit past dates';
+
+  String get _customSymptomsSubtitle => customSymptomCount == 0
+      ? 'Add your own symptoms to track'
+      : '$customSymptomCount added';
+
+  void _popWithName(BuildContext context) {
+    Navigator.of(context).pop(name);
+  }
+
+  Future<void> _editName(BuildContext context) async {
+    final updated = await showEditNameDialog(context, currentName: name);
+    if (updated == null || !context.mounted) return;
+    if (updated == name) return;
+    await context.profiles.upsertDisplayName(updated);
+  }
+
+  Future<void> _editPeriodStarted(BuildContext context) async {
+    await Navigator.of(context).push<DateTime>(
+      MaterialPageRoute<DateTime>(
+        builder: (_) => const PeriodStartedScreen(),
+      ),
+    );
+  }
+
+  Future<void> _editPeriodHistory(BuildContext context) async {
+    await Navigator.of(context).push<int>(
+      MaterialPageRoute<int>(
+        builder: (_) => const PeriodHistoryScreen(),
+      ),
+    );
+  }
+
+  Future<void> _editCustomSymptoms(BuildContext context) async {
+    await Navigator.of(context).push<int>(
+      MaterialPageRoute<int>(
+        builder: (_) => const CustomSymptomsScreen(),
+      ),
+    );
   }
 
   @override
@@ -171,23 +194,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
-        _popWithName();
+        _popWithName(context);
       },
       child: Scaffold(
         backgroundColor: RituColors.backgroundPage,
         body: SafeArea(
           child: Column(
             children: [
-              _SettingsAppBar(onBack: _popWithName),
+              _SettingsAppBar(onBack: () => _popWithName(context)),
               Expanded(
                 child: ListView(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
                   children: [
                     _ProfileCard(
                       initial: _initial,
-                      name: _name,
+                      name: name,
                       loggingSinceLabel: _loggingSinceLabel,
-                      onNameTap: _editName,
+                      onNameTap: () => _editName(context),
                     ),
                     const SizedBox(height: 20),
                     const _SectionLabel('Cycle & Tracking'),
@@ -199,8 +222,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           iconBackground: RituColors.fillPositiveSecondary,
                           iconColor: RituColors.sage600,
                           title: 'Period Started',
-                          subtitle: _periodStartedLabel ?? 'Not set',
-                          onTap: _editPeriodStarted,
+                          subtitle: periodStartedLabel ?? 'Not set',
+                          onTap: () => _editPeriodStarted(context),
                         ),
                         _SettingsRow(
                           icon: LucideIcons.history,
@@ -208,7 +231,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           iconColor: RituColors.sage600,
                           title: 'Period History',
                           subtitle: _periodHistorySubtitle,
-                          onTap: _editPeriodHistory,
+                          onTap: () => _editPeriodHistory(context),
                         ),
                         _SettingsRow(
                           icon: LucideIcons.clock,
@@ -224,7 +247,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           title: 'Custom Symptoms',
                           subtitle: _customSymptomsSubtitle,
                           showDivider: false,
-                          onTap: _editCustomSymptoms,
+                          onTap: () => _editCustomSymptoms(context),
                         ),
                       ],
                     ),
@@ -290,7 +313,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           title: 'Delete Data',
                           subtitle: 'Permanently removes everything',
                           showDivider: false,
-                          onTap: _confirmAndDeleteData,
+                          onTap: onDeleteData,
                         ),
                       ],
                     ),

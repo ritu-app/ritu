@@ -5,8 +5,6 @@ import 'package:widgetbook_annotation/widgetbook_annotation.dart' as widgetbook;
 
 import '../../support/seeded_app_scope.dart';
 
-final _loggingSince = DateTime.now().subtract(const Duration(days: 10));
-
 @widgetbook.UseCase(
   name: 'Not logged today',
   type: HomeScreen,
@@ -25,7 +23,7 @@ Widget homeNotLoggedUseCase(BuildContext context) {
         typicalPeriodDays: 5,
       );
     },
-    builder: (context) => HomeScreen(name: 'Maya', loggingSince: _loggingSince),
+    builder: (context) => const HomeScreen(),
   );
 }
 
@@ -50,7 +48,6 @@ Widget homeLoggedTodayUseCase(BuildContext context) {
         sleepQuality: 'Good',
         symptoms: const ['Bloating'],
       );
-      // A couple of prior days so the streak flame shows as active.
       await repos.dailyLogs.upsert(
         loggedOn: DateTime.now().subtract(const Duration(days: 1)),
         flowIntensity: 'Light',
@@ -60,7 +57,7 @@ Widget homeLoggedTodayUseCase(BuildContext context) {
         flowIntensity: 'Medium',
       );
     },
-    builder: (context) => HomeScreen(name: 'Maya', loggingSince: _loggingSince),
+    builder: (context) => const HomeScreen(),
   );
 }
 
@@ -72,6 +69,6 @@ Widget homeLoggedTodayUseCase(BuildContext context) {
 Widget homeEmptyUseCase(BuildContext context) {
   return SeededAppScope(
     seed: (repos) => seedOnboardedProfile(repos, name: 'Maya'),
-    builder: (context) => HomeScreen(name: 'Maya', loggingSince: _loggingSince),
+    builder: (context) => const HomeScreen(),
   );
 }

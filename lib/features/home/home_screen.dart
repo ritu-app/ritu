@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '../../providers/repository_access.dart';
 import '../../core/date_format.dart';
 import '../../data/repositories/daily_log_repository.dart';
+import '../../providers/daily_log_providers.dart';
+import '../../providers/period_providers.dart';
+import '../../providers/profile_providers.dart';
 import '../../theme/ritu_colors.dart';
 import '../insights/insights_screen.dart';
 import '../journal/journal_screen.dart';
@@ -13,38 +16,20 @@ import '../reports/reports_screen.dart';
 import '../settings/settings_screen.dart';
 import '../setup/widgets/ritu_calendar.dart';
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({
-    super.key,
-    required this.name,
-    required this.loggingSince,
-    this.patternDaysRequired = 14,
-  });
+class HomeScreen extends ConsumerStatefulWidget {
+  const HomeScreen({super.key, this.patternDaysRequired = 14});
 
-  final String name;
-  final DateTime loggingSince;
   final int patternDaysRequired;
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _tabIndex = 0;
-  bool _showSpeedUpBanner = true;
+  var _bannerDismissed = false;
   String? _selectedMood;
   late DateTime _calendarMonth;
-  late String _name;
-
-  int? _daysSinceLastPeriod;
-  String? _lastPeriodLabel;
-  Set<DateTime> _periodDates = {};
-  int _loggedDaysCount = 0;
-  int _pastPeriodCount = 0;
-  int _customSymptomCount = 0;
-  bool _periodDataLoaded = false;
-  DailyLogEntry? _todayLog;
-  int _streak = 0;
 
   static const _moods = [
     ('😊', 'Radiant'),
@@ -57,58 +42,53 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _name = widget.name;
     final now = DateTime.now();
     _calendarMonth = DateTime(now.year, now.month);
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (!_periodDataLoaded) {
-      _periodDataLoaded = true;
-      _loadPeriodData();
-    }
-  }
-
-  Future<void> _loadPeriodData() async {
-    final periods = context.periods;
-    final symptoms = context.symptoms;
-    final dailyLogs = context.dailyLogs;
-    final latest = await periods.getLatest();
-    final days = await periods.daysSinceLastPeriod();
-    final bleed = await periods.allBleedDays();
-    final all = await periods.getAll();
-    final past = await periods.getPastStartedOn();
-    final customSymptoms = await symptoms.getAll();
-    final todayLog = await dailyLogs.getByDate(DateTime.now());
-    final streak = await dailyLogs.getCurrentStreak();
-    final loggedDaysCount = await dailyLogs.getTotalLoggedDays();
-    if (!mounted) return;
-    setState(() {
-      _daysSinceLastPeriod = days;
-      _lastPeriodLabel = latest == null
-          ? null
-          : formatDisplayDate(latest.startedOn);
-      _periodDates = bleed;
-      _loggedDaysCount = loggedDaysCount;
-      _pastPeriodCount = past.length;
-      _customSymptomCount = customSymptoms.length;
-      _todayLog = todayLog;
-      _streak = streak;
-      _showSpeedUpBanner = all.length < 2;
-    });
   }
 
   Future<void> _openDailyLog() async {
     await Navigator.of(
       context,
     ).push<bool>(MaterialPageRoute<bool>(builder: (_) => DailyLogFlow()));
-    await _loadPeriodData();
   }
 
   @override
   Widget build(BuildContext context) {
+    final profileAsync = ref.watch(profileProvider);
+    final daysSinceAsync = ref.watch(daysSinceLastPeriodProvider);
+    final latestAsync = ref.watch(latestPeriodProvider);
+    final bleedDaysAsync = ref.watch(bleedDaysProvider);
+    final loggedDaysAsync = ref.watch(totalLoggedDaysProvider);
+    final bannerAsync = ref.watch(showSpeedUpBannerProvider);
+    final todayLogAsync = ref.watch(todayLogProvider);
+    final streakAsync = ref.watch(currentStreakProvider);
+
+    final profile = profileAsync.valueOrNull;
+    if (profileAsync.isLoading && profile == null) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(color: RituColors.sage500),
+        ),
+      );
+    }
+    if (profile == null || profile.onboardingCompletedAt == null) {
+      return const Scaffold(
+        body: Center(child: Text('Profile not found')),
+      );
+    }
+
+    final name = profile.displayName;
+    final daysSinceLastPeriod = daysSinceAsync.valueOrNull;
+    final latest = latestAsync.valueOrNull;
+    final lastPeriodLabel =
+        latest == null ? null : formatDisplayDate(latest.startedOn);
+    final periodDates = bleedDaysAsync.valueOrNull ?? {};
+    final loggedDaysCount = loggedDaysAsync.valueOrNull ?? 0;
+    final showSpeedUpBanner =
+        (bannerAsync.valueOrNull ?? false) && !_bannerDismissed;
+    final todayLog = todayLogAsync.valueOrNull;
+    final streak = streakAsync.valueOrNull ?? 0;
+
     return Scaffold(
       backgroundColor: RituColors.backgroundPage,
       body: SafeArea(
@@ -118,38 +98,30 @@ class _HomeScreenState extends State<HomeScreen> {
             Expanded(
               child: switch (_tabIndex) {
                 0 => _HomeTab(
-                  name: _name,
-                  loggingSince: widget.loggingSince,
-                  daysSinceLastPeriod: _daysSinceLastPeriod,
-                  lastPeriodLabel: _lastPeriodLabel,
-                  patternDaysLogged: _loggedDaysCount.clamp(
+                  name: name,
+                  daysSinceLastPeriod: daysSinceLastPeriod,
+                  lastPeriodLabel: lastPeriodLabel,
+                  patternDaysLogged: loggedDaysCount.clamp(
                     0,
                     widget.patternDaysRequired,
                   ),
                   patternDaysRequired: widget.patternDaysRequired,
-                  showSpeedUpBanner: _showSpeedUpBanner,
+                  showSpeedUpBanner: showSpeedUpBanner,
                   selectedMood: _selectedMood,
                   moods: _moods,
                   calendarMonth: _calendarMonth,
-                  periodDates: _periodDates,
+                  periodDates: periodDates,
                   onMoodSelected: (mood) {
                     setState(() => _selectedMood = mood);
                   },
                   onDismissBanner: () {
-                    setState(() => _showSpeedUpBanner = false);
+                    setState(() => _bannerDismissed = true);
                   },
                   onMonthChanged: (month) {
                     setState(() => _calendarMonth = month);
                   },
-                  onNameUpdated: (name) {
-                    setState(() => _name = name);
-                  },
-                  onReturnedFromSettings: _loadPeriodData,
-                  periodStartedLabel: _lastPeriodLabel,
-                  pastPeriodCount: _pastPeriodCount,
-                  customSymptomCount: _customSymptomCount,
-                  todayLog: _todayLog,
-                  streak: _streak,
+                  todayLog: todayLog,
+                  streak: streak,
                   onLogToday: _openDailyLog,
                 ),
                 1 => InsightsScreen(
@@ -181,7 +153,6 @@ class _HomeScreenState extends State<HomeScreen> {
 class _HomeTab extends StatelessWidget {
   const _HomeTab({
     required this.name,
-    required this.loggingSince,
     required this.daysSinceLastPeriod,
     required this.lastPeriodLabel,
     required this.patternDaysLogged,
@@ -194,18 +165,12 @@ class _HomeTab extends StatelessWidget {
     required this.onMoodSelected,
     required this.onDismissBanner,
     required this.onMonthChanged,
-    required this.onNameUpdated,
-    required this.onReturnedFromSettings,
     required this.onLogToday,
-    this.periodStartedLabel,
-    this.pastPeriodCount = 0,
-    this.customSymptomCount = 0,
     this.todayLog,
     this.streak = 0,
   });
 
   final String name;
-  final DateTime loggingSince;
   final int? daysSinceLastPeriod;
   final String? lastPeriodLabel;
   final int patternDaysLogged;
@@ -218,12 +183,7 @@ class _HomeTab extends StatelessWidget {
   final ValueChanged<String> onMoodSelected;
   final VoidCallback onDismissBanner;
   final ValueChanged<DateTime> onMonthChanged;
-  final ValueChanged<String> onNameUpdated;
-  final Future<void> Function() onReturnedFromSettings;
   final Future<void> Function() onLogToday;
-  final String? periodStartedLabel;
-  final int pastPeriodCount;
-  final int customSymptomCount;
   final DailyLogEntry? todayLog;
   final int streak;
 
@@ -235,20 +195,12 @@ class _HomeTab extends StatelessWidget {
         _Header(
           name: name,
           streak: streak,
-          onSettingsTap: () async {
-            final updated = await Navigator.of(context).push<String>(
+          onSettingsTap: () {
+            Navigator.of(context).push<String>(
               MaterialPageRoute<String>(
-                builder: (_) => SettingsScreen(
-                  name: name,
-                  loggingSince: loggingSince,
-                  periodStartedLabel: periodStartedLabel,
-                  pastPeriodCount: pastPeriodCount,
-                  customSymptomCount: customSymptomCount,
-                ),
+                builder: (_) => const SettingsScreen(),
               ),
             );
-            if (updated != null) onNameUpdated(updated);
-            await onReturnedFromSettings();
           },
         ),
         const SizedBox(height: 16),

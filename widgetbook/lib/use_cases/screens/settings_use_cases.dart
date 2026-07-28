@@ -8,8 +8,6 @@ import 'package:widgetbook_annotation/widgetbook_annotation.dart' as widgetbook;
 
 import '../../support/seeded_app_scope.dart';
 
-final _loggingSince = DateTime.now().subtract(const Duration(days: 10));
-
 @widgetbook.UseCase(
   name: 'With history',
   type: SettingsScreen,
@@ -29,13 +27,7 @@ Widget settingsWithHistoryUseCase(BuildContext context) {
       );
       await repos.symptoms.addSymptom('Jaw tension');
     },
-    builder: (context) => SettingsScreen(
-      name: 'Maya',
-      loggingSince: _loggingSince,
-      periodStartedLabel: 'June 12, 2026',
-      pastPeriodCount: 1,
-      customSymptomCount: 1,
-    ),
+    builder: (context) => const SettingsScreen(),
   );
 }
 
@@ -47,8 +39,7 @@ Widget settingsWithHistoryUseCase(BuildContext context) {
 Widget settingsEmptyUseCase(BuildContext context) {
   return SeededAppScope(
     seed: (repos) => seedOnboardedProfile(repos),
-    builder: (context) =>
-        SettingsScreen(name: 'Maya', loggingSince: _loggingSince),
+    builder: (context) => const SettingsScreen(),
   );
 }
 
