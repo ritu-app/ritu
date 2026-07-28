@@ -6,6 +6,8 @@ main `ritu` package via a path dependency ([pubspec.yaml](pubspec.yaml)), so
 `widgetbook`/`widgetbook_annotation`/`widgetbook_generator`/`device_frame`
 never pollute the main app's dependencies.
 
+**Live catalog:** [components.ritu.care](https://components.ritu.care/) — deployed from `main` via GitHub Actions + Vercel (see [Deploy to Vercel](#deploy-to-vercel-github-actions) below).
+
 ## Running it
 
 ```bash
@@ -55,6 +57,8 @@ SQLite), so Home, Settings, and related screens preview normally on web.
 Component-level use-cases also render normally.
 
 ## Deploy to Vercel (GitHub Actions)
+
+Production URL: **[components.ritu.care](https://components.ritu.care/)**
 
 Widgetbook is deployed as a static Flutter web app via
 [.github/workflows/widgetbook-vercel.yml](../.github/workflows/widgetbook-vercel.yml).

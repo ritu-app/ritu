@@ -4,7 +4,7 @@ A private journal for your cycle.
 
 For how on-device data is stored and how the schema is laid out, see [docs/DATA.md](docs/DATA.md).
 
-For a browsable catalog of Ritu's reusable widgets and screens, see [widgetbook/](widgetbook/README.md).
+For a browsable catalog of Ritu's reusable widgets and screens, see the live Widgetbook at [components.ritu.care](https://components.ritu.care/) or [widgetbook/](widgetbook/README.md) to run it locally.
 
 ## Prerequisites
 
