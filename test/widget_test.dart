@@ -5,10 +5,11 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:ritu/app/ritu_app.dart';
 import 'package:ritu/core/date_format.dart';
 import 'package:ritu/data/local/app_database.dart';
-import 'package:ritu/data/repositories/daily_log_repository.dart';
+import 'package:ritu/data/repositories/drift/drift_daily_log_repository.dart';
+import 'package:ritu/data/repositories/drift/drift_period_repository.dart';
+import 'package:ritu/data/repositories/drift/drift_profile_repository.dart';
+import 'package:ritu/data/repositories/drift/drift_symptom_repository.dart';
 import 'package:ritu/data/repositories/period_repository.dart';
-import 'package:ritu/data/repositories/profile_repository.dart';
-import 'package:ritu/data/repositories/symptom_repository.dart';
 import 'package:ritu/features/setup/widgets/choice_chips.dart';
 import 'package:ritu/theme/ritu_colors.dart';
 
@@ -71,7 +72,7 @@ void main() {
     expect(find.text('Maya ✨'), findsOneWidget);
     expect(find.text('Home'), findsWidgets);
 
-    final profile = await ProfileRepository(database).getProfile();
+    final profile = await DriftProfileRepository(database).getProfile();
     expect(profile?.displayName, 'Maya');
     expect(profile?.hasCompletedOnboarding, isTrue);
 
@@ -100,7 +101,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Export your health data'), findsOneWidget);
 
-    final periods = PeriodRepository(database);
+    final periods = DriftPeriodRepository(database);
     expect(await periods.getLatest(), isNotNull);
   });
 
@@ -130,12 +131,12 @@ void main() {
     await tester.tap(find.text('This look right'));
     await tester.pumpAndSettle();
 
-    final periods = PeriodRepository(database);
+    final periods = DriftPeriodRepository(database);
     final latest = await periods.getLatest();
     expect(latest, isNotNull);
     expect(latest!.source, PeriodSources.onboardingLast);
 
-    final profiles = ProfileRepository(database);
+    final profiles = DriftProfileRepository(database);
     expect((await profiles.getProfile())?.typicalPeriodDays, 5);
 
     await tester.tap(find.text('Skip – I’ll build from today'));
@@ -149,7 +150,7 @@ void main() {
   testWidgets('Returning user skips onboarding when profile is complete', (
     tester,
   ) async {
-    final profiles = ProfileRepository(database);
+    final profiles = DriftProfileRepository(database);
     await profiles.upsertDisplayName('Maya');
     await profiles.markOnboardingCompleted();
 
@@ -164,7 +165,7 @@ void main() {
   testWidgets('Delete Data clears profile and returns to splash', (
     tester,
   ) async {
-    final profiles = ProfileRepository(database);
+    final profiles = DriftProfileRepository(database);
     await profiles.upsertDisplayName('Maya');
     await profiles.markOnboardingCompleted();
 
@@ -195,7 +196,7 @@ void main() {
   testWidgets('Editing name from Settings updates profile and Home', (
     tester,
   ) async {
-    final profiles = ProfileRepository(database);
+    final profiles = DriftProfileRepository(database);
     await profiles.upsertDisplayName('Maya');
     await profiles.markOnboardingCompleted();
 
@@ -228,8 +229,8 @@ void main() {
   testWidgets('Editing period started from Settings updates latest log', (
     tester,
   ) async {
-    final profiles = ProfileRepository(database);
-    final periods = PeriodRepository(database);
+    final profiles = DriftProfileRepository(database);
+    final periods = DriftPeriodRepository(database);
     await profiles.upsertDisplayName('Maya');
     await profiles.setTypicalPeriodDays(5);
     await profiles.markOnboardingCompleted();
@@ -282,8 +283,8 @@ void main() {
   testWidgets('Period start calendar does not accept future dates', (
     tester,
   ) async {
-    final profiles = ProfileRepository(database);
-    final periods = PeriodRepository(database);
+    final profiles = DriftProfileRepository(database);
+    final periods = DriftPeriodRepository(database);
     await profiles.upsertDisplayName('Maya');
     await profiles.markOnboardingCompleted();
     await periods.upsertPeriod(
@@ -346,8 +347,8 @@ void main() {
   });
 
   testWidgets('Period History from Settings adds past dates', (tester) async {
-    final profiles = ProfileRepository(database);
-    final periods = PeriodRepository(database);
+    final profiles = DriftProfileRepository(database);
+    final periods = DriftPeriodRepository(database);
     await profiles.upsertDisplayName('Maya');
     await profiles.setTypicalPeriodDays(5);
     await profiles.markOnboardingCompleted();
@@ -403,7 +404,7 @@ void main() {
   testWidgets('Custom Symptoms from Settings adds and removes body signals', (
     tester,
   ) async {
-    final profiles = ProfileRepository(database);
+    final profiles = DriftProfileRepository(database);
     await profiles.upsertDisplayName('Maya');
     await profiles.markOnboardingCompleted();
 
@@ -441,7 +442,7 @@ void main() {
 
     expect(find.text('Bacne'), findsOneWidget);
 
-    final symptomRepository = SymptomRepository(database);
+    final symptomRepository = DriftSymptomRepository(database);
     final stored = await symptomRepository.getAll();
     expect(stored.map((s) => s.name), ['Leg pain', 'Bacne']);
 
@@ -458,7 +459,7 @@ void main() {
   });
 
   testWidgets('Log today records a full daily log entry', (tester) async {
-    final profiles = ProfileRepository(database);
+    final profiles = DriftProfileRepository(database);
     await profiles.upsertDisplayName('Maya');
     await profiles.markOnboardingCompleted();
 
@@ -535,7 +536,7 @@ void main() {
       RituColors.iconAttention,
     );
 
-    final dailyLogs = DailyLogRepository(database);
+    final dailyLogs = DriftDailyLogRepository(database);
     final entry = await dailyLogs.getByDate(DateTime.now());
     expect(entry, isNotNull);
     expect(entry!.flowIntensity, 'Spotting');
@@ -546,7 +547,7 @@ void main() {
     expect(entry.notes, 'Feeling okay today');
     expect(await dailyLogs.getCurrentStreak(), 1);
 
-    final symptomRepository = SymptomRepository(database);
+    final symptomRepository = DriftSymptomRepository(database);
     final storedSymptoms = await symptomRepository.getAll();
     expect(storedSymptoms.map((s) => s.name), contains('Custom ache'));
   });
@@ -554,10 +555,10 @@ void main() {
   testWidgets('Log today re-opens with previous answers pre-filled', (
     tester,
   ) async {
-    final profiles = ProfileRepository(database);
+    final profiles = DriftProfileRepository(database);
     await profiles.upsertDisplayName('Maya');
     await profiles.markOnboardingCompleted();
-    final dailyLogs = DailyLogRepository(database);
+    final dailyLogs = DriftDailyLogRepository(database);
     await dailyLogs.upsert(
       loggedOn: DateTime.now(),
       flowIntensity: 'Light',
@@ -587,9 +588,9 @@ void main() {
   testWidgets(
     'Patterns progress counts logged days, not past periods',
     (tester) async {
-      final profiles = ProfileRepository(database);
-      final periods = PeriodRepository(database);
-      final dailyLogs = DailyLogRepository(database);
+      final profiles = DriftProfileRepository(database);
+      final periods = DriftPeriodRepository(database);
+      final dailyLogs = DriftDailyLogRepository(database);
       await profiles.upsertDisplayName('Maya');
       await profiles.markOnboardingCompleted();
       await periods.upsertPeriod(

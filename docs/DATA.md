@@ -41,6 +41,11 @@ Tests use `AppDatabase.memory()` so they do not touch the device file.
 
 ```
 lib/data/
+  models/
+    profile.dart
+    period_log.dart
+    custom_symptom.dart
+    daily_log_entry.dart
   local/
     app_database.dart
     app_database.g.dart
@@ -50,21 +55,31 @@ lib/data/
       custom_symptoms.dart
       daily_logs.dart
   repositories/
-    profile_repository.dart
+    profile_repository.dart      # abstract interface
     period_repository.dart
     symptom_repository.dart
     daily_log_repository.dart
+    drift/
+      drift_profile_repository.dart   # Drift/SQLite implementation
+      drift_period_repository.dart
+      drift_symptom_repository.dart
+      drift_daily_log_repository.dart
 ```
 
 ```
 Widget / flow
     │
     ▼
-ProfileRepository / PeriodRepository
+ProfileRepository (abstract)
+    │
+    ▼
+DriftProfileRepository
     │
     ▼
 AppDatabase (Drift / SQLite)
 ```
+
+Domain models in `lib/data/models/` have no Drift imports. Row mapping lives in the `drift/` repository implementations. Abstract repositories expose both one-shot `Future` methods and reactive `Stream` watchers (Drift `.watch()` under the hood).
 
 ## Schema
 

@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../data/local/app_database.dart';
 import '../data/repositories/daily_log_repository.dart';
+import '../data/repositories/drift/drift_daily_log_repository.dart';
+import '../data/repositories/drift/drift_period_repository.dart';
+import '../data/repositories/drift/drift_profile_repository.dart';
+import '../data/repositories/drift/drift_symptom_repository.dart';
 import '../data/repositories/period_repository.dart';
 import '../data/repositories/profile_repository.dart';
 import '../data/repositories/symptom_repository.dart';
@@ -191,9 +195,9 @@ class _OnboardingFlow extends StatelessWidget {
 RituApp createRituApp({AppDatabase? database}) {
   final db = database ?? AppDatabase();
   return RituApp(
-    profileRepository: ProfileRepository(db),
-    periodRepository: PeriodRepository(db),
-    symptomRepository: SymptomRepository(db),
-    dailyLogRepository: DailyLogRepository(db),
+    profileRepository: DriftProfileRepository(db),
+    periodRepository: DriftPeriodRepository(db),
+    symptomRepository: DriftSymptomRepository(db),
+    dailyLogRepository: DriftDailyLogRepository(db),
   );
 }

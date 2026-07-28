@@ -3,6 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:ritu/app/app_scope.dart';
 import 'package:ritu/data/local/app_database.dart';
 import 'package:ritu/data/repositories/daily_log_repository.dart';
+import 'package:ritu/data/repositories/drift/drift_daily_log_repository.dart';
+import 'package:ritu/data/repositories/drift/drift_period_repository.dart';
+import 'package:ritu/data/repositories/drift/drift_profile_repository.dart';
+import 'package:ritu/data/repositories/drift/drift_symptom_repository.dart';
 import 'package:ritu/data/repositories/period_repository.dart';
 import 'package:ritu/data/repositories/profile_repository.dart';
 import 'package:ritu/data/repositories/symptom_repository.dart';
@@ -55,10 +59,10 @@ class _SeededAppScopeState extends State<SeededAppScope> {
   Future<void> _init() async {
     final db = AppDatabase.memory();
     final repos = RituRepos(
-      ProfileRepository(db),
-      PeriodRepository(db),
-      SymptomRepository(db),
-      DailyLogRepository(db),
+      DriftProfileRepository(db),
+      DriftPeriodRepository(db),
+      DriftSymptomRepository(db),
+      DriftDailyLogRepository(db),
     );
     await widget.seed(repos);
     if (!mounted) return;

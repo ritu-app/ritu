@@ -1,92 +1,22 @@
-import 'package:drift/drift.dart';
-
 import '../../core/date_format.dart';
-import '../local/app_database.dart';
+import '../models/period_log.dart';
 
-class PeriodSources {
-  static const onboardingLast = 'onboarding_last';
-  static const onboardingPast = 'onboarding_past';
-  static const calendar = 'calendar';
-  static const settings = 'settings';
-}
+export '../models/period_log.dart';
 
-class PeriodLog {
-  const PeriodLog({
-    required this.id,
-    required this.startedOn,
-    required this.source,
-    required this.createdAt,
-    required this.updatedAt,
-    this.endedOn,
-  });
+/// Persistence for period episodes and bleed-day calendar data.
+abstract class PeriodRepository {
+  Future<PeriodLog?> getLatest();
 
-  final int id;
-  final DateTime startedOn;
-  final DateTime? endedOn;
-  final String source;
-  final DateTime createdAt;
-  final DateTime updatedAt;
+  Stream<PeriodLog?> watchLatest();
 
-  factory PeriodLog.fromRow(PeriodLogRow row) {
-    return PeriodLog(
-      id: row.id,
-      startedOn: dateOnly(row.startedOn),
-      endedOn: row.endedOn == null ? null : dateOnly(row.endedOn!),
-      source: row.source,
-      createdAt: row.createdAt,
-      updatedAt: row.updatedAt,
-    );
-  }
+  Future<List<PeriodLog>> getAll();
 
-  /// Inclusive bleed days for calendar highlighting.
-  Set<DateTime> get bleedDays {
-    final start = dateOnly(startedOn);
-    final end = endedOn == null ? start : dateOnly(endedOn!);
-    if (end.isBefore(start)) return {start};
+  Stream<List<PeriodLog>> watchAll();
 
-    final days = <DateTime>{};
-    var cursor = start;
-    while (!cursor.isAfter(end)) {
-      days.add(cursor);
-      cursor = cursor.add(const Duration(days: 1));
-    }
-    return days;
-  }
-}
-
-class PeriodRepository {
-  PeriodRepository(this._db);
-
-  final AppDatabase _db;
-
-  Future<PeriodLog?> getLatest() async {
-    final row = await (_db.select(_db.periodLogs)
-          ..orderBy([(t) => OrderingTerm.desc(t.startedOn)])
-          ..limit(1))
-        .getSingleOrNull();
-    if (row == null) return null;
-    return PeriodLog.fromRow(row);
-  }
-
-  Future<List<PeriodLog>> getAll() async {
-    final rows = await (_db.select(_db.periodLogs)
-          ..orderBy([(t) => OrderingTerm.desc(t.startedOn)]))
-        .get();
-    return rows.map(PeriodLog.fromRow).toList();
-  }
-
-  Future<Set<DateTime>> allBleedDays() async {
-    final logs = await getAll();
-    return {for (final log in logs) ...log.bleedDays};
-  }
+  Future<Set<DateTime>> allBleedDays();
 
   /// Days since the latest period start (0 = started today). Null if none.
-  Future<int?> daysSinceLastPeriod([DateTime? today]) async {
-    final latest = await getLatest();
-    if (latest == null) return null;
-    final now = dateOnly(today ?? DateTime.now());
-    return now.difference(dateOnly(latest.startedOn)).inDays;
-  }
+  Future<int?> daysSinceLastPeriod([DateTime? today]);
 
   /// Insert or update a period keyed by [startedOn].
   ///
@@ -95,107 +25,28 @@ class PeriodRepository {
     required DateTime startedOn,
     DateTime? endedOn,
     required String source,
-  }) async {
-    final start = dateOnly(startedOn);
-    final today = dateOnly(DateTime.now());
-    if (start.isAfter(today)) {
-      throw ArgumentError.value(
-        startedOn,
-        'startedOn',
-        'Period start cannot be in the future',
-      );
-    }
-    final end = endedOn == null ? null : dateOnly(endedOn);
-    final now = DateTime.now();
-
-    final existing = await (_db.select(_db.periodLogs)
-          ..where((t) => t.startedOn.equals(start)))
-        .getSingleOrNull();
-
-    if (existing == null) {
-      await _db.into(_db.periodLogs).insert(
-            PeriodLogsCompanion.insert(
-              startedOn: start,
-              endedOn: Value(end),
-              source: source,
-              createdAt: now,
-              updatedAt: now,
-            ),
-          );
-    } else {
-      await (_db.update(_db.periodLogs)
-            ..where((t) => t.id.equals(existing.id)))
-          .write(
-        PeriodLogsCompanion(
-          endedOn: Value(end),
-          source: Value(source),
-          updatedAt: Value(now),
-        ),
-      );
-    }
-
-    final row = await (_db.select(_db.periodLogs)
-          ..where((t) => t.startedOn.equals(start)))
-        .getSingle();
-    return PeriodLog.fromRow(row);
-  }
+  });
 
   Future<void> recordLastPeriod({
     required DateTime startedOn,
     required int? typicalPeriodDays,
-  }) async {
-    await upsertPeriod(
-      startedOn: startedOn,
-      endedOn: estimateEnd(startedOn, typicalPeriodDays),
-      source: PeriodSources.onboardingLast,
-    );
-  }
+  });
 
   Future<void> recordPastStarts({
     required List<DateTime> startedOnDates,
     required int? typicalPeriodDays,
-  }) async {
-    if (startedOnDates.isEmpty) return;
-    await _db.transaction(() async {
-      for (final start in startedOnDates) {
-        await upsertPeriod(
-          startedOn: start,
-          endedOn: estimateEnd(start, typicalPeriodDays),
-          source: PeriodSources.onboardingPast,
-        );
-      }
-    });
-  }
+  });
 
   /// All period starts except the latest episode (older history only).
-  Future<List<DateTime>> getPastStartedOn() async {
-    final all = await getAll();
-    if (all.length <= 1) return [];
-    return all.skip(1).map((log) => dateOnly(log.startedOn)).toList();
-  }
+  Future<List<DateTime>> getPastStartedOn();
 
   /// Adds one past start (settings / history). Skips dates on/after the latest.
   Future<PeriodLog?> addPastStart({
     required DateTime startedOn,
     required int? typicalPeriodDays,
-  }) async {
-    final start = dateOnly(startedOn);
-    final latest = await getLatest();
-    if (latest != null && !start.isBefore(dateOnly(latest.startedOn))) {
-      return null;
-    }
-    return upsertPeriod(
-      startedOn: start,
-      endedOn: estimateEnd(start, typicalPeriodDays),
-      source: PeriodSources.settings,
-    );
-  }
+  });
 
-  Future<void> deleteByStartedOn(DateTime startedOn) async {
-    final start = dateOnly(startedOn);
-    await (_db.delete(_db.periodLogs)..where((t) => t.startedOn.equals(start)))
-        .go();
-  }
+  Future<void> deleteByStartedOn(DateTime startedOn);
 
   /// Replaces past (non-latest) starts with [startedOnDates].
   ///
@@ -204,38 +55,7 @@ class PeriodRepository {
   Future<void> syncPastStarts({
     required List<DateTime> startedOnDates,
     required int? typicalPeriodDays,
-  }) async {
-    final latest = await getLatest();
-    final latestStart =
-        latest == null ? null : dateOnly(latest.startedOn);
-
-    final desired = <DateTime>{};
-    for (final raw in startedOnDates) {
-      final start = dateOnly(raw);
-      if (latestStart != null && !start.isBefore(latestStart)) continue;
-      desired.add(start);
-    }
-
-    await _db.transaction(() async {
-      final all = await getAll();
-      for (final log in all) {
-        final start = dateOnly(log.startedOn);
-        if (latestStart != null && start == latestStart) continue;
-        if (!desired.contains(start)) {
-          await (_db.delete(_db.periodLogs)..where((t) => t.id.equals(log.id)))
-              .go();
-        }
-      }
-
-      for (final start in desired) {
-        await upsertPeriod(
-          startedOn: start,
-          endedOn: estimateEnd(start, typicalPeriodDays),
-          source: PeriodSources.settings,
-        );
-      }
-    });
-  }
+  });
 
   /// Moves (or creates) the latest period episode to [newStartedOn].
   ///
@@ -244,93 +64,7 @@ class PeriodRepository {
   Future<PeriodLog> updateLatestStartedOn({
     required DateTime newStartedOn,
     int? typicalPeriodDays,
-  }) async {
-    final start = dateOnly(newStartedOn);
-    final today = dateOnly(DateTime.now());
-    if (start.isAfter(today)) {
-      throw ArgumentError.value(
-        newStartedOn,
-        'newStartedOn',
-        'Period start cannot be in the future',
-      );
-    }
-    final latest = await getLatest();
-    final now = DateTime.now();
-
-    DateTime? end;
-    if (typicalPeriodDays != null && typicalPeriodDays >= 1) {
-      end = estimateEnd(start, typicalPeriodDays);
-    } else if (latest?.endedOn != null) {
-      final length =
-          dateOnly(latest!.endedOn!).difference(dateOnly(latest.startedOn)).inDays +
-              1;
-      end = estimateEnd(start, length);
-    }
-
-    if (latest == null) {
-      return upsertPeriod(
-        startedOn: start,
-        endedOn: end,
-        source: PeriodSources.settings,
-      );
-    }
-
-    if (dateOnly(latest.startedOn) == start) {
-      if (end != latest.endedOn) {
-        await (_db.update(_db.periodLogs)..where((t) => t.id.equals(latest.id)))
-            .write(
-          PeriodLogsCompanion(
-            endedOn: Value(end),
-            source: const Value(PeriodSources.settings),
-            updatedAt: Value(now),
-          ),
-        );
-      }
-      final row = await (_db.select(_db.periodLogs)
-            ..where((t) => t.id.equals(latest.id)))
-          .getSingle();
-      return PeriodLog.fromRow(row);
-    }
-
-    final conflict = await (_db.select(_db.periodLogs)
-          ..where((t) => t.startedOn.equals(start)))
-        .getSingleOrNull();
-
-    return _db.transaction(() async {
-      if (conflict != null && conflict.id != latest.id) {
-        await (_db.delete(_db.periodLogs)
-              ..where((t) => t.id.equals(latest.id)))
-            .go();
-        await (_db.update(_db.periodLogs)
-              ..where((t) => t.id.equals(conflict.id)))
-            .write(
-          PeriodLogsCompanion(
-            endedOn: Value(end),
-            source: const Value(PeriodSources.settings),
-            updatedAt: Value(now),
-          ),
-        );
-        final row = await (_db.select(_db.periodLogs)
-              ..where((t) => t.id.equals(conflict.id)))
-            .getSingle();
-        return PeriodLog.fromRow(row);
-      }
-
-      await (_db.update(_db.periodLogs)..where((t) => t.id.equals(latest.id)))
-          .write(
-        PeriodLogsCompanion(
-          startedOn: Value(start),
-          endedOn: Value(end),
-          source: const Value(PeriodSources.settings),
-          updatedAt: Value(now),
-        ),
-      );
-      final row = await (_db.select(_db.periodLogs)
-            ..where((t) => t.id.equals(latest.id)))
-          .getSingle();
-      return PeriodLog.fromRow(row);
-    });
-  }
+  });
 
   static DateTime? estimateEnd(DateTime startedOn, int? typicalPeriodDays) {
     if (typicalPeriodDays == null || typicalPeriodDays < 1) return null;

@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:ritu/data/local/app_database.dart';
 import 'package:ritu/data/repositories/daily_log_repository.dart';
+import 'package:ritu/data/repositories/drift/drift_daily_log_repository.dart';
 
 void main() {
   late AppDatabase database;
@@ -9,7 +10,7 @@ void main() {
 
   setUp(() {
     database = AppDatabase.memory();
-    repository = DailyLogRepository(database);
+    repository = DriftDailyLogRepository(database);
   });
 
   tearDown(() async {
