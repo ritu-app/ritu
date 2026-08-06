@@ -76,6 +76,7 @@ flutter:
   assets:
     - assets/images/ritu_logo.png
     - assets/images/insights_journey.png
+    - assets/images/insights_rhythm.png
     - assets/images/journal_reflection.png
     - assets/images/reports_health.png
 

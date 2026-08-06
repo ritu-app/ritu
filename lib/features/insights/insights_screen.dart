@@ -23,7 +23,11 @@ class InsightsScreen extends StatelessWidget {
   final bool hasLoggedToday;
   final VoidCallback? onLogToday;
 
-  static const _heroBackground = Color(0xFFE7E9DE);
+  /// Empty-state banner (Figma pastel-green-banner-2).
+  static const _heroBackgroundEmpty = Color(0xFFEDF0EC);
+
+  /// After-logged banner (Figma pastel-green-banner).
+  static const _heroBackgroundProgress = Color(0xFFE7E9DE);
 
   static const _unlockItems = [
     (
@@ -34,7 +38,7 @@ class InsightsScreen extends StatelessWidget {
       'See how your energy changes over time',
     ),
     (
-      LucideIcons.audioLines,
+      LucideIcons.audioWaveform,
       RituColors.fillInfoSecondary,
       RituColors.iconInfo,
       'Symptom patterns',
@@ -48,7 +52,7 @@ class InsightsScreen extends StatelessWidget {
       'Get personalised predictions and phase insights',
     ),
     (
-      LucideIcons.notebookText,
+      LucideIcons.notepadText,
       RituColors.fillAttentionSecondary,
       RituColors.iconAttention,
       'Monthly summaries',
@@ -141,7 +145,9 @@ class _HeroCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: InsightsScreen._heroBackground,
+        color: hasStartedLogging
+            ? InsightsScreen._heroBackgroundProgress
+            : InsightsScreen._heroBackgroundEmpty,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -150,7 +156,9 @@ class _HeroCard extends StatelessWidget {
             width: 116,
             height: 118,
             child: Image.asset(
-              'assets/images/insights_journey.png',
+              hasStartedLogging
+                  ? 'assets/images/insights_rhythm.png'
+                  : 'assets/images/insights_journey.png',
               fit: BoxFit.contain,
             ),
           ),
