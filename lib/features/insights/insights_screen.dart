@@ -4,19 +4,26 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../theme/ritu_colors.dart';
 
-/// New-user empty state for the Insights tab.
+/// Insights tab — empty state until the first daily log, then a progress
+/// teaser toward pattern unlock (Figma 385-1001).
 class InsightsScreen extends StatelessWidget {
   const InsightsScreen({
     super.key,
+    this.loggedDaysCount = 0,
+    this.patternDaysRequired = 14,
     this.hasLoggedToday = false,
     this.onLogToday,
   });
+
+  /// Total calendar days with a saved daily log (drives empty vs progress UI).
+  final int loggedDaysCount;
+  final int patternDaysRequired;
 
   /// When true, the hero CTA is hidden — logging is done for today.
   final bool hasLoggedToday;
   final VoidCallback? onLogToday;
 
-  static const _heroBackground = Color(0xFFEDF0EC);
+  static const _heroBackground = Color(0xFFE7E9DE);
 
   static const _unlockItems = [
     (
@@ -51,6 +58,8 @@ class InsightsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasStartedLogging = loggedDaysCount > 0;
+
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
       children: [
@@ -75,6 +84,9 @@ class InsightsScreen extends StatelessWidget {
         ),
         const SizedBox(height: 20),
         _HeroCard(
+          hasStartedLogging: hasStartedLogging,
+          daysLogged: loggedDaysCount.clamp(0, patternDaysRequired),
+          daysRequired: patternDaysRequired,
           showLogToday: !hasLoggedToday,
           onLogToday: onLogToday,
         ),
@@ -106,15 +118,25 @@ class InsightsScreen extends StatelessWidget {
 
 class _HeroCard extends StatelessWidget {
   const _HeroCard({
+    required this.hasStartedLogging,
+    required this.daysLogged,
+    required this.daysRequired,
     required this.showLogToday,
     this.onLogToday,
   });
 
+  final bool hasStartedLogging;
+  final int daysLogged;
+  final int daysRequired;
   final bool showLogToday;
   final VoidCallback? onLogToday;
 
   @override
   Widget build(BuildContext context) {
+    final progress = daysRequired == 0
+        ? 0.0
+        : (daysLogged / daysRequired).clamp(0.0, 1.0);
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -134,7 +156,9 @@ class _HeroCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            'Your journey is just beginning',
+            hasStartedLogging
+                ? 'Learning your rhythm'
+                : 'Your journey is just beginning',
             textAlign: TextAlign.center,
             style: GoogleFonts.dmSans(
               fontSize: 18,
@@ -144,7 +168,9 @@ class _HeroCard extends StatelessWidget {
             ),
           ),
           Text(
-            'Once you start logging daily, Ritu will find patterns unique to your body',
+            hasStartedLogging
+                ? 'Keep logging daily and Ritu will begin finding meaningful patterns'
+                : 'Once you start logging daily, Ritu will find patterns unique to your body',
             textAlign: TextAlign.center,
             style: GoogleFonts.dmSans(
               fontSize: 13,
@@ -153,7 +179,29 @@ class _HeroCard extends StatelessWidget {
               color: RituColors.textSecondary,
             ),
           ),
-          if (showLogToday) ...[
+          if (hasStartedLogging) ...[
+            const SizedBox(height: 12),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(999),
+              child: LinearProgressIndicator(
+                value: progress,
+                minHeight: 5,
+                backgroundColor: RituColors.white,
+                color: RituColors.meadow600,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '$daysLogged of $daysRequired days – pattern unlock at $daysRequired',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.dmSans(
+                fontSize: 11,
+                fontWeight: FontWeight.w400,
+                height: 18 / 11,
+                color: RituColors.textSecondary,
+              ),
+            ),
+          ] else if (showLogToday) ...[
             const SizedBox(height: 12),
             SizedBox(
               width: double.infinity,

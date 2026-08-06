@@ -181,8 +181,10 @@ regenerate `main.directories.g.dart` as above.
 - **Two implementations per repository**: any new/changed repository method
   needs both a `drift/` and a `memory/` implementation, or Widgetbook's web
   previews silently drift out of sync with the real app.
-- `InsightsScreen` and `ReportsScreen` are currently unbuilt — just
-  marketing-style empty-state teasers, not real features yet.
+- `InsightsScreen` and `ReportsScreen` are currently unbuilt — marketing-style
+  teasers, not real features yet. Insights switches from an empty hero +
+  "Log today" CTA to a "Learning your rhythm" progress card once
+  `totalLoggedDays > 0`.
 
 ## CI
 

@@ -125,6 +125,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   onLogToday: _openDailyLog,
                 ),
                 1 => InsightsScreen(
+                  loggedDaysCount: loggedDaysCount,
+                  patternDaysRequired: widget.patternDaysRequired,
                   hasLoggedToday: todayLog != null,
                   onLogToday: _openDailyLog,
                 ),
@@ -218,11 +220,13 @@ class _HomeTab extends StatelessWidget {
                 onLogToday: onLogToday,
               )
             : _LoggedTodayCard(entry: todayLog!, onEdit: onLogToday),
-        const SizedBox(height: 12),
-        _PatternsCard(
-          daysLogged: patternDaysLogged,
-          daysRequired: patternDaysRequired,
-        ),
+        if (patternDaysLogged > 0) ...[
+          const SizedBox(height: 12),
+          _PatternsCard(
+            daysLogged: patternDaysLogged,
+            daysRequired: patternDaysRequired,
+          ),
+        ],
         if (showSpeedUpBanner) ...[
           const SizedBox(height: 12),
           _SpeedUpBanner(onDismiss: onDismissBanner),

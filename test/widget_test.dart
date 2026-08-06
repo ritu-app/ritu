@@ -675,8 +675,9 @@ void main() {
       await tester.pumpWidget(createRituApp(database: database));
       await tester.pumpAndSettle();
 
-      // Three periods logged, but zero daily logs yet.
-      expect(find.text('0 of 14 days – pattern unlock at 14'), findsOneWidget);
+      // Three periods logged, but zero daily logs yet — hide the card.
+      expect(find.text('Your patterns will appear here'), findsNothing);
+      expect(find.text('0 of 14 days – pattern unlock at 14'), findsNothing);
 
       await dailyLogs.upsert(loggedOn: DateTime.now(), flowIntensity: 'Light');
       await dailyLogs.upsert(
@@ -686,6 +687,7 @@ void main() {
 
       await tester.pump();
 
+      expect(find.text('Your patterns will appear here'), findsOneWidget);
       expect(find.text('2 of 14 days – pattern unlock at 14'), findsOneWidget);
     },
   );
