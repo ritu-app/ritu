@@ -125,7 +125,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   onLogToday: _openDailyLog,
                 ),
                 1 => InsightsScreen(
-                  onLogToday: () => setState(() => _tabIndex = 0),
+                  hasLoggedToday: todayLog != null,
+                  onLogToday: _openDailyLog,
                 ),
                 2 => const JournalScreen(),
                 3 => const ReportsScreen(),

@@ -8,9 +8,12 @@ import '../../theme/ritu_colors.dart';
 class InsightsScreen extends StatelessWidget {
   const InsightsScreen({
     super.key,
+    this.hasLoggedToday = false,
     this.onLogToday,
   });
 
+  /// When true, the hero CTA is hidden — logging is done for today.
+  final bool hasLoggedToday;
   final VoidCallback? onLogToday;
 
   static const _heroBackground = Color(0xFFEDF0EC);
@@ -71,7 +74,10 @@ class InsightsScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 20),
-        _HeroCard(onLogToday: onLogToday),
+        _HeroCard(
+          showLogToday: !hasLoggedToday,
+          onLogToday: onLogToday,
+        ),
         const SizedBox(height: 20),
         Text(
           'What you’ll unlock',
@@ -99,8 +105,12 @@ class InsightsScreen extends StatelessWidget {
 }
 
 class _HeroCard extends StatelessWidget {
-  const _HeroCard({this.onLogToday});
+  const _HeroCard({
+    required this.showLogToday,
+    this.onLogToday,
+  });
 
+  final bool showLogToday;
   final VoidCallback? onLogToday;
 
   @override
@@ -143,27 +153,29 @@ class _HeroCard extends StatelessWidget {
               color: RituColors.textSecondary,
             ),
           ),
-          const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            height: 36,
-            child: FilledButton(
-              onPressed: onLogToday,
-              style: FilledButton.styleFrom(
-                backgroundColor: RituColors.sage500,
-                foregroundColor: RituColors.white,
-                elevation: 0,
-                padding: EdgeInsets.zero,
-                shape: const StadiumBorder(),
-                textStyle: GoogleFonts.dmSans(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  height: 20 / 13,
+          if (showLogToday) ...[
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              height: 36,
+              child: FilledButton(
+                onPressed: onLogToday,
+                style: FilledButton.styleFrom(
+                  backgroundColor: RituColors.sage500,
+                  foregroundColor: RituColors.white,
+                  elevation: 0,
+                  padding: EdgeInsets.zero,
+                  shape: const StadiumBorder(),
+                  textStyle: GoogleFonts.dmSans(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    height: 20 / 13,
+                  ),
                 ),
+                child: const Text('Log today'),
               ),
-              child: const Text('Log today'),
             ),
-          ),
+          ],
         ],
       ),
     );
