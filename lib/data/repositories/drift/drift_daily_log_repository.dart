@@ -31,7 +31,6 @@ class DriftDailyLogRepository implements DailyLogRepository {
       sleepQuality: row.sleepQuality,
       wellbeing: row.wellbeing,
       symptoms: _decodeList(row.symptoms),
-      notes: row.notes,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     );
@@ -120,14 +119,9 @@ class DriftDailyLogRepository implements DailyLogRepository {
     String? sleepQuality,
     int? wellbeing,
     List<String> symptoms = const [],
-    String? notes,
   }) async {
     final day = dateOnly(loggedOn);
     final now = DateTime.now();
-    final trimmedNotes = notes?.trim();
-    final resolvedNotes = trimmedNotes == null || trimmedNotes.isEmpty
-        ? null
-        : trimmedNotes;
     final encodedMoods = _encodeList(moods);
     final encodedSymptoms = _encodeList(symptoms);
 
@@ -148,7 +142,6 @@ class DriftDailyLogRepository implements DailyLogRepository {
               sleepQuality: Value(sleepQuality),
               wellbeing: Value(wellbeing),
               symptoms: Value(encodedSymptoms),
-              notes: Value(resolvedNotes),
               createdAt: now,
               updatedAt: now,
             ),
@@ -165,7 +158,6 @@ class DriftDailyLogRepository implements DailyLogRepository {
           sleepQuality: Value(sleepQuality),
           wellbeing: Value(wellbeing),
           symptoms: Value(encodedSymptoms),
-          notes: Value(resolvedNotes),
           updatedAt: Value(now),
         ),
       );

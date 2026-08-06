@@ -4,11 +4,13 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../providers/daily_log_providers.dart';
+import '../../providers/journal_entry_providers.dart';
 import '../../providers/repository_providers.dart';
 import '../../providers/symptom_providers.dart';
 import '../../core/date_format.dart';
 import '../../data/models/custom_symptom.dart';
 import '../../data/models/daily_log_entry.dart';
+import '../../data/models/journal_entry.dart';
 import '../../theme/ritu_colors.dart';
 import '../setup/widgets/choice_chips.dart';
 import '../setup/widgets/progress_dots.dart';
@@ -49,8 +51,10 @@ const _presetSymptoms = [
 const _totalSteps = 4;
 
 /// Home "Log today" daily check-in — a 4-step wizard (flow, mood, body
-/// signals, notes) that upserts a single [lib/data/local/tables/daily_logs.dart]
-/// row for the given day (Figma node-id 293-407 / 293-485 / 293-624 / 308-762).
+/// signals, notes). Structured answers upsert a
+/// [lib/data/local/tables/daily_logs.dart] row; the notes step writes to
+/// [lib/data/local/tables/journal_entries.dart] (Figma node-id 293-407 /
+/// 293-485 / 293-624 / 308-762).
 class DailyLogFlow extends ConsumerStatefulWidget {
   DailyLogFlow({super.key, DateTime? date})
     : date = dateOnly(date ?? DateTime.now());
@@ -90,9 +94,15 @@ class _DailyLogFlowState extends ConsumerState<DailyLogFlow> {
 
   void _maybeHydrate(
     AsyncValue<DailyLogEntry?> logAsync,
+    AsyncValue<JournalEntry?> journalAsync,
     AsyncValue<List<CustomSymptom>> symptomsAsync,
   ) {
-    if (_hydrated || logAsync.isLoading || symptomsAsync.isLoading) return;
+    if (_hydrated ||
+        logAsync.isLoading ||
+        journalAsync.isLoading ||
+        symptomsAsync.isLoading) {
+      return;
+    }
     _hydrated = true;
 
     _customSymptomNames =
@@ -106,8 +116,8 @@ class _DailyLogFlowState extends ConsumerState<DailyLogFlow> {
       _sleepQuality = existing.sleepQuality;
       _wellbeing = existing.wellbeing ?? 0;
       _symptoms.addAll(existing.symptoms);
-      _notesController.text = existing.notes ?? '';
     }
+    _notesController.text = journalAsync.valueOrNull?.body ?? '';
   }
 
   List<String> get _symptomOptions => [
@@ -154,8 +164,14 @@ class _DailyLogFlowState extends ConsumerState<DailyLogFlow> {
       sleepQuality: _sleepQuality,
       wellbeing: _wellbeing,
       symptoms: _symptoms.toList(),
-      notes: _notesController.text,
     );
+    final notes = _notesController.text.trim();
+    if (notes.isNotEmpty) {
+      await ref.read(journalEntryRepositoryProvider).upsert(
+        loggedOn: widget.date,
+        body: notes,
+      );
+    }
     if (!mounted) return;
     Navigator.of(context).pop(true);
   }
@@ -163,8 +179,9 @@ class _DailyLogFlowState extends ConsumerState<DailyLogFlow> {
   @override
   Widget build(BuildContext context) {
     final logAsync = ref.watch(dailyLogByDateProvider(widget.date));
+    final journalAsync = ref.watch(journalEntryByDateProvider(widget.date));
     final symptomsAsync = ref.watch(customSymptomsProvider);
-    _maybeHydrate(logAsync, symptomsAsync);
+    _maybeHydrate(logAsync, journalAsync, symptomsAsync);
 
     return PopScope(
       canPop: false,

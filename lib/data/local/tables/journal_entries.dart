@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
 
-/// One free-text reflection per calendar day from the Journal tab.
+/// One free-text reflection per calendar day (Journal tab and daily-log notes).
 @DataClassName('JournalEntryRow')
 class JournalEntries extends Table {
   IntColumn get id => integer().autoIncrement()();

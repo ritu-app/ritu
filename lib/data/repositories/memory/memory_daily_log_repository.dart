@@ -77,13 +77,9 @@ class MemoryDailyLogRepository implements DailyLogRepository {
     String? sleepQuality,
     int? wellbeing,
     List<String> symptoms = const [],
-    String? notes,
   }) async {
     final day = dateOnly(loggedOn);
     final now = DateTime.now();
-    final trimmedNotes = notes?.trim();
-    final resolvedNotes =
-        trimmedNotes == null || trimmedNotes.isEmpty ? null : trimmedNotes;
 
     final existing = _store.dailyLogs[day];
     if (existing == null) {
@@ -97,7 +93,6 @@ class MemoryDailyLogRepository implements DailyLogRepository {
         sleepQuality: sleepQuality,
         wellbeing: wellbeing,
         symptoms: List.of(symptoms),
-        notes: resolvedNotes,
         createdAt: now,
         updatedAt: now,
       );
@@ -113,7 +108,6 @@ class MemoryDailyLogRepository implements DailyLogRepository {
         sleepQuality: sleepQuality,
         wellbeing: wellbeing,
         symptoms: List.of(symptoms),
-        notes: resolvedNotes,
         createdAt: existing.createdAt,
         updatedAt: now,
       );

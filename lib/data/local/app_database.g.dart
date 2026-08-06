@@ -1166,15 +1166,6 @@ class $DailyLogsTable extends DailyLogs
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _notesMeta = const VerificationMeta('notes');
-  @override
-  late final GeneratedColumn<String> notes = GeneratedColumn<String>(
-    'notes',
-    aliasedName,
-    true,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -1208,7 +1199,6 @@ class $DailyLogsTable extends DailyLogs
     sleepQuality,
     wellbeing,
     symptoms,
-    notes,
     createdAt,
     updatedAt,
   ];
@@ -1289,12 +1279,6 @@ class $DailyLogsTable extends DailyLogs
         symptoms.isAcceptableOrUnknown(data['symptoms']!, _symptomsMeta),
       );
     }
-    if (data.containsKey('notes')) {
-      context.handle(
-        _notesMeta,
-        notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
-      );
-    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -1360,10 +1344,6 @@ class $DailyLogsTable extends DailyLogs
         DriftSqlType.string,
         data['${effectivePrefix}symptoms'],
       ),
-      notes: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}notes'],
-      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -1403,7 +1383,6 @@ class DailyLogRow extends DataClass implements Insertable<DailyLogRow> {
 
   /// JSON-encoded list of selected body signal labels (preset + custom).
   final String? symptoms;
-  final String? notes;
   final DateTime createdAt;
   final DateTime updatedAt;
   const DailyLogRow({
@@ -1416,7 +1395,6 @@ class DailyLogRow extends DataClass implements Insertable<DailyLogRow> {
     this.sleepQuality,
     this.wellbeing,
     this.symptoms,
-    this.notes,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -1445,9 +1423,6 @@ class DailyLogRow extends DataClass implements Insertable<DailyLogRow> {
     }
     if (!nullToAbsent || symptoms != null) {
       map['symptoms'] = Variable<String>(symptoms);
-    }
-    if (!nullToAbsent || notes != null) {
-      map['notes'] = Variable<String>(notes);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
@@ -1479,9 +1454,6 @@ class DailyLogRow extends DataClass implements Insertable<DailyLogRow> {
       symptoms: symptoms == null && nullToAbsent
           ? const Value.absent()
           : Value(symptoms),
-      notes: notes == null && nullToAbsent
-          ? const Value.absent()
-          : Value(notes),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -1502,7 +1474,6 @@ class DailyLogRow extends DataClass implements Insertable<DailyLogRow> {
       sleepQuality: serializer.fromJson<String?>(json['sleepQuality']),
       wellbeing: serializer.fromJson<int?>(json['wellbeing']),
       symptoms: serializer.fromJson<String?>(json['symptoms']),
-      notes: serializer.fromJson<String?>(json['notes']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
@@ -1520,7 +1491,6 @@ class DailyLogRow extends DataClass implements Insertable<DailyLogRow> {
       'sleepQuality': serializer.toJson<String?>(sleepQuality),
       'wellbeing': serializer.toJson<int?>(wellbeing),
       'symptoms': serializer.toJson<String?>(symptoms),
-      'notes': serializer.toJson<String?>(notes),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
@@ -1536,7 +1506,6 @@ class DailyLogRow extends DataClass implements Insertable<DailyLogRow> {
     Value<String?> sleepQuality = const Value.absent(),
     Value<int?> wellbeing = const Value.absent(),
     Value<String?> symptoms = const Value.absent(),
-    Value<String?> notes = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
   }) => DailyLogRow(
@@ -1553,7 +1522,6 @@ class DailyLogRow extends DataClass implements Insertable<DailyLogRow> {
     sleepQuality: sleepQuality.present ? sleepQuality.value : this.sleepQuality,
     wellbeing: wellbeing.present ? wellbeing.value : this.wellbeing,
     symptoms: symptoms.present ? symptoms.value : this.symptoms,
-    notes: notes.present ? notes.value : this.notes,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );
@@ -1576,7 +1544,6 @@ class DailyLogRow extends DataClass implements Insertable<DailyLogRow> {
           : this.sleepQuality,
       wellbeing: data.wellbeing.present ? data.wellbeing.value : this.wellbeing,
       symptoms: data.symptoms.present ? data.symptoms.value : this.symptoms,
-      notes: data.notes.present ? data.notes.value : this.notes,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -1594,7 +1561,6 @@ class DailyLogRow extends DataClass implements Insertable<DailyLogRow> {
           ..write('sleepQuality: $sleepQuality, ')
           ..write('wellbeing: $wellbeing, ')
           ..write('symptoms: $symptoms, ')
-          ..write('notes: $notes, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -1612,7 +1578,6 @@ class DailyLogRow extends DataClass implements Insertable<DailyLogRow> {
     sleepQuality,
     wellbeing,
     symptoms,
-    notes,
     createdAt,
     updatedAt,
   );
@@ -1629,7 +1594,6 @@ class DailyLogRow extends DataClass implements Insertable<DailyLogRow> {
           other.sleepQuality == this.sleepQuality &&
           other.wellbeing == this.wellbeing &&
           other.symptoms == this.symptoms &&
-          other.notes == this.notes &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -1644,7 +1608,6 @@ class DailyLogsCompanion extends UpdateCompanion<DailyLogRow> {
   final Value<String?> sleepQuality;
   final Value<int?> wellbeing;
   final Value<String?> symptoms;
-  final Value<String?> notes;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   const DailyLogsCompanion({
@@ -1657,7 +1620,6 @@ class DailyLogsCompanion extends UpdateCompanion<DailyLogRow> {
     this.sleepQuality = const Value.absent(),
     this.wellbeing = const Value.absent(),
     this.symptoms = const Value.absent(),
-    this.notes = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
   });
@@ -1671,7 +1633,6 @@ class DailyLogsCompanion extends UpdateCompanion<DailyLogRow> {
     this.sleepQuality = const Value.absent(),
     this.wellbeing = const Value.absent(),
     this.symptoms = const Value.absent(),
-    this.notes = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
   }) : loggedOn = Value(loggedOn),
@@ -1687,7 +1648,6 @@ class DailyLogsCompanion extends UpdateCompanion<DailyLogRow> {
     Expression<String>? sleepQuality,
     Expression<int>? wellbeing,
     Expression<String>? symptoms,
-    Expression<String>? notes,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
   }) {
@@ -1701,7 +1661,6 @@ class DailyLogsCompanion extends UpdateCompanion<DailyLogRow> {
       if (sleepQuality != null) 'sleep_quality': sleepQuality,
       if (wellbeing != null) 'wellbeing': wellbeing,
       if (symptoms != null) 'symptoms': symptoms,
-      if (notes != null) 'notes': notes,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
     });
@@ -1717,7 +1676,6 @@ class DailyLogsCompanion extends UpdateCompanion<DailyLogRow> {
     Value<String?>? sleepQuality,
     Value<int?>? wellbeing,
     Value<String?>? symptoms,
-    Value<String?>? notes,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
   }) {
@@ -1731,7 +1689,6 @@ class DailyLogsCompanion extends UpdateCompanion<DailyLogRow> {
       sleepQuality: sleepQuality ?? this.sleepQuality,
       wellbeing: wellbeing ?? this.wellbeing,
       symptoms: symptoms ?? this.symptoms,
-      notes: notes ?? this.notes,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -1767,9 +1724,6 @@ class DailyLogsCompanion extends UpdateCompanion<DailyLogRow> {
     if (symptoms.present) {
       map['symptoms'] = Variable<String>(symptoms.value);
     }
-    if (notes.present) {
-      map['notes'] = Variable<String>(notes.value);
-    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -1791,7 +1745,6 @@ class DailyLogsCompanion extends UpdateCompanion<DailyLogRow> {
           ..write('sleepQuality: $sleepQuality, ')
           ..write('wellbeing: $wellbeing, ')
           ..write('symptoms: $symptoms, ')
-          ..write('notes: $notes, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -2759,7 +2712,6 @@ typedef $$DailyLogsTableCreateCompanionBuilder =
       Value<String?> sleepQuality,
       Value<int?> wellbeing,
       Value<String?> symptoms,
-      Value<String?> notes,
       required DateTime createdAt,
       required DateTime updatedAt,
     });
@@ -2774,7 +2726,6 @@ typedef $$DailyLogsTableUpdateCompanionBuilder =
       Value<String?> sleepQuality,
       Value<int?> wellbeing,
       Value<String?> symptoms,
-      Value<String?> notes,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
     });
@@ -2830,11 +2781,6 @@ class $$DailyLogsTableFilterComposer
 
   ColumnFilters<String> get symptoms => $composableBuilder(
     column: $table.symptoms,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get notes => $composableBuilder(
-    column: $table.notes,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -2903,11 +2849,6 @@ class $$DailyLogsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get notes => $composableBuilder(
-    column: $table.notes,
-    builder: (column) => ColumnOrderings(column),
-  );
-
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -2963,9 +2904,6 @@ class $$DailyLogsTableAnnotationComposer
   GeneratedColumn<String> get symptoms =>
       $composableBuilder(column: $table.symptoms, builder: (column) => column);
 
-  GeneratedColumn<String> get notes =>
-      $composableBuilder(column: $table.notes, builder: (column) => column);
-
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
@@ -3013,7 +2951,6 @@ class $$DailyLogsTableTableManager
                 Value<String?> sleepQuality = const Value.absent(),
                 Value<int?> wellbeing = const Value.absent(),
                 Value<String?> symptoms = const Value.absent(),
-                Value<String?> notes = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
               }) => DailyLogsCompanion(
@@ -3026,7 +2963,6 @@ class $$DailyLogsTableTableManager
                 sleepQuality: sleepQuality,
                 wellbeing: wellbeing,
                 symptoms: symptoms,
-                notes: notes,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
               ),
@@ -3041,7 +2977,6 @@ class $$DailyLogsTableTableManager
                 Value<String?> sleepQuality = const Value.absent(),
                 Value<int?> wellbeing = const Value.absent(),
                 Value<String?> symptoms = const Value.absent(),
-                Value<String?> notes = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
               }) => DailyLogsCompanion.insert(
@@ -3054,7 +2989,6 @@ class $$DailyLogsTableTableManager
                 sleepQuality: sleepQuality,
                 wellbeing: wellbeing,
                 symptoms: symptoms,
-                notes: notes,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
               ),

@@ -6,6 +6,7 @@ import 'package:ritu/app/ritu_app.dart';
 import 'package:ritu/core/date_format.dart';
 import 'package:ritu/data/local/app_database.dart';
 import 'package:ritu/data/repositories/drift/drift_daily_log_repository.dart';
+import 'package:ritu/data/repositories/drift/drift_journal_entry_repository.dart';
 import 'package:ritu/data/repositories/drift/drift_period_repository.dart';
 import 'package:ritu/data/repositories/drift/drift_profile_repository.dart';
 import 'package:ritu/data/repositories/drift/drift_symptom_repository.dart';
@@ -561,8 +562,11 @@ void main() {
     expect(entry.energyLevel, 'Moderate');
     expect(entry.sleepQuality, 'Okay');
     expect(entry.symptoms, containsAll(['Bloating', 'Custom ache']));
-    expect(entry.notes, 'Feeling okay today');
     expect(await dailyLogs.getCurrentStreak(), 1);
+
+    final journal = DriftJournalEntryRepository(database);
+    final journalEntry = await journal.getByDate(DateTime.now());
+    expect(journalEntry?.body, 'Feeling okay today');
 
     final symptomRepository = DriftSymptomRepository(database);
     final storedSymptoms = await symptomRepository.getAll();
@@ -580,7 +584,10 @@ void main() {
       loggedOn: DateTime.now(),
       flowIntensity: 'Light',
       moods: const ['Focused'],
-      notes: 'Already logged this morning',
+    );
+    await DriftJournalEntryRepository(database).upsert(
+      loggedOn: DateTime.now(),
+      body: 'Already logged this morning',
     );
 
     await tester.pumpWidget(createRituApp(database: database));
@@ -600,6 +607,12 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, 'Next'));
     await tester.pumpAndSettle();
     expect(find.text('Focused'), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(FilledButton, 'Next'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Next'));
+    await tester.pumpAndSettle();
+    expect(find.text('Already logged this morning'), findsOneWidget);
   });
 
   rituTestWidgets(

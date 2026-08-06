@@ -34,6 +34,5 @@ abstract class DailyLogRepository {
     String? sleepQuality,
     int? wellbeing,
     List<String> symptoms = const [],
-    String? notes,
   });
 }

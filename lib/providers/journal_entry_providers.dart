@@ -10,6 +10,13 @@ final todayJournalEntryProvider = StreamProvider<JournalEntry?>((ref) {
       .watchByDate(DateTime.now());
 });
 
+final journalEntryByDateProvider =
+    StreamProvider.family<JournalEntry?, DateTime>((ref, date) {
+  return ref
+      .watch(journalEntryRepositoryProvider)
+      .watchByDate(dateOnly(date));
+});
+
 final pastJournalEntriesProvider = StreamProvider<List<JournalEntry>>((ref) {
   return ref.watch(journalEntryRepositoryProvider).watchPastEntries(
         before: dateOnly(DateTime.now()),

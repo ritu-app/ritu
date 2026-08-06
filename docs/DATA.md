@@ -23,7 +23,7 @@ Ritu stores all user data **on-device only** (SQLite via [Drift](https://drift.s
 
 Database file name: **`ritu.sqlite`** (opened as `driftDatabase(name: 'ritu')`).
 
-Current **schema version:** `4`.
+Current **schema version:** `6`.
 
 ### Regenerating code
 
@@ -46,6 +46,7 @@ lib/data/
     period_log.dart
     custom_symptom.dart
     daily_log_entry.dart
+    journal_entry.dart
   local/
     app_database.dart
     app_database.g.dart
@@ -54,16 +55,19 @@ lib/data/
       period_logs.dart
       custom_symptoms.dart
       daily_logs.dart
+      journal_entries.dart
   repositories/
     profile_repository.dart      # abstract interface
     period_repository.dart
     symptom_repository.dart
     daily_log_repository.dart
+    journal_entry_repository.dart
     drift/
       drift_profile_repository.dart   # Drift/SQLite implementation
       drift_period_repository.dart
       drift_symptom_repository.dart
       drift_daily_log_repository.dart
+      drift_journal_entry_repository.dart
 ```
 
 ```
@@ -98,6 +102,9 @@ Screens read data via `ref.watch` on StreamProviders; writes use `ref.read` on t
 | `dailyLogByDateProvider(date)` | `watchByDate(date)` |
 | `totalLoggedDaysProvider` | `watchTotalLoggedDays()` |
 | `currentStreakProvider` | `watchCurrentStreak()` |
+| `todayJournalEntryProvider` | `watchByDate(today)` |
+| `journalEntryByDateProvider(date)` | `watchByDate(date)` |
+| `pastJournalEntriesProvider` | `watchPastEntries(before: today)` |
 
 Providers are hand-written today. `@riverpod` codegen is deferred until `riverpod_generator` can coexist with `drift_dev` on the same `build_runner` toolchain.
 
@@ -162,7 +169,7 @@ User-defined body signals shown alongside the (not-yet-built) daily log. Managed
 
 ### `daily_logs`
 
-One row per **calendar day**, filled in by the Home "Log today" flow (`DailyLogFlow`, 4 steps: flow, mood, body signals, notes). Managed via `DailyLogRepository`. Every field is optional — a step left untouched (or explicitly "Skip"ped) just stores `null`.
+One row per **calendar day**, filled in by the Home "Log today" flow (`DailyLogFlow`, 4 steps: flow, mood, body signals, notes). Managed via `DailyLogRepository`. Every field is optional — a step left untouched (or explicitly "Skip"ped) just stores `null`. Free-text notes from the final step are **not** stored here — they go to `journal_entries` (see below). Schema v6 migrated any legacy `daily_logs.notes` into `journal_entries` and dropped that column.
 
 | Column | Type | Notes |
 |--------|------|--------|
@@ -175,15 +182,14 @@ One row per **calendar day**, filled in by the Home "Log today" flow (`DailyLogF
 | `sleep_quality` | `TEXT` nullable | One of `Poor` / `Restless` / `Okay` / `Good` / `Great` |
 | `wellbeing` | `INTEGER` nullable | 0–10 slider |
 | `symptoms` | `TEXT` nullable | JSON list of selected body signal labels (presets + `custom_symptoms`) |
-| `notes` | `TEXT` nullable | Free text, trimmed; empty string stored as `null` |
 | `created_at` | `DATETIME` | Set on first save for that day |
 | `updated_at` | `DATETIME` | Bumped on every save |
 
 **Lifecycle**
 
-1. Home → **Log today** → `DailyLogFlow` pre-fills from `getByDate(today)` if a log already exists for today (so re-opening edits in place)
+1. Home → **Log today** → `DailyLogFlow` pre-fills structured fields from `getByDate(today)` and notes from `JournalEntryRepository.getByDate(today)` if either already exists (so re-opening edits in place)
 2. Each step's "Next"/"Skip" just advances the wizard locally — nothing is written until the final "Save log" step
-3. Final step → `upsert(...)` — single write for the whole day, no per-step persistence
+3. Final step → `DailyLogRepository.upsert(...)` for structured answers; if notes are non-empty, also `JournalEntryRepository.upsert(...)` for that day. Empty notes leave any existing journal entry untouched.
 4. Home re-reads `watchByDate(today)` via Riverpod: `null` → check-in card, non-null → "Logged today" summary card (moods/energy/sleep/symptoms rendered as read-only pills, "Edit" re-opens the flow pre-filled)
 
 **Derived in `DailyLogRepository` (not stored):**
@@ -195,16 +201,17 @@ One row per **calendar day**, filled in by the Home "Log today" flow (`DailyLogF
 
 | Table | Purpose |
 |--------|---------|
-| `journal_entries` | Free-text reflections from the Journal tab — one row per calendar day (`logged_on` unique) |
+| `journal_entries` | Free-text reflections — one row per calendar day (`logged_on` unique). Written from the Journal tab **and** from the daily log Notes step. |
 
 **Lifecycle:**
 
 1. User writes in Journal → `JournalEntryRepository.upsert(loggedOn: today, body: ...)`
-2. UI reads `todayJournalEntryProvider` and `pastJournalEntriesProvider` (entries before today, newest first)
-3. First save only: green "Today's reflection saved" card with Edit
-4. Once past days exist: editable today's card + "Past entries" preview list
+2. Or: Home → **Log today** → Notes step with non-empty text → same `upsert` for that day
+3. UI reads `todayJournalEntryProvider` / `journalEntryByDateProvider` and `pastJournalEntriesProvider` (entries before today, newest first)
+4. First save only: green "Today's reflection saved" card with Edit
+5. Once past days exist: editable today's card + "Past entries" preview list
 
-Daily log `notes` are stored separately in `daily_logs.notes` and are not yet mirrored into Journal.
+Schema v6 migrated any leftover `daily_logs.notes` into this table (skipping days that already had a journal row) and dropped the old column.
 
 ## Planned extensions (not implemented yet)
 

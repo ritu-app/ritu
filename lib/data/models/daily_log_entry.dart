@@ -12,7 +12,6 @@ class DailyLogEntry {
     this.sleepQuality,
     this.wellbeing,
     this.symptoms = const [],
-    this.notes,
   });
 
   final int id;
@@ -24,7 +23,6 @@ class DailyLogEntry {
   final String? sleepQuality;
   final int? wellbeing;
   final List<String> symptoms;
-  final String? notes;
   final DateTime createdAt;
   final DateTime updatedAt;
 }

@@ -30,9 +30,7 @@ kept up to date and are more authoritative than this file for those topics.
   Don't introduce `@riverpod` annotations without resolving that first.
 - Persistence: **Drift** (SQLite ORM) — `drift: ^2.34.2`, `drift_flutter`.
   DB file `ritu.sqlite` in the app support directory. Current schema version
-  is **5** (`AppDatabase.schemaVersion` in `lib/data/local/app_database.dart`
-  — `docs/DATA.md` still says 4; that doc is stale on this one point, trust
-  the code). Tests/Widgetbook use `AppDatabase.memory()` / in-memory fake
+  is **6** (`AppDatabase.schemaVersion` in `lib/data/local/app_database.dart`). Tests/Widgetbook use `AppDatabase.memory()` / in-memory fake
   repos instead of the real file. `lib/data/local/memory_executor*.dart` is a
   conditional-import shim (`_io`/`_web` variants) so `AppDatabase` still
   compiles for web even though `.memory()` (native FFI) throws

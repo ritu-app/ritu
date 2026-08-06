@@ -26,8 +26,6 @@ class DailyLogs extends Table {
   /// JSON-encoded list of selected body signal labels (preset + custom).
   TextColumn get symptoms => text().nullable()();
 
-  TextColumn get notes => text().nullable()();
-
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
 

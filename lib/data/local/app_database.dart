@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 
+import '../../core/date_format.dart';
 import 'memory_executor.dart';
 import 'tables/custom_symptoms.dart';
 import 'tables/daily_logs.dart';
@@ -20,7 +21,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.memory() : super(createMemoryExecutor());
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -40,6 +41,31 @@ class AppDatabase extends _$AppDatabase {
           }
           if (from < 5) {
             await m.createTable(journalEntries);
+          }
+          if (from < 6) {
+            // Notes used to live on daily_logs; fold them into journal_entries
+            // (canonical home for free-text reflections), then drop the column.
+            final noteRows = await customSelect(
+              'SELECT logged_on, notes, created_at, updated_at '
+              'FROM daily_logs '
+              'WHERE notes IS NOT NULL AND TRIM(notes) != \'\'',
+            ).get();
+            for (final row in noteRows) {
+              final day = dateOnly(row.read<DateTime>('logged_on'));
+              final existing = await (select(journalEntries)
+                    ..where((t) => t.loggedOn.equals(day)))
+                  .getSingleOrNull();
+              if (existing != null) continue;
+              await into(journalEntries).insert(
+                JournalEntriesCompanion.insert(
+                  loggedOn: day,
+                  body: row.read<String>('notes').trim(),
+                  createdAt: row.read<DateTime>('created_at'),
+                  updatedAt: row.read<DateTime>('updated_at'),
+                ),
+              );
+            }
+            await m.alterTable(TableMigration(dailyLogs));
           }
         },
       );
