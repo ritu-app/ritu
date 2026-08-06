@@ -115,7 +115,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Your space to reflect'), findsOneWidget);
 
-    await tester.tap(find.text('Reports'));
+    await tester.tap(find.text('Summary'));
     await tester.pumpAndSettle();
     expect(find.text('Export your health data'), findsOneWidget);
 

@@ -12,9 +12,9 @@ import '../../theme/ritu_colors.dart';
 import '../insights/insights_screen.dart';
 import '../journal/journal_screen.dart';
 import '../log/daily_log_flow.dart';
-import '../reports/reports_screen.dart';
 import '../settings/settings_screen.dart';
 import '../setup/widgets/ritu_calendar.dart';
+import '../summary/summary_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key, this.patternDaysRequired = 14});
@@ -131,7 +131,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   onLogToday: _openDailyLog,
                 ),
                 2 => const JournalScreen(),
-                3 => const ReportsScreen(),
+                3 => SummaryScreen(
+                  loggedDaysCount: loggedDaysCount,
+                  patternDaysRequired: widget.patternDaysRequired,
+                ),
                 _ => _PlaceholderTab(label: _tabLabel(_tabIndex)),
               },
             ),
@@ -148,7 +151,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   String _tabLabel(int index) => switch (index) {
     1 => 'Insights',
     2 => 'Journal',
-    3 => 'Reports',
+    3 => 'Summary',
     _ => 'Home',
   };
 }
@@ -831,7 +834,7 @@ class _BottomNav extends StatelessWidget {
     (LucideIcons.house, 'Home'),
     (LucideIcons.activity, 'Insights'),
     (LucideIcons.bookOpen, 'Journal'),
-    (LucideIcons.notepadText, 'Reports'),
+    (LucideIcons.notepadText, 'Summary'),
   ];
 
   @override

@@ -4,12 +4,22 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../theme/ritu_colors.dart';
 
-/// New-user empty state for the Reports tab.
-class ReportsScreen extends StatelessWidget {
-  const ReportsScreen({super.key});
+/// Summary tab — empty state until the first daily log, then a progress
+/// teaser toward summary unlock (Figma 411-844 / 411-1162).
+class SummaryScreen extends StatelessWidget {
+  const SummaryScreen({
+    super.key,
+    this.loggedDaysCount = 0,
+    this.patternDaysRequired = 14,
+  });
+
+  /// Total calendar days with a saved daily log (drives empty vs progress UI).
+  final int loggedDaysCount;
+  final int patternDaysRequired;
 
   static const _heroBackground = Color(0xFFF5EFF6);
   static const _heroBorder = Color(0xFFE2DDD8);
+  static const _progressColor = Color(0xFF9C8FB5);
 
   static const _valueItems = [
     (
@@ -34,7 +44,7 @@ class ReportsScreen extends StatelessWidget {
       'Use insights to support your well-being',
     ),
     (
-      LucideIcons.library,
+      LucideIcons.squareLibrary,
       RituColors.fillCriticalSecondary,
       RituColors.iconCritical,
       'Keep everything in one place',
@@ -44,11 +54,13 @@ class ReportsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasStartedLogging = loggedDaysCount > 0;
+
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
       children: [
         Text(
-          'Reports',
+          'Summary',
           style: GoogleFonts.dmSerifDisplay(
             fontSize: 28,
             fontWeight: FontWeight.w400,
@@ -67,10 +79,14 @@ class ReportsScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 20),
-        const _HeroCard(),
+        _HeroCard(
+          hasStartedLogging: hasStartedLogging,
+          daysLogged: loggedDaysCount.clamp(0, patternDaysRequired),
+          daysRequired: patternDaysRequired,
+        ),
         const SizedBox(height: 20),
         Text(
-          'Why Reports Are Valuable',
+          'Why summary valuable',
           style: GoogleFonts.dmSans(
             fontSize: 15,
             fontWeight: FontWeight.w600,
@@ -95,18 +111,30 @@ class ReportsScreen extends StatelessWidget {
 }
 
 class _HeroCard extends StatelessWidget {
-  const _HeroCard();
+  const _HeroCard({
+    required this.hasStartedLogging,
+    required this.daysLogged,
+    required this.daysRequired,
+  });
+
+  final bool hasStartedLogging;
+  final int daysLogged;
+  final int daysRequired;
 
   @override
   Widget build(BuildContext context) {
+    final progress = daysRequired == 0
+        ? 0.0
+        : (daysLogged / daysRequired).clamp(0.0, 1.0);
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: ReportsScreen._heroBackground,
+        color: SummaryScreen._heroBackground,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: ReportsScreen._heroBorder,
+          color: SummaryScreen._heroBorder,
           width: 0.5,
         ),
       ),
@@ -116,13 +144,13 @@ class _HeroCard extends StatelessWidget {
             width: 116,
             height: 118,
             child: Image.asset(
-              'assets/images/reports_health.png',
+              'assets/images/summary_health.png',
               fit: BoxFit.contain,
             ),
           ),
           const SizedBox(height: 12),
           Text(
-            'Your first report is on the way',
+            'Your first summary is on the way',
             textAlign: TextAlign.center,
             style: GoogleFonts.dmSans(
               fontSize: 18,
@@ -132,7 +160,7 @@ class _HeroCard extends StatelessWidget {
             ),
           ),
           Text(
-            'Keep logging daily to unlock your personalised health report',
+            'Keep logging daily to unlock your personalised health summary',
             textAlign: TextAlign.center,
             style: GoogleFonts.dmSans(
               fontSize: 13,
@@ -141,23 +169,47 @@ class _HeroCard extends StatelessWidget {
               color: RituColors.textSecondary,
             ),
           ),
-          const SizedBox(height: 12),
-          const Divider(
-            height: 1,
-            thickness: 0.5,
-            color: RituColors.divider,
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'Every small note you write brings meaningful insights',
-            textAlign: TextAlign.center,
-            style: GoogleFonts.dmSans(
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-              height: 18 / 11,
-              color: RituColors.textTertiary,
+          if (hasStartedLogging) ...[
+            const SizedBox(height: 12),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(999),
+              child: LinearProgressIndicator(
+                value: progress,
+                minHeight: 5,
+                backgroundColor: RituColors.white,
+                color: SummaryScreen._progressColor,
+              ),
             ),
-          ),
+            const SizedBox(height: 4),
+            Text(
+              '$daysLogged of $daysRequired days – summary unlock at $daysRequired',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.dmSans(
+                fontSize: 11,
+                fontWeight: FontWeight.w400,
+                height: 18 / 11,
+                color: RituColors.textSecondary,
+              ),
+            ),
+          ] else ...[
+            const SizedBox(height: 12),
+            const Divider(
+              height: 1,
+              thickness: 0.5,
+              color: RituColors.divider,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Every small note you write brings meaningful insights',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.dmSans(
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                height: 18 / 11,
+                color: RituColors.textTertiary,
+              ),
+            ),
+          ],
         ],
       ),
     );

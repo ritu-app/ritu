@@ -233,4 +233,4 @@ When adding a table:
 
 - Data stays in the app’s sandboxed storage.
 - Copy on the name screen (“stays on your phone”) matches this architecture.
-- Export / sharing (Reports) should be explicit user actions when those features exist—not background sync.
+- Export / sharing (Summary) should be explicit user actions when those features exist—not background sync.

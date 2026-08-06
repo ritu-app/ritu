@@ -90,7 +90,7 @@ lib/
   features/                  one folder per screen area, screens/widgets directly
                               inside (no per-feature domain/data split — that lives
                               centrally under lib/data/)
-    home/  insights/  journal/  log/  onboarding/  reports/  settings/  setup/  splash/
+    home/  insights/  journal/  log/  onboarding/  summary/  settings/  setup/  splash/
 widgetbook/                  separate Flutter app, see widgetbook/README.md
 ```
 
@@ -181,10 +181,11 @@ regenerate `main.directories.g.dart` as above.
 - **Two implementations per repository**: any new/changed repository method
   needs both a `drift/` and a `memory/` implementation, or Widgetbook's web
   previews silently drift out of sync with the real app.
-- `InsightsScreen` and `ReportsScreen` are currently unbuilt — marketing-style
+- `InsightsScreen` and `SummaryScreen` are currently unbuilt — marketing-style
   teasers, not real features yet. Insights switches from an empty hero +
   "Log today" CTA to a "Learning your rhythm" progress card once
-  `totalLoggedDays > 0`.
+  `totalLoggedDays > 0`. Summary switches from an empty hero to a purple
+  progress card (`N of 14 days – summary unlock at 14`) on the same trigger.
 
 ## CI
 
