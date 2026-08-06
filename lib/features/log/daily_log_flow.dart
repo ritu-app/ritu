@@ -71,11 +71,11 @@ class _DailyLogFlowState extends ConsumerState<DailyLogFlow> {
   var _saving = false;
 
   String? _flowIntensity;
-  int _crampIntensity = 0;
+  int? _crampIntensity;
   final _moods = <String>{};
   String? _energyLevel;
   String? _sleepQuality;
-  int _wellbeing = 0;
+  int? _wellbeing;
   final _symptoms = <String>{};
   var _customSymptomNames = const <String>[];
   late final TextEditingController _notesController;
@@ -110,15 +110,24 @@ class _DailyLogFlowState extends ConsumerState<DailyLogFlow> {
     final existing = logAsync.valueOrNull;
     if (existing != null) {
       _flowIntensity = existing.flowIntensity;
-      _crampIntensity = existing.crampIntensity ?? 0;
+      _crampIntensity = existing.crampIntensity;
       _moods.addAll(existing.moods);
       _energyLevel = existing.energyLevel;
       _sleepQuality = existing.sleepQuality;
-      _wellbeing = existing.wellbeing ?? 0;
+      _wellbeing = existing.wellbeing;
       _symptoms.addAll(existing.symptoms);
     }
     _notesController.text = journalAsync.valueOrNull?.body ?? '';
   }
+
+  bool get _hasStructuredAnswers =>
+      _flowIntensity != null ||
+      _crampIntensity != null ||
+      _moods.isNotEmpty ||
+      _energyLevel != null ||
+      _sleepQuality != null ||
+      _wellbeing != null ||
+      _symptoms.isNotEmpty;
 
   List<String> get _symptomOptions => [
     ..._presetSymptoms,
@@ -155,17 +164,28 @@ class _DailyLogFlowState extends ConsumerState<DailyLogFlow> {
   Future<void> _save() async {
     if (_saving) return;
     setState(() => _saving = true);
-    await ref.read(dailyLogRepositoryProvider).upsert(
-      loggedOn: widget.date,
-      flowIntensity: _flowIntensity,
-      crampIntensity: _crampIntensity,
-      moods: _moods.toList(),
-      energyLevel: _energyLevel,
-      sleepQuality: _sleepQuality,
-      wellbeing: _wellbeing,
-      symptoms: _symptoms.toList(),
-    );
+
     final notes = _notesController.text.trim();
+    final hasStructured = _hasStructuredAnswers;
+    // Skipping every step should not create an empty "logged" day.
+    if (!hasStructured && notes.isEmpty) {
+      if (!mounted) return;
+      Navigator.of(context).pop(false);
+      return;
+    }
+
+    if (hasStructured) {
+      await ref.read(dailyLogRepositoryProvider).upsert(
+        loggedOn: widget.date,
+        flowIntensity: _flowIntensity,
+        crampIntensity: _crampIntensity,
+        moods: _moods.toList(),
+        energyLevel: _energyLevel,
+        sleepQuality: _sleepQuality,
+        wellbeing: _wellbeing,
+        symptoms: _symptoms.toList(),
+      );
+    }
     if (notes.isNotEmpty) {
       await ref.read(journalEntryRepositoryProvider).upsert(
         loggedOn: widget.date,
@@ -227,7 +247,7 @@ class _DailyLogFlowState extends ConsumerState<DailyLogFlow> {
         subtitle: 'Tap one, or skip this step entirely',
         selected: _flowIntensity,
         onSelected: (v) => setState(() => _flowIntensity = v),
-        crampIntensity: _crampIntensity,
+        crampIntensity: _crampIntensity ?? 0,
         onCrampChanged: (v) => setState(() => _crampIntensity = v),
       ),
       1 => _MoodStep(
@@ -241,7 +261,7 @@ class _DailyLogFlowState extends ConsumerState<DailyLogFlow> {
         onEnergySelected: (v) => setState(() => _energyLevel = v),
         sleepQuality: _sleepQuality,
         onSleepSelected: (v) => setState(() => _sleepQuality = v),
-        wellbeing: _wellbeing,
+        wellbeing: _wellbeing ?? 0,
         onWellbeingChanged: (v) => setState(() => _wellbeing = v),
       ),
       2 => _BodySignalsStep(

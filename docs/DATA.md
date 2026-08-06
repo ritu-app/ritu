@@ -189,7 +189,7 @@ One row per **calendar day**, filled in by the Home "Log today" flow (`DailyLogF
 
 1. Home → **Log today** → `DailyLogFlow` pre-fills structured fields from `getByDate(today)` and notes from `JournalEntryRepository.getByDate(today)` if either already exists (so re-opening edits in place)
 2. Each step's "Next"/"Skip" just advances the wizard locally — nothing is written until the final "Save log" step
-3. Final step → `DailyLogRepository.upsert(...)` for structured answers; if notes are non-empty, also `JournalEntryRepository.upsert(...)` for that day. Empty notes leave any existing journal entry untouched.
+3. Final step → if any structured answer was given, `DailyLogRepository.upsert(...)`; if notes are non-empty, also `JournalEntryRepository.upsert(...)` for that day. Skipping every step (no answers, empty notes) writes nothing and does not count as a logged day. Empty notes leave any existing journal entry untouched.
 4. Home re-reads `watchByDate(today)` via Riverpod: `null` → check-in card, non-null → "Logged today" summary card (moods/energy/sleep/symptoms rendered as read-only pills, "Edit" re-opens the flow pre-filled)
 
 **Derived in `DailyLogRepository` (not stored):**

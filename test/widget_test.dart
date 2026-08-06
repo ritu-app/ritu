@@ -476,6 +476,41 @@ void main() {
     expect(find.text('1 added'), findsOneWidget);
   });
 
+  rituTestWidgets('Skipping every Log today step does not count as logged', (
+    tester,
+  ) async {
+    final profiles = DriftProfileRepository(database);
+    await profiles.upsertDisplayName('Maya');
+    await profiles.markOnboardingCompleted();
+
+    await tester.pumpWidget(createRituApp(database: database));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Log today'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Skip'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Skip'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Skip'));
+    await tester.pumpAndSettle();
+    expect(find.text('Notes'), findsOneWidget);
+    await tester.tap(find.widgetWithText(FilledButton, 'Save log'));
+    await tester.pumpAndSettle();
+
+    expect(find.text("Complete today's check-in"), findsOneWidget);
+    expect(find.text('Logged today'), findsNothing);
+    expect(
+      await DriftDailyLogRepository(database).getByDate(DateTime.now()),
+      isNull,
+    );
+    expect(
+      await DriftJournalEntryRepository(database).getByDate(DateTime.now()),
+      isNull,
+    );
+  });
+
   rituTestWidgets('Log today records a full daily log entry', (tester) async {
     final profiles = DriftProfileRepository(database);
     await profiles.upsertDisplayName('Maya');
