@@ -39,3 +39,43 @@ Studio depends on `ritu` as a package, so those PNGs are symlinked from
 `../assets/images/` into `studio/assets/images/` and declared in `pubspec.yaml`.
 After cloning on a new machine, confirm the symlinks under `studio/assets/images/`
 resolve (re-run `flutter pub get` if images fail to load).
+
+## Deploy to Vercel (GitHub Actions)
+
+Production URL: **[studio.ritu.care](https://studio.ritu.care/)** *(after DNS is configured)*
+
+Cycle Studio is deployed as a static Flutter web app via
+[.github/workflows/studio-vercel.yml](../.github/workflows/studio-vercel.yml).
+The workflow builds on GitHub (Flutter available there) and uploads
+`studio/build/web` to Vercel — Vercel itself does not run Flutter.
+
+### One-time setup
+
+1. **Create a second Vercel project** for Cycle Studio (separate from Widgetbook).
+   - Framework preset: **Other**
+   - Root directory: **repository root** (not `studio/`) — Studio depends on the parent `ritu` package via `path: ..`
+   - Disable Vercel's own builds; GitHub Actions performs the build.
+
+2. **Add GitHub Actions secrets** (repo → Settings → Secrets and variables → Actions):
+
+   | Secret | Where to find it |
+   |--------|------------------|
+   | `VERCEL_TOKEN` | Reuse the same token as Widgetbook — [vercel.com/account/tokens](https://vercel.com/account/tokens) |
+   | `VERCEL_ORG_ID` | Reuse the same org ID as Widgetbook |
+   | `VERCEL_STUDIO_PROJECT_ID` | The **Studio** project's ID (not Widgetbook's) — Vercel project → Settings → General, or `.vercel/project.json` after `vercel link` |
+
+3. **Custom domain** (optional): in the Studio Vercel project, add `studio.ritu.care` and point DNS per Vercel's instructions.
+
+4. **Push to `main`** (or run **Actions → Deploy Cycle Studio to Vercel → Run workflow** manually).
+
+The workflow runs when files under `studio/`, `lib/`, `assets/`, or root `pubspec.yaml` change.
+
+### Local preview of the production bundle
+
+```bash
+cd studio
+flutter build web --release
+cd build/web
+python3 -m http.server 8080
+# open http://localhost:8080
+```
