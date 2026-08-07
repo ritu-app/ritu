@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/date_format.dart';
 import '../data/local/app_database.dart';
 import '../features/home/home_screen.dart';
 import '../features/onboarding/confirmation_screen.dart';
@@ -13,6 +14,7 @@ import '../providers/app_restart_provider.dart';
 import '../providers/database_provider.dart';
 import '../providers/profile_providers.dart';
 import '../providers/repository_providers.dart';
+import '../providers/simulated_today_provider.dart';
 import '../theme/ritu_theme.dart';
 
 class RituApp extends ConsumerWidget {
@@ -144,11 +146,13 @@ class _OnboardingFlow extends ConsumerWidget {
 }
 
 /// Root widget for tests and Widgetbook. Wraps [RituApp] in a [ProviderScope],
-/// optionally overriding the shared [AppDatabase].
-Widget createRituApp({AppDatabase? database}) {
+/// optionally overriding the shared [AppDatabase] and simulated today.
+Widget createRituApp({AppDatabase? database, DateTime? simulatedToday}) {
   return ProviderScope(
     overrides: [
       if (database != null) databaseProvider.overrideWithValue(database),
+      if (simulatedToday != null)
+        simulatedTodayProvider.overrideWithValue(dateOnly(simulatedToday)),
     ],
     child: const RituApp(),
   );

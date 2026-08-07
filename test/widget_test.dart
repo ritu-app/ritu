@@ -181,6 +181,101 @@ void main() {
     expect(find.text('Maya ✨'), findsOneWidget);
   });
 
+  Future<void> seedRegularHistory() async {
+    final profiles = DriftProfileRepository(database);
+    final periods = DriftPeriodRepository(database);
+    await profiles.upsertDisplayName('Maya');
+    await profiles.setTypicalPeriodDays(5);
+    await profiles.markOnboardingCompleted();
+
+    // 4 starts → 3 completed cycles of length 28 → Regular.
+    final starts = [
+      DateTime(2026, 1, 7),
+      DateTime(2026, 2, 4),
+      DateTime(2026, 3, 4),
+      DateTime(2026, 4, 1),
+    ];
+    for (final start in starts) {
+      await periods.upsertPeriod(
+        startedOn: start,
+        endedOn: start.add(const Duration(days: 4)),
+        source: PeriodSources.settings,
+      );
+    }
+  }
+
+  rituTestWidgets(
+    'Regular user in ovulatory phase sees golden header',
+    (tester) async {
+      await seedRegularHistory();
+
+      await tester.pumpWidget(
+        createRituApp(
+          database: database,
+          simulatedToday: DateTime(2026, 4, 14),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Ovulatory phase'), findsOneWidget);
+      expect(find.text('days into your cycle'), findsOneWidget);
+      expect(find.text('Last period Apr 1'), findsOneWidget);
+      expect(find.text('Next period Apr 29'), findsOneWidget);
+      expect(
+        find.image(const AssetImage('assets/images/phase_ovulatory.png')),
+        findsOneWidget,
+      );
+    },
+  );
+
+  rituTestWidgets(
+    'Regular user in menstrual phase sees rose header',
+    (tester) async {
+      await seedRegularHistory();
+
+      await tester.pumpWidget(
+        createRituApp(
+          database: database,
+          simulatedToday: DateTime(2026, 4, 3),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Menstrual phase'), findsOneWidget);
+      expect(find.text('days into your period'), findsOneWidget);
+      expect(find.text('28 day cycle'), findsOneWidget);
+      expect(find.text('Next period Apr 29'), findsOneWidget);
+      expect(
+        find.image(const AssetImage('assets/images/phase_menstrual.png')),
+        findsOneWidget,
+      );
+    },
+  );
+
+  rituTestWidgets(
+    'Regular user in luteal phase sees lilac header',
+    (tester) async {
+      await seedRegularHistory();
+
+      await tester.pumpWidget(
+        createRituApp(
+          database: database,
+          simulatedToday: DateTime(2026, 4, 26),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Luteal phase'), findsOneWidget);
+      expect(find.text('days into your cycle'), findsOneWidget);
+      expect(find.text('Last period Apr 1'), findsOneWidget);
+      expect(find.text('Next period Apr 29'), findsOneWidget);
+      expect(
+        find.image(const AssetImage('assets/images/phase_luteal.png')),
+        findsOneWidget,
+      );
+    },
+  );
+
   rituTestWidgets('Delete Data clears profile and returns to splash', (
     tester,
   ) async {

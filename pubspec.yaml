@@ -80,6 +80,10 @@ flutter:
     - assets/images/insights_rhythm.png
     - assets/images/journal_reflection.png
     - assets/images/summary_health.png
+    - assets/images/phase_follicular.png
+    - assets/images/phase_menstrual.png
+    - assets/images/phase_ovulatory.png
+    - assets/images/phase_luteal.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

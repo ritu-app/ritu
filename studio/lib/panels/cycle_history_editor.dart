@@ -12,6 +12,7 @@ class CycleHistoryEditor extends StatelessWidget {
     required this.simulatedToday,
     required this.onDraftChanged,
     required this.onApply,
+    required this.onLiveApply,
   });
 
   final CycleHistoryDraft draft;
@@ -19,10 +20,17 @@ class CycleHistoryEditor extends StatelessWidget {
   final ValueChanged<CycleHistoryDraft> onDraftChanged;
   final VoidCallback onApply;
 
+  /// Applies [draft] to the preview immediately (used by the cycle-day slider).
+  final ValueChanged<CycleHistoryDraft> onLiveApply;
+
+  static const _cycleDayMin = 1;
+  static const _cycleDayMax = 60;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final starts = draft.computedStarts(simulatedToday);
+    final cycleDay = draft.currentCycleDay.clamp(_cycleDayMin, _cycleDayMax);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -36,26 +44,29 @@ class CycleHistoryEditor extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: _NumberField(
-                label: 'Current cycle day',
-                value: draft.currentCycleDay,
-                min: 1,
-                max: 60,
-                onChanged: (value) {
-                  onDraftChanged(draft.copyWith(currentCycleDay: value));
-                },
-              ),
-            ),
-            const SizedBox(width: 12),
-            OutlinedButton.icon(
-              onPressed: () => onDraftChanged(draft.addOldestRow()),
-              icon: const Icon(Icons.add, size: 18),
-              label: const Text('Add cycle'),
-            ),
-          ],
+        Text(
+          'Current cycle day: $cycleDay',
+          style: theme.textTheme.labelLarge,
+        ),
+        Slider(
+          value: cycleDay.toDouble(),
+          min: _cycleDayMin.toDouble(),
+          max: _cycleDayMax.toDouble(),
+          divisions: _cycleDayMax - _cycleDayMin,
+          label: '$cycleDay',
+          onChanged: (value) {
+            final updated = draft.copyWith(currentCycleDay: value.round());
+            onDraftChanged(updated);
+            onLiveApply(updated);
+          },
+        ),
+        Align(
+          alignment: Alignment.centerRight,
+          child: OutlinedButton.icon(
+            onPressed: () => onDraftChanged(draft.addOldestRow()),
+            icon: const Icon(Icons.add, size: 18),
+            label: const Text('Add cycle'),
+          ),
         ),
         const SizedBox(height: 12),
         ReorderableListView.builder(

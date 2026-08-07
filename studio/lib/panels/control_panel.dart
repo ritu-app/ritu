@@ -58,6 +58,7 @@ class ControlPanel extends StatelessWidget {
           simulatedToday: controller.simulatedToday,
           onDraftChanged: onHistoryDraftChanged,
           onApply: () => controller.applyHistory(historyDraft),
+          onLiveApply: controller.applyHistory,
         ),
         const SizedBox(height: 24),
         DailyLogControls(

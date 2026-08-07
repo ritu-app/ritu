@@ -36,6 +36,18 @@ abstract final class RituColors {
   static const Color gradientSh1 = Color(0xFF5F8F7A);
   static const Color gradientSh2 = Color(0xFFAFCDB8);
   static const Color gradientSh3 = Color(0xFFE4C6B8);
+  /// Meadow-light gradient (Regular follicular hero).
+  static const Color gradientMl1 = Color(0xFF30473A);
+  static const Color gradientMl2 = Color(0xFF588164);
+  /// Rose-whisper gradient (Regular menstrual hero).
+  static const Color gradientRw1 = Color(0xFF583333);
+  static const Color gradientRw2 = Color(0xFF945959);
+  /// Golden-hour gradient (Regular ovulatory hero).
+  static const Color gradientGh1 = Color(0xFF624D22);
+  static const Color gradientGh2 = Color(0xFFB09149);
+  /// Moonlit-lilac gradient (Regular luteal hero).
+  static const Color gradientLilac1 = Color(0xFF474056);
+  static const Color gradientLilac2 = Color(0xFF7E7393);
   static const Color gradientVb1 = Color(0xFF5F8F7A);
   static const Color gradientVb2 = Color(0xFF8EB29C);
   static const Color gradientVb3 = Color(0xFFDCE9E1);

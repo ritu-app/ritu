@@ -6,6 +6,16 @@ enum CyclePhase {
   luteal,
 }
 
+/// User-facing phase label, e.g. "Follicular phase".
+String phaseDisplayLabel(CyclePhase phase) {
+  return switch (phase) {
+    CyclePhase.menstrual => 'Menstrual phase',
+    CyclePhase.follicular => 'Follicular phase',
+    CyclePhase.ovulatory => 'Ovulatory phase',
+    CyclePhase.luteal => 'Luteal phase',
+  };
+}
+
 /// How confidently a phase label is shown.
 enum PhaseConfidence {
   /// Logged data (menstrual bleed days).

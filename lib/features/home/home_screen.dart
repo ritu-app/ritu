@@ -85,6 +85,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final latest = latestAsync.valueOrNull;
     final lastPeriodLabel =
         latest == null ? null : formatShortMonthDay(latest.startedOn);
+    final cycleLength =
+        snapshot?.effectiveCycleLength ?? snapshot?.mean?.round();
+    final nextStart = nextPeriodStart(
+      lastPeriodStartedOn: latest?.startedOn,
+      effectiveCycleLength: cycleLength,
+    );
+    final nextPeriodLabel =
+        nextStart == null ? null : formatShortMonthDay(nextStart);
     final periodStartCount = allPeriodsAsync.valueOrNull?.length ?? 0;
     final periodDates = bleedDaysAsync.valueOrNull ?? {};
     final loggedDaysCount = loggedDaysAsync.valueOrNull ?? 0;
@@ -105,10 +113,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   name: name,
                   cycleDay: snapshot?.cycleDay,
                   lastPeriodLabel: lastPeriodLabel,
+                  nextPeriodLabel: nextPeriodLabel,
+                  effectiveCycleLength: cycleLength,
                   periodStartCount: periodStartCount,
                   classification:
                       snapshot?.classification ??
                       CycleClassification.unclassified,
+                  todayPhase: snapshot?.todayPhase,
                   patternDaysLogged: loggedDaysCount.clamp(
                     0,
                     widget.patternDaysRequired,
@@ -169,8 +180,11 @@ class _HomeTab extends StatelessWidget {
     required this.name,
     required this.cycleDay,
     required this.lastPeriodLabel,
+    required this.nextPeriodLabel,
+    required this.effectiveCycleLength,
     required this.periodStartCount,
     required this.classification,
+    required this.todayPhase,
     required this.patternDaysLogged,
     required this.patternDaysRequired,
     required this.showSpeedUpBanner,
@@ -189,8 +203,11 @@ class _HomeTab extends StatelessWidget {
   final String name;
   final int? cycleDay;
   final String? lastPeriodLabel;
+  final String? nextPeriodLabel;
+  final int? effectiveCycleLength;
   final int periodStartCount;
   final CycleClassification classification;
+  final CyclePhase? todayPhase;
   final int patternDaysLogged;
   final int patternDaysRequired;
   final bool showSpeedUpBanner;
@@ -225,8 +242,11 @@ class _HomeTab extends StatelessWidget {
         _StatusCard(
           cycleDay: cycleDay,
           lastPeriodLabel: lastPeriodLabel,
+          nextPeriodLabel: nextPeriodLabel,
+          effectiveCycleLength: effectiveCycleLength,
           periodStartCount: periodStartCount,
           classification: classification,
+          todayPhase: todayPhase,
         ),
         const SizedBox(height: 12),
         todayLog == null
@@ -364,18 +384,34 @@ class _StatusCard extends StatelessWidget {
   const _StatusCard({
     required this.cycleDay,
     required this.lastPeriodLabel,
+    required this.nextPeriodLabel,
+    required this.effectiveCycleLength,
     required this.periodStartCount,
     required this.classification,
+    required this.todayPhase,
   });
 
   final int? cycleDay;
   final String? lastPeriodLabel;
+  final String? nextPeriodLabel;
+  final int? effectiveCycleLength;
   final int periodStartCount;
   final CycleClassification classification;
+  final CyclePhase? todayPhase;
 
   @override
   Widget build(BuildContext context) {
     final hasPeriod = cycleDay != null && lastPeriodLabel != null;
+    if (hasPeriod && classification == CycleClassification.regular) {
+      return _RegularStatusCard(
+        cycleDay: cycleDay!,
+        lastPeriodLabel: lastPeriodLabel!,
+        nextPeriodLabel: nextPeriodLabel,
+        effectiveCycleLength: effectiveCycleLength,
+        todayPhase: todayPhase,
+      );
+    }
+
     final trailing = !hasPeriod
         ? 'No history yet'
         : classification == CycleClassification.unclassified
@@ -448,6 +484,177 @@ class _StatusCard extends StatelessWidget {
                   color: RituColors.textInverse,
                 ),
               ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Regular classification hero — phase-colored gradient, badge, next period.
+class _RegularStatusCard extends StatelessWidget {
+  const _RegularStatusCard({
+    required this.cycleDay,
+    required this.lastPeriodLabel,
+    required this.nextPeriodLabel,
+    required this.effectiveCycleLength,
+    required this.todayPhase,
+  });
+
+  final int cycleDay;
+  final String lastPeriodLabel;
+  final String? nextPeriodLabel;
+  final int? effectiveCycleLength;
+  final CyclePhase? todayPhase;
+
+  static const _menstrualAsset = 'assets/images/phase_menstrual.png';
+  static const _follicularAsset = 'assets/images/phase_follicular.png';
+  static const _ovulatoryAsset = 'assets/images/phase_ovulatory.png';
+  static const _lutealAsset = 'assets/images/phase_luteal.png';
+
+  bool get _isMenstrual => todayPhase == CyclePhase.menstrual;
+
+  List<Color> get _gradientColors => switch (todayPhase) {
+    CyclePhase.menstrual => const [
+      RituColors.gradientRw1,
+      RituColors.gradientRw2,
+    ],
+    CyclePhase.ovulatory => const [
+      RituColors.gradientGh1,
+      RituColors.gradientGh2,
+    ],
+    CyclePhase.luteal => const [
+      RituColors.gradientLilac1,
+      RituColors.gradientLilac2,
+    ],
+    _ => const [
+      RituColors.gradientMl1,
+      RituColors.gradientMl2,
+    ],
+  };
+
+  String get _illustrationAsset => switch (todayPhase) {
+    CyclePhase.menstrual => _menstrualAsset,
+    CyclePhase.ovulatory => _ovulatoryAsset,
+    CyclePhase.luteal => _lutealAsset,
+    _ => _follicularAsset,
+  };
+
+  String get _daySubtitle => _isMenstrual
+      ? 'days into your period'
+      : 'days into your cycle';
+
+  String get _footerLeading {
+    if (_isMenstrual && effectiveCycleLength != null) {
+      return '$effectiveCycleLength day cycle';
+    }
+    return 'Last period $lastPeriodLabel';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        gradient: LinearGradient(
+          begin: const Alignment(-0.95, -0.25),
+          end: const Alignment(0.95, 0.35),
+          colors: _gradientColors,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (todayPhase != null)
+                      DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: RituColors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(9999),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2.5,
+                          ),
+                          child: Text(
+                            phaseDisplayLabel(todayPhase!),
+                            style: GoogleFonts.dmSans(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                              height: 18 / 11,
+                              color: RituColors.textDisabled,
+                            ),
+                          ),
+                        ),
+                      ),
+                    Text(
+                      '$cycleDay',
+                      style: GoogleFonts.dmSerifDisplay(
+                        fontSize: 52,
+                        fontWeight: FontWeight.w400,
+                        height: 54 / 52,
+                        color: RituColors.textInverse,
+                      ),
+                    ),
+                    Text(
+                      _daySubtitle,
+                      style: GoogleFonts.dmSans(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w400,
+                        height: 20 / 13,
+                        color: RituColors.textInverse,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(
+                width: 100,
+                height: 97,
+                child: Image(
+                  image: AssetImage(_illustrationAsset),
+                  fit: BoxFit.contain,
+                  alignment: Alignment.centerRight,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Container(height: 1, color: RituColors.white.withValues(alpha: 0.35)),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  _footerLeading,
+                  style: GoogleFonts.dmSans(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    height: 18 / 11,
+                    color: RituColors.textInverse,
+                  ),
+                ),
+              ),
+              if (nextPeriodLabel != null)
+                Text(
+                  'Next period $nextPeriodLabel',
+                  style: GoogleFonts.dmSans(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    height: 18 / 11,
+                    color: RituColors.textInverse,
+                  ),
+                ),
             ],
           ),
         ],
