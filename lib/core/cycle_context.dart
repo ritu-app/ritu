@@ -1,4 +1,6 @@
 import '../data/models/period_log.dart';
+import 'cycle/cycle_adapters.dart';
+import 'cycle/cycle_day.dart';
 import 'date_format.dart';
 
 /// e.g. June 18
@@ -25,20 +27,12 @@ String formatJournalEntryContextLine(
   DateTime entryDate,
   List<PeriodLog> periods,
 ) {
-  final day = dateOnly(entryDate);
-  PeriodLog? applicable;
-  for (final period in periods) {
-    final start = dateOnly(period.startedOn);
-    if (start.isAfter(day)) continue;
-    if (applicable == null ||
-        start.isAfter(dateOnly(applicable.startedOn))) {
-      applicable = period;
-    }
-  }
+  final cycleDay = cycleDayForDate(
+    date: entryDate,
+    episodesNewestFirst: episodesFromPeriodLogs(periods),
+  );
 
-  if (applicable == null) return '${day.year}';
+  if (cycleDay == null) return '${dateOnly(entryDate).year}';
 
-  final cycleDay =
-      day.difference(dateOnly(applicable.startedOn)).inDays + 1;
-  return '${day.year} • Day $cycleDay';
+  return '${dateOnly(entryDate).year} • Day $cycleDay';
 }

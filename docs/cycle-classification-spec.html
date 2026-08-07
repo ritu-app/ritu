@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Cycle Classification Spec — Ritu</title>
+<style>
+  :root {
+    --text: #1F2328;
+    --text-muted: #59636E;
+    --border: #D1D9E0;
+    --bg-subtle: #F6F8FA;
+    --link: #0969DA;
+    --code-bg: #F6F8FA;
+    --accent: #1A7F5A;
+    --warn-bg: #FFF1F0;
+    --warn-border: #FFCCC7;
+    --warn-text: #82251C;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    color: var(--text);
+    background: #fff;
+    line-height: 1.6;
+    font-size: 16px;
+  }
+  .page {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 48px 32px 96px;
+  }
+  h1 {
+    font-size: 30px;
+    font-weight: 600;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 12px;
+    margin: 0 0 8px;
+  }
+  h2 {
+    font-size: 21px;
+    font-weight: 600;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 8px;
+    margin: 40px 0 16px;
+  }
+  h3 {
+    font-size: 16.5px;
+    font-weight: 600;
+    margin: 28px 0 12px;
+  }
+  h4 {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 20px 0 8px;
+    color: var(--text);
+  }
+  p { margin: 12px 0; }
+  code {
+    font-family: "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 85%;
+    background: var(--code-bg);
+    border-radius: 4px;
+    padding: 2px 6px;
+  }
+  pre {
+    background: var(--code-bg);
+    border-radius: 6px;
+    padding: 14px 16px;
+    overflow-x: auto;
+    font-family: "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 13.5px;
+    line-height: 1.65;
+    border: 1px solid var(--border);
+  }
+  pre code { background: none; padding: 0; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0 20px;
+    font-size: 14px;
+  }
+  th, td {
+    border: 1px solid var(--border);
+    padding: 8px 12px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th {
+    background: var(--bg-subtle);
+    font-weight: 600;
+  }
+  tr:nth-child(even) td { background: #FBFCFD; }
+  .num-table td { text-align: center; }
+  .num-table td:first-child { text-align: left; }
+  .total-row td { font-weight: 600; background: var(--bg-subtle); }
+  .badge {
+    display: inline-block;
+    font-size: 11.5px;
+    font-weight: 600;
+    padding: 2px 10px;
+    border-radius: 12px;
+  }
+  .badge-regular { background: #DAFBE1; color: #1A7F37; }
+  .badge-variable { background: #FFF8C5; color: #7D5A00; }
+  .badge-unpredictable { background: #FFEBE9; color: #CF222E; }
+  .callout {
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    background: var(--bg-subtle);
+    border-radius: 4px;
+    padding: 12px 16px;
+    margin: 16px 0;
+    font-size: 14.5px;
+  }
+  .callout b { color: var(--text); }
+  ul, ol { padding-left: 24px; }
+  li { margin: 4px 0; }
+  .toc {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px 20px;
+    background: var(--bg-subtle);
+    margin-bottom: 32px;
+    font-size: 14px;
+  }
+  .toc-title { font-weight: 600; margin-bottom: 8px; }
+  .toc a { color: var(--link); text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+  .toc ol { margin: 0; padding-left: 20px; }
+  .result-line {
+    font-size: 14.5px;
+    font-weight: 600;
+    margin-top: 4px;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+<h1>Cycle Classification Spec</h1>
+
+<div class="toc">
+  <div class="toc-title">Contents</div>
+  <ol>
+    <li><a href="#s1">Overview</a></li>
+    <li><a href="#s2">Calculation Steps</a></li>
+    <li><a href="#s3">Classification Thresholds</a></li>
+    <li><a href="#s4">Worked Examples</a></li>
+    <li><a href="#s5">Design Rationale</a></li>
+  </ol>
+</div>
+
+<h2 id="s1">1. Overview</h2>
+<p>Ritu classifies each user as Regular, Variable, or Unpredictable based on how much their recent cycle lengths deviate from their own average — not against a fixed reference value such as 28 days. A cycle length is defined as the number of days between two consecutive logged period start dates.</p>
+
+<h2 id="s2">2. Calculation Steps</h2>
+<table>
+  <tr><th>Step</th><th>Description</th></tr>
+  <tr>
+    <td>1. Select the sample</td>
+    <td>Requires a minimum of 3 completed cycles before classification is attempted. For a new user, the sample grows with each logged cycle — 3, then 4, then 5 — until 6 cycles have been logged. From that point on, use a rolling window of the 6 most recent completed cycles, dropping the oldest as each new one is logged, so a user's classification can continue to change over time in either direction.</td>
+  </tr>
+  <tr>
+    <td>2. Compute the mean</td>
+    <td>Sum the 6 cycle lengths and divide by 6. This produces the user's own personal average, not a fixed assumption.</td>
+  </tr>
+  <tr>
+    <td>3. Compute per-cycle deviation</td>
+    <td>For each of the 6 cycles, compute the absolute difference between that cycle's length and the mean from step 2. Direction (shorter or longer) is not considered — only magnitude.</td>
+  </tr>
+  <tr>
+    <td>4. Compute Mean Absolute Deviation (MAD)</td>
+    <td>Average the 6 absolute deviations from step 3. This single value, referred to as MAD throughout this document, is the sole input to classification.</td>
+  </tr>
+  <tr>
+    <td>5. Apply thresholds</td>
+    <td>Compare MAD against the three bands defined in Section 3 to determine classification.</td>
+  </tr>
+</table>
+
+<h2 id="s3">3. Classification Thresholds</h2>
+<table>
+  <tr><th>MAD (days)</th><th>Classification</th></tr>
+  <tr><td>0–4</td><td><span class="badge badge-regular">Regular</span></td></tr>
+  <tr><td>5–9</td><td><span class="badge badge-variable">Variable</span></td></tr>
+  <tr><td>10+</td><td><span class="badge badge-unpredictable">Unpredictable</span></td></tr>
+</table>
+<div class="callout"><b>Minimum data requirement:</b> Classification requires at least 3 completed cycles, which in turn requires at least 4 logged period start dates (a cycle length is only defined between two consecutive start dates). Below this threshold, the user remains <b>Unclassified</b>.</div>
+
+<h2 id="s4">4. Worked Examples</h2>
+
+<h3>4.1 Regular</h3>
+<p>Cycle lengths: 28, 27, 29, 28, 27, 28. Mean = 27.8.</p>
+<table class="num-table">
+  <tr><th>Cycle length</th><td>28</td><td>27</td><td>29</td><td>28</td><td>27</td><td>28</td></tr>
+  <tr><td>Deviation from mean</td><td>0.2</td><td>0.8</td><td>1.2</td><td>0.2</td><td>0.8</td><td>0.2</td></tr>
+</table>
+<div class="result-line">MAD = 0.6 days → <span class="badge badge-regular">Regular</span></div>
+
+<h3>4.2 Variable</h3>
+<p>Cycle lengths: 21, 35, 23, 33, 25, 31. Mean = 28.0.</p>
+<table class="num-table">
+  <tr><th>Cycle length</th><td>21</td><td>35</td><td>23</td><td>33</td><td>25</td><td>31</td></tr>
+  <tr><td>Deviation from mean</td><td>7</td><td>7</td><td>5</td><td>5</td><td>3</td><td>3</td></tr>
+</table>
+<div class="result-line">MAD = 5.0 days → <span class="badge badge-variable">Variable</span></div>
+<p>This example sits at the lower boundary of the Variable band, illustrating that two data sets with similar spread can resolve to different classifications depending on where the boundary falls.</p>
+
+<h3>4.3 Unpredictable</h3>
+<p>Cycle lengths: 21, 46, 24, 43, 22, 40. Mean = 32.7.</p>
+<table class="num-table">
+  <tr><th>Cycle length</th><td>21</td><td>46</td><td>24</td><td>43</td><td>22</td><td>40</td></tr>
+  <tr><td>Deviation from mean</td><td>11.7</td><td>13.3</td><td>8.7</td><td>10.3</td><td>10.7</td><td>7.3</td></tr>
+</table>
+<div class="result-line">MAD = 10.3 days → <span class="badge badge-unpredictable">Unpredictable</span></div>
+
+<h2 id="s5">5. Design Rationale</h2>
+
+<h4>Deviation is measured against the user's own mean, not a fixed reference value</h4>
+<p>A user whose cycles consistently run 35 days is exactly as regular as a user whose cycles consistently run 28 days. Classification measures consistency relative to the individual, not conformity to a textbook value.</p>
+
+<h4>The sample window is 6 cycles, not the user's full history or a minimum of 3</h4>
+<p>A rolling window reflects a user's recent pattern rather than a lifetime average. If a user's cycle regularity genuinely changes over time, this allows their classification to update accordingly rather than remaining fixed to data from years prior.</p>
+
+<h4>Deviations are averaged, not reduced to a single largest value</h4>
+<p>A single atypical cycle (attributable to travel, illness, or stress) should not by itself determine classification. Averaging all 6 deviations ensures one outlier is smoothed into the result rather than dominating it.</p>
+
+</div>
+</body>
+</html>

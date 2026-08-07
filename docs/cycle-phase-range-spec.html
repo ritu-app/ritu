@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Phase Range Calculation Spec — Ritu</title>
+<style>
+  :root {
+    --text: #1F2328;
+    --text-muted: #59636E;
+    --border: #D1D9E0;
+    --bg-subtle: #F6F8FA;
+    --link: #0969DA;
+    --code-bg: #F6F8FA;
+    --accent: #1A7F5A;
+    --warn-bg: #FFF1F0;
+    --warn-border: #FFCCC7;
+    --warn-text: #82251C;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    color: var(--text);
+    background: #fff;
+    line-height: 1.6;
+    font-size: 16px;
+  }
+  .page {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 48px 32px 96px;
+  }
+  .meta-block {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg-subtle);
+    padding: 14px 18px;
+    font-size: 13.5px;
+    color: var(--text-muted);
+    margin-bottom: 32px;
+  }
+  .meta-block b { color: var(--text); }
+  h1 {
+    font-size: 30px;
+    font-weight: 600;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 12px;
+    margin: 0 0 8px;
+  }
+  h2 {
+    font-size: 21px;
+    font-weight: 600;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 8px;
+    margin: 40px 0 16px;
+  }
+  h3 {
+    font-size: 16.5px;
+    font-weight: 600;
+    margin: 28px 0 12px;
+  }
+  h4 {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 20px 0 8px;
+    color: var(--text);
+  }
+  p { margin: 12px 0; }
+  code {
+    font-family: "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 85%;
+    background: var(--code-bg);
+    border-radius: 4px;
+    padding: 2px 6px;
+  }
+  pre {
+    background: var(--code-bg);
+    border-radius: 6px;
+    padding: 14px 16px;
+    overflow-x: auto;
+    font-family: "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 13.5px;
+    line-height: 1.65;
+    border: 1px solid var(--border);
+  }
+  pre code { background: none; padding: 0; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0 20px;
+    font-size: 14px;
+  }
+  th, td {
+    border: 1px solid var(--border);
+    padding: 8px 12px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th {
+    background: var(--bg-subtle);
+    font-weight: 600;
+  }
+  tr:nth-child(even) td { background: #FBFCFD; }
+  .total-row td { font-weight: 600; background: var(--bg-subtle); }
+  .check { color: var(--accent); font-weight: 600; }
+  .badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 10px;
+    border-radius: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    vertical-align: middle;
+    margin-left: 8px;
+  }
+  .badge-resolved { background: #DAFBE1; color: #1A7F37; }
+  .callout {
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    background: var(--bg-subtle);
+    border-radius: 4px;
+    padding: 12px 16px;
+    margin: 16px 0;
+    font-size: 14.5px;
+  }
+  .callout b { color: var(--text); }
+  .callout-warn {
+    border-left-color: #CF222E;
+    background: var(--warn-bg);
+    color: var(--warn-text);
+  }
+  .callout-warn b { color: #82251C; }
+  hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 40px 0;
+  }
+  ul, ol { padding-left: 24px; }
+  li { margin: 4px 0; }
+  .toc {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px 20px;
+    background: var(--bg-subtle);
+    margin-bottom: 32px;
+    font-size: 14px;
+  }
+  .toc-title { font-weight: 600; margin-bottom: 8px; }
+  .toc a { color: var(--link); text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+  .toc ol { margin: 0; padding-left: 20px; }
+  .footer-note {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    margin-top: 60px;
+    border-top: 1px solid var(--border);
+    padding-top: 16px;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+<h1>Phase Range Calculation Spec</h1>
+
+<div class="toc">
+  <div class="toc-title">Contents</div>
+  <ol>
+    <li><a href="#s1">Base Definitions</a></li>
+    <li><a href="#s2">Core Formula</a></li>
+    <li><a href="#s3">Worked Examples</a></li>
+    <li><a href="#s4">Edge Case: Insufficient Cycle Length</a></li>
+    <li><a href="#s5">Parameter Selection by Classification</a></li>
+    <li><a href="#s6">Variable Classification: Range Calculation</a></li>
+    <li><a href="#s7">Hero Card Update Triggers</a></li>
+    <li><a href="#s8">Hero Card Visual States</a></li>
+  </ol>
+</div>
+
+<h2>Overview</h2>
+<p>This document specifies how Ritu computes and displays menstrual cycle phases (Menstrual, Follicular, Ovulatory, Luteal) across all user classifications (Regular, Variable, Unpredictable), including the short-cycle edge case and the hero card's update behavior. It is the single source of truth for this logic; changes to phase calculation or hero card display behavior should be made here first.</p>
+
+<h2 id="s1">1. Base Definitions</h2>
+<p>Two values are treated as fixed anchors. All other ranges are derived from them.</p>
+<table>
+  <tr><th>Anchor</th><th>Definition</th></tr>
+  <tr><td><b>Menstrual</b></td><td>Day 1 of the cycle is the day a period was logged. This is observed data, not a calculated estimate, for every classification.</td></tr>
+  <tr><td><b>Luteal</b></td><td>The final 14 days of the cycle, counted backward from the day the next period starts. This is treated as the most biologically stable phase and is never shortened except under the Tier C fallback (Section 4.3).</td></tr>
+</table>
+<p>No other value is required as an input to this system besides these two anchors, <code>P</code>, and <code>C</code> (defined below).</p>
+
+<h2 id="s2">2. Core Formula</h2>
+<h4>Inputs</h4>
+<table>
+  <tr><th>Symbol</th><th>Definition</th></tr>
+  <tr><td><code>P</code></td><td>Period duration, in days</td></tr>
+  <tr><td><code>C</code></td><td>Total cycle length, in days (period start to next period start)</td></tr>
+</table>
+
+<h4>Derivation</h4>
+<pre>Menstrual   = day 1     to day P
+Follicular  = day P+1   to day C-17
+Ovulatory   = day C-16  to day C-14
+Luteal      = day C-13  to day C</pre>
+
+<table>
+  <tr><th>Phase</th><th>Basis</th></tr>
+  <tr><td>Menstrual</td><td>Fixed anchor: day 1 to <code>P</code>, taken directly from logged data</td></tr>
+  <tr><td>Luteal</td><td>Fixed anchor: the final 14 days, counted backward from day <code>C</code></td></tr>
+  <tr><td>Ovulatory</td><td>A fixed 3-day window immediately preceding Luteal</td></tr>
+  <tr><td>Follicular</td><td>The remainder between the end of Menstrual and the start of Ovulatory. This is the only phase whose length varies with cycle length.</td></tr>
+</table>
+
+<div class="callout"><code>P</code> and <code>C</code> are the only two inputs to this system. Menstrual and Luteal are fixed anchors; Ovulatory is offset a fixed distance from Luteal; Follicular absorbs whatever length remains. No phase boundary is hardcoded to a specific day count.</div>
+
+<h2 id="s3">3. Worked Examples</h2>
+
+<h3>Case: P=5, C=28 (baseline)</h3>
+<table>
+  <tr><th>Phase</th><th>Range</th></tr>
+  <tr><td>Menstrual</td><td>Days 1–5</td></tr>
+  <tr><td>Follicular</td><td>Days 6–11</td></tr>
+  <tr><td>Ovulatory</td><td>Days 12–14</td></tr>
+  <tr><td>Luteal</td><td>Days 15–28</td></tr>
+</table>
+
+<h3>Case: P=3, C=23 (short period, short cycle)</h3>
+<table>
+  <tr><th>Phase</th><th>Formula</th><th>Result</th></tr>
+  <tr><td>Menstrual</td><td>1 to P</td><td>Day 1–3</td></tr>
+  <tr><td>Follicular</td><td>P+1 to C-17</td><td>Day 4–6</td></tr>
+  <tr><td>Ovulatory</td><td>C-16 to C-14</td><td>Day 7–9</td></tr>
+  <tr><td>Luteal</td><td>C-13 to C</td><td>Day 10–23</td></tr>
+  <tr class="total-row"><td colspan="2">Total</td><td>23 days <span class="check">✓ matches C</span></td></tr>
+</table>
+
+<h3>Case: P=7, C=35 (long period, long cycle)</h3>
+<table>
+  <tr><th>Phase</th><th>Formula</th><th>Result</th></tr>
+  <tr><td>Menstrual</td><td>1 to P</td><td>Day 1–7</td></tr>
+  <tr><td>Follicular</td><td>P+1 to C-17</td><td>Day 8–18</td></tr>
+  <tr><td>Ovulatory</td><td>C-16 to C-14</td><td>Day 19–21</td></tr>
+  <tr><td>Luteal</td><td>C-13 to C</td><td>Day 22–35</td></tr>
+  <tr class="total-row"><td colspan="2">Total</td><td>35 days <span class="check">✓ matches C</span></td></tr>
+</table>
+<p>In both cases, Menstrual and Luteal shift to match <code>P</code> and <code>C</code>; Follicular absorbs the resulting difference in length.</p>
+
+<h2 id="s4">4. Edge Case: Insufficient Cycle Length <span class="badge badge-resolved">Resolved</span></h2>
+
+<h3>4.1 Failure mode</h3>
+<p>For a sufficiently short cycle relative to period length, the standard formula produces an invalid (negative-length) Follicular range.</p>
+<p>Example: P=5, C=21.</p>
+<table>
+  <tr><th>Phase</th><th>Formula</th><th>Result</th></tr>
+  <tr><td>Menstrual</td><td>1 to P</td><td>Day 1–5</td></tr>
+  <tr><td>Follicular</td><td>P+1 to C-17</td><td>Day 6 to Day 4 — <b style="color:#CF222E;">invalid</b></td></tr>
+  <tr><td>Ovulatory</td><td>C-16 to C-14</td><td>Day 5–7</td></tr>
+  <tr><td>Luteal</td><td>C-13 to C</td><td>Day 8–21</td></tr>
+</table>
+<div class="callout callout-warn"><b>Cause:</b> Ovulatory (3 days) + Luteal (14 days) + a 5-day period already total 22 days, one more than the 21-day cycle. There is no remaining length for Follicular, and the unmodified formula produces overlapping, invalid ranges.</div>
+
+<h3>4.2 Resolution strategy</h3>
+<p>Priority order when cycle length is constrained: <b>preserve Luteal → compress Ovulatory → drop Follicular.</b></p>
+<ul>
+  <li>Luteal is the anchor defined as most biologically stable (Section 1) and is the last phase to be reduced.</li>
+  <li>Ovulatory is a fixed 3-day convention rather than a hard biological boundary, and is the least costly phase to compress.</li>
+  <li>Follicular is defined as "remaining length" (Section 2); when no length remains, it does not appear. This follows directly from its definition rather than requiring a special case.</li>
+</ul>
+
+<p><b>Step 1 — compute available length after the period:</b></p>
+<pre>available = C - P</pre>
+
+<p><b>Step 2 — apply tier:</b></p>
+<table>
+  <tr><th>Tier</th><th>Condition</th><th>Behavior</th></tr>
+  <tr><td>A — Normal</td><td><code>available &gt;= 17</code></td><td>Standard formula (Section 2). Follicular = <code>available - 17</code>, Ovulatory = 3, Luteal = 14.</td></tr>
+  <tr><td>B — Compressed</td><td><code>15 &lt;= available &lt; 17</code></td><td>Follicular omitted for this cycle. Ovulatory = <code>available - 14</code> (1–2 days). Luteal remains fixed at 14.</td></tr>
+  <tr><td>C — Irregular</td><td><code>available &lt; 15</code></td><td>No phase math is attempted; even a 1-day Ovulatory and 14-day Luteal do not fit. Handled as Section 4.3.</td></tr>
+</table>
+
+<p><b>Worked resolution, P=5, C=21:</b> <code>available = 16</code> → Tier B → Ovulatory = 2 days.</p>
+<table>
+  <tr><th>Phase</th><th>Range</th></tr>
+  <tr><td>Menstrual</td><td>Day 1–5</td></tr>
+  <tr><td>Ovulatory</td><td>Day 6–7</td></tr>
+  <tr><td>Luteal</td><td>Day 8–21</td></tr>
+  <tr class="total-row"><td>Total</td><td>21 days, no overlap</td></tr>
+</table>
+<p>Follicular is absent from this cycle's output; it is not rendered as a zero-width segment.</p>
+
+<h3>4.3 Additional condition</h3>
+<p>If <code>C &lt;= P</code> (period duration equal to or exceeding total cycle length — typically a logging error), route directly to Tier C regardless of the computed <code>available</code> value.</p>
+
+<h3>4.4 Hero card behavior by tier</h3>
+<table>
+  <tr><th>Tier</th><th>Hero card behavior</th></tr>
+  <tr><td>A</td><td>Standard 4-segment strip (Section 8), unmodified.</td></tr>
+  <tr><td>B</td><td>3-segment strip: Menstrual → Ovulatory → Luteal. Follicular is removed from the strip, not collapsed to near-zero width. On the day following the period, the label transitions directly from "Menstrual" to "Ovulatory phase." On first occurrence for a given user, display a one-time explanatory message: <i>"Your cycle this time is on the shorter side — the Follicular window was too brief to show separately."</i></td></tr>
+  <tr><td>C</td><td>No phase strip is rendered. Reuse the Unpredictable-classification neutral card component (Menstrual when logged, plain neutral card otherwise), with cycle-specific copy rather than classification copy: <i>"This cycle looks unusually short — we're not showing phase estimates for it."</i> This also signals to the user that the logged dates may warrant review.</td></tr>
+</table>
+
+<h3>4.5 Rationale: Tier B is not merged into the Unpredictable pattern</h3>
+<p>Unpredictable is a user-level classification derived from six cycles of observed variance; it represents insufficient confidence in a user's data to attempt phase calculation at all. Tier B is a single-cycle condition for an otherwise Regular or Variable user, in which Ovulatory and Luteal remain valid, non-overlapping calculated ranges — only Follicular lacks sufficient length. Substituting the Unpredictable neutral card in this case would discard valid ovulation-window data for any user with a single shorter-than-typical cycle, which is a common occurrence, not a rare one.</p>
+
+<h2 id="s5">5. Parameter Selection by Classification</h2>
+<table>
+  <tr><th>Classification</th><th>Value used for <code>C</code></th><th>Display treatment</th></tr>
+  <tr><td><b>Regular</b></td><td>The user's personal average cycle length (single stable value)</td><td>Exact ranges — e.g., "Day 14 · Follicular phase"</td></tr>
+  <tr><td><b>Variable</b></td><td>The midpoint of the user's observed range (see Section 6)</td><td>Identical formula to Regular, displayed as an estimate — e.g., "probably Follicular," denoted with <code>~</code></td></tr>
+  <tr><td><b>Unpredictable</b></td><td>Not applicable — no calculation is attempted</td><td>Only Menstrual (logged) is shown; all other days display a neutral card</td></tr>
+</table>
+<p>Regular and Variable classifications use an identical calculation. The only difference is the confidence level associated with the input value for <code>C</code>, reflected in copy and UI treatment — not in the underlying formula.</p>
+
+<h2 id="s6">6. Variable Classification: Range Calculation</h2>
+
+<h3>6.1 Data window</h3>
+<p>The sample size used for both classification and range calculation follows a single shared, incrementally growing window:</p>
+<table>
+  <tr><th>Cycles logged</th><th>Data used</th></tr>
+  <tr><td>1–2</td><td>Unclassified — insufficient data</td></tr>
+  <tr><td>3</td><td>All 3 cycles</td></tr>
+  <tr><td>4</td><td>All 4 cycles</td></tr>
+  <tr><td>5</td><td>All 5 cycles</td></tr>
+  <tr><td>6+</td><td>Most recent 6 cycles, rolling (cycle 7 displaces cycle 1, etc.)</td></tr>
+</table>
+<p>This window is identical to the one used by the classification engine (minimum 3 cycles; mean absolute deviation computed over the most recent 6), so the Variable range is always derived from the same data that produced the classification, rather than an independently defined sample.</p>
+
+<h3>6.2 Midpoint definition</h3>
+<p>The midpoint used for <code>C</code> is not a median of the full sample. It is calculated from only the shortest and longest values in the window:</p>
+<pre>midpoint = (shortest + longest) / 2</pre>
+<p>Values between the extremes (e.g., a middle value in a 3-cycle sample) contribute to the classification's mean-absolute-deviation calculation but are not inputs to the midpoint or range calculations described in Sections 6.3–6.4.</p>
+
+<h3>6.3 Rounding</h3>
+<p><code>shortest + longest</code> is frequently odd (e.g., 24 + 33 = 57 → 28.5). Round half up to the nearest whole day (28.5 → 29). This rounding rule is a defined requirement, not an implementation detail left open to interpretation.</p>
+<div class="callout"><b>Note:</b> With smaller sample sizes (e.g., 3 cycles), a single atypical cycle has proportionally greater influence on the computed midpoint and range than it would with a full 6-cycle sample. This is expected behavior; the existing estimate-hedging treatment (tilde, "probably") is designed to account for it. The range is expected to narrow as more cycles are logged.</div>
+
+<h3>6.4 Calculation methods</h3>
+<p>Two calculations are performed for a Variable user. They answer different questions and are not interchangeable; both run for every applicable cycle.</p>
+
+<h4>Method 1 — Point estimate (displayed value)</h4>
+<p>Uses the midpoint of the observed range as <code>C</code>, applied to the standard formula (Section 2). This is the only output of this section shown to the user.</p>
+<p>Example: shortest = 24, longest = 33 → midpoint ≈ 29 (P=5):</p>
+<table>
+  <tr><th>Phase</th><th>Range</th></tr>
+  <tr><td>Menstrual</td><td>Day 1–5</td></tr>
+  <tr><td>Follicular</td><td>Day 6–12</td></tr>
+  <tr><td>Ovulatory</td><td>Day 13–15</td></tr>
+  <tr><td>Luteal</td><td>Day 16–29</td></tr>
+</table>
+
+<h4>Method 2 — Range of possibility (uncertainty measurement, not displayed)</h4>
+<p>Substitutes the shortest and longest observed cycle lengths independently into the Ovulatory and Luteal-start expressions from Section 2 (<code>Ovulatory = day C-16 to C-14</code>, <code>Luteal start = day C-13</code>). Note that <code>P</code> does not appear in either expression and plays no role in this calculation.</p>
+<p>If C = 24 (shortest): Ovulatory start = 24−16 = 8; Ovulatory end = 24−14 = 10 → Day 8–10. Luteal start = 24−13 = 11.<br>
+If C = 33 (longest): Ovulatory start = 33−16 = 17; Ovulatory end = 33−14 = 19 → Day 17–19. Luteal start = 33−13 = 20.</p>
+<table>
+  <tr><th>Phase</th><th>If short (C=24)</th><th>If long (C=33)</th></tr>
+  <tr><td>Ovulatory</td><td>Day 8–10</td><td>Day 17–19</td></tr>
+  <tr><td>Luteal start</td><td>Day 11</td><td>Day 20</td></tr>
+</table>
+<p>The output used from this method is the <b>width of the range</b>: latest possible end (19) minus earliest possible start (8) = an 11-day uncertainty window. This value is the basis for classifying Ovulatory as the least reliable phase estimate for Variable users. Neither "Day 8–10" nor "Day 17–19" is displayed to the user as a phase estimate; only Method 1's output (e.g., "~Day 13–15") is shown. Method 2 exists solely to calibrate the degree of hedging applied to the displayed estimate.</p>
+<div class="callout"><b>Future extension:</b> if a detail view explaining the estimate's uncertainty is implemented, Method 2's range (e.g., "Ovulatory could fall anywhere between day 8 and day 19") is appropriate content for it, as supplementary detail beneath the Method 1 value — not as a replacement for it.</div>
+
+<h2 id="s7">7. Hero Card Update Triggers</h2>
+<table>
+  <tr><th>Trigger</th><th>Behavior</th></tr>
+  <tr><td>A new day begins</td><td>The day count advances by one. If this crosses a phase boundary, the hero card updates its color and label.</td></tr>
+  <tr><td>A new period is logged</td><td>The day count resets to 1 immediately upon logging, independent of calendar day. The hero card transitions to Menstrual at that moment.</td></tr>
+  <tr><td>Classification changes</td><td>A distinct, lower-frequency event that determines whether phase-based display applies at all. Initial classification (Unclassified → Regular/Variable/Unpredictable) or reclassification can change the entire hero card treatment — e.g., from a dimmed "estimated" state to full confidence, or from a phase card to the Unpredictable neutral card.</td></tr>
+</table>
+
+<h2 id="s8">8. Hero Card Visual States</h2>
+<table>
+  <tr><th>State</th><th>Applies to</th><th>Notes</th></tr>
+  <tr><td>Menstrual</td><td>All classifications</td><td>Always shown with full confidence (logged data)</td></tr>
+  <tr><td>Follicular</td><td>Regular, Variable</td><td>Regular: exact. Variable: estimate, denoted with <code>~</code></td></tr>
+  <tr><td>Ovulatory</td><td>Regular, Variable</td><td>Regular: exact. Variable: estimate, denoted with <code>~</code></td></tr>
+  <tr><td>Luteal</td><td>Regular, Variable</td><td>Regular: exact. Variable: estimate, denoted with <code>~</code></td></tr>
+  <tr><td>Neutral</td><td>Unpredictable only</td><td>Shown for every day that is not a logged period</td></tr>
+</table>
+<p>Colors and gradients for each state are defined in the Ritu color system and are referenced here, not redefined.</p>
+
+</div>
+</body>
+</html>
