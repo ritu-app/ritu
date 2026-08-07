@@ -13,4 +13,5 @@ export 'cycle_snapshot.dart';
 export 'day_range.dart';
 export 'period_episode.dart';
 export 'phase_ranges.dart';
+export 'unclassified_status_copy.dart';
 export 'variable_estimates.dart';

@@ -162,7 +162,8 @@ void main() {
     await tester.tap(find.text('Skip for now'));
     await tester.pumpAndSettle();
 
-    expect(find.text('days since last period'), findsOneWidget);
+    expect(find.text('days into your cycle'), findsOneWidget);
+    expect(find.text('No history yet'), findsOneWidget);
   });
 
   rituTestWidgets('Returning user skips onboarding when profile is complete', (
@@ -283,8 +284,8 @@ void main() {
     await tester.tap(save);
     await tester.pumpAndSettle();
 
-    final updatedLabel = formatDisplayDate(DateTime(2026, 6, 15));
-    expect(find.text(updatedLabel), findsOneWidget);
+    final settingsLabel = formatDisplayDate(DateTime(2026, 6, 15));
+    expect(find.text(settingsLabel), findsOneWidget);
 
     final latest = await periods.getLatest();
     expect(latest, isNotNull);
@@ -295,7 +296,10 @@ void main() {
     await tester.tap(find.byIcon(LucideIcons.chevronLeft));
     await tester.pumpAndSettle();
 
-    expect(find.text('Last period $updatedLabel'), findsOneWidget);
+    expect(
+      find.text('Last period ${formatShortMonthDay(DateTime(2026, 6, 15))}'),
+      findsOneWidget,
+    );
   });
 
   rituTestWidgets('Period start calendar does not accept future dates', (

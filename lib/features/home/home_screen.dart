@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../core/cycle/cycle.dart';
 import '../../core/date_format.dart';
 import '../../data/repositories/daily_log_repository.dart';
+import '../../providers/cycle_snapshot_provider.dart';
 import '../../providers/daily_log_providers.dart';
 import '../../providers/period_providers.dart';
 import '../../providers/profile_providers.dart';
@@ -55,8 +57,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final profileAsync = ref.watch(profileProvider);
-    final daysSinceAsync = ref.watch(daysSinceLastPeriodProvider);
+    final snapshotAsync = ref.watch(cycleSnapshotProvider);
     final latestAsync = ref.watch(latestPeriodProvider);
+    final allPeriodsAsync = ref.watch(allPeriodsProvider);
     final bleedDaysAsync = ref.watch(bleedDaysProvider);
     final loggedDaysAsync = ref.watch(totalLoggedDaysProvider);
     final bannerAsync = ref.watch(showSpeedUpBannerProvider);
@@ -78,10 +81,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
 
     final name = profile.displayName;
-    final daysSinceLastPeriod = daysSinceAsync.valueOrNull;
+    final snapshot = snapshotAsync.valueOrNull;
     final latest = latestAsync.valueOrNull;
     final lastPeriodLabel =
-        latest == null ? null : formatDisplayDate(latest.startedOn);
+        latest == null ? null : formatShortMonthDay(latest.startedOn);
+    final periodStartCount = allPeriodsAsync.valueOrNull?.length ?? 0;
     final periodDates = bleedDaysAsync.valueOrNull ?? {};
     final loggedDaysCount = loggedDaysAsync.valueOrNull ?? 0;
     final showSpeedUpBanner =
@@ -99,8 +103,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               child: switch (_tabIndex) {
                 0 => _HomeTab(
                   name: name,
-                  daysSinceLastPeriod: daysSinceLastPeriod,
+                  cycleDay: snapshot?.cycleDay,
                   lastPeriodLabel: lastPeriodLabel,
+                  periodStartCount: periodStartCount,
+                  classification:
+                      snapshot?.classification ??
+                      CycleClassification.unclassified,
                   patternDaysLogged: loggedDaysCount.clamp(
                     0,
                     widget.patternDaysRequired,
@@ -159,8 +167,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 class _HomeTab extends StatelessWidget {
   const _HomeTab({
     required this.name,
-    required this.daysSinceLastPeriod,
+    required this.cycleDay,
     required this.lastPeriodLabel,
+    required this.periodStartCount,
+    required this.classification,
     required this.patternDaysLogged,
     required this.patternDaysRequired,
     required this.showSpeedUpBanner,
@@ -177,8 +187,10 @@ class _HomeTab extends StatelessWidget {
   });
 
   final String name;
-  final int? daysSinceLastPeriod;
+  final int? cycleDay;
   final String? lastPeriodLabel;
+  final int periodStartCount;
+  final CycleClassification classification;
   final int patternDaysLogged;
   final int patternDaysRequired;
   final bool showSpeedUpBanner;
@@ -211,8 +223,10 @@ class _HomeTab extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         _StatusCard(
-          daysSinceLastPeriod: daysSinceLastPeriod,
+          cycleDay: cycleDay,
           lastPeriodLabel: lastPeriodLabel,
+          periodStartCount: periodStartCount,
+          classification: classification,
         ),
         const SizedBox(height: 12),
         todayLog == null
@@ -348,16 +362,28 @@ class _Header extends StatelessWidget {
 
 class _StatusCard extends StatelessWidget {
   const _StatusCard({
-    required this.daysSinceLastPeriod,
+    required this.cycleDay,
     required this.lastPeriodLabel,
+    required this.periodStartCount,
+    required this.classification,
   });
 
-  final int? daysSinceLastPeriod;
+  final int? cycleDay;
   final String? lastPeriodLabel;
+  final int periodStartCount;
+  final CycleClassification classification;
 
   @override
   Widget build(BuildContext context) {
-    final hasPeriod = daysSinceLastPeriod != null && lastPeriodLabel != null;
+    final hasPeriod = cycleDay != null && lastPeriodLabel != null;
+    final trailing = !hasPeriod
+        ? 'No history yet'
+        : classification == CycleClassification.unclassified
+        ? unclassifiedStatusTrailingLabel(
+            periodStartCount: periodStartCount,
+            cycleDay: cycleDay,
+          )
+        : '';
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
@@ -378,7 +404,7 @@ class _StatusCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            hasPeriod ? '$daysSinceLastPeriod' : '—',
+            hasPeriod ? '$cycleDay' : '—',
             style: GoogleFonts.dmSerifDisplay(
               fontSize: 52,
               fontWeight: FontWeight.w400,
@@ -387,7 +413,7 @@ class _StatusCard extends StatelessWidget {
             ),
           ),
           Text(
-            hasPeriod ? 'days since last period' : 'No period logged yet',
+            hasPeriod ? 'days into your cycle' : 'No period logged yet',
             style: GoogleFonts.dmSans(
               fontSize: 13,
               fontWeight: FontWeight.w600,
@@ -395,9 +421,9 @@ class _StatusCard extends StatelessWidget {
               color: RituColors.textInverse,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           Container(height: 1, color: RituColors.white.withValues(alpha: 0.35)),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           Row(
             children: [
               Expanded(
@@ -414,7 +440,7 @@ class _StatusCard extends StatelessWidget {
                 ),
               ),
               Text(
-                hasPeriod ? '' : 'No history yet',
+                trailing,
                 style: GoogleFonts.dmSans(
                   fontSize: 11,
                   fontWeight: FontWeight.w500,

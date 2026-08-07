@@ -30,7 +30,7 @@ class CycleHistoryEditor extends StatelessWidget {
         Text('Cycle history editor', style: theme.textTheme.titleSmall),
         const SizedBox(height: 8),
         Text(
-          'Oldest → newest. Start dates derive from simulated today and cycle day.',
+          'Oldest → newest. Tap a start date to pick the period start day.',
           style: theme.textTheme.bodySmall?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),
@@ -75,6 +75,7 @@ class CycleHistoryEditor extends StatelessWidget {
               row: row,
               startDate: start,
               isOldest: index == 0,
+              onPickStartDate: () => _pickStartDate(context, index, start),
               onChanged: (updated) {
                 final rows = draft.rows.toList(growable: true);
                 rows[index] = updated;
@@ -94,6 +95,41 @@ class CycleHistoryEditor extends StatelessWidget {
       ],
     );
   }
+
+  Future<void> _pickStartDate(
+    BuildContext context,
+    int index,
+    DateTime currentStart,
+  ) async {
+    final bounds = draft.startDateBounds(
+      index: index,
+      simulatedToday: simulatedToday,
+    );
+    if (bounds.firstDate.isAfter(bounds.lastDate)) return;
+
+    final initialDate = currentStart.isBefore(bounds.firstDate)
+        ? bounds.firstDate
+        : currentStart.isAfter(bounds.lastDate)
+        ? bounds.lastDate
+        : currentStart;
+
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: initialDate,
+      firstDate: bounds.firstDate,
+      lastDate: bounds.lastDate,
+      helpText: 'Period start date',
+    );
+    if (picked == null || !context.mounted) return;
+
+    onDraftChanged(
+      draft.withRowStartDate(
+        index: index,
+        newStart: picked,
+        simulatedToday: simulatedToday,
+      ),
+    );
+  }
 }
 
 class _HistoryRowTile extends StatelessWidget {
@@ -103,6 +139,7 @@ class _HistoryRowTile extends StatelessWidget {
     required this.row,
     required this.startDate,
     required this.isOldest,
+    required this.onPickStartDate,
     required this.onChanged,
     this.onRemove,
   });
@@ -111,6 +148,7 @@ class _HistoryRowTile extends StatelessWidget {
   final CycleHistoryRow row;
   final DateTime startDate;
   final bool isOldest;
+  final VoidCallback onPickStartDate;
   final ValueChanged<CycleHistoryRow> onChanged;
   final VoidCallback? onRemove;
 
@@ -149,11 +187,10 @@ class _HistoryRowTile extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 8),
-            Text(
-              'Start: ${formatDisplayDate(startDate)}',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
+            OutlinedButton.icon(
+              onPressed: onPickStartDate,
+              icon: const Icon(Icons.event, size: 18),
+              label: Text('Start: ${formatDisplayDate(startDate)}'),
             ),
             const SizedBox(height: 8),
             Row(

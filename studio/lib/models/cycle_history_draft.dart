@@ -127,6 +127,61 @@ class CycleHistoryDraft {
     return starts;
   }
 
+  /// Sets the period start for [index], keeping other starts fixed.
+  ///
+  /// Rebuilds cycle lengths (and [currentCycleDay] when the newest start moves)
+  /// from the resulting start list. Returns [this] when the date would make
+  /// starts non-increasing or place the latest start after [simulatedToday].
+  CycleHistoryDraft withRowStartDate({
+    required int index,
+    required DateTime newStart,
+    required DateTime simulatedToday,
+  }) {
+    if (index < 0 || index >= rows.length) return this;
+
+    final today = dateOnly(simulatedToday);
+    final starts = List<DateTime>.from(computedStarts(today));
+    final start = dateOnly(newStart);
+    starts[index] = start;
+
+    for (var i = 0; i < starts.length - 1; i++) {
+      if (!starts[i].isBefore(starts[i + 1])) return this;
+    }
+    if (starts.last.isAfter(today)) return this;
+
+    final updated = <CycleHistoryRow>[
+      for (var i = 0; i < rows.length; i++)
+        CycleHistoryRow(
+          cycleLength: i == 0
+              ? null
+              : starts[i].difference(starts[i - 1]).inDays,
+          periodDuration: rows[i].periodDuration,
+        ),
+    ];
+
+    final cycleDay = today.difference(starts.last).inDays + 1;
+    return CycleHistoryDraft(
+      currentCycleDay: cycleDay.clamp(1, 99),
+      rows: updated,
+    );
+  }
+
+  /// Inclusive date bounds for picking the period start of [index].
+  ({DateTime firstDate, DateTime lastDate}) startDateBounds({
+    required int index,
+    required DateTime simulatedToday,
+  }) {
+    final today = dateOnly(simulatedToday);
+    final starts = computedStarts(today);
+    final firstDate = index == 0
+        ? DateTime(today.year - 5)
+        : starts[index - 1].add(const Duration(days: 1));
+    final lastDate = index == starts.length - 1
+        ? today
+        : starts[index + 1].subtract(const Duration(days: 1));
+    return (firstDate: firstDate, lastDate: lastDate);
+  }
+
   CycleHistoryDraft addOldestRow() {
     if (rows.isEmpty) {
       return copyWith(rows: [CycleHistoryRow()]);
