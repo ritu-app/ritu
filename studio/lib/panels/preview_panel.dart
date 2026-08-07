@@ -8,15 +8,30 @@ class PreviewPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: DeviceFrame(
-        device: Devices.ios.iPhone13,
-        screen: MaterialApp(
-          theme: buildRituTheme(),
-          debugShowCheckedModeBanner: false,
-          home: const HomeScreen(),
-        ),
-      ),
+    final device = Devices.ios.iPhone13;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final frame = DeviceFrame(
+          device: device,
+          screen: MaterialApp(
+            theme: buildRituTheme(),
+            debugShowCheckedModeBanner: false,
+            home: const HomeScreen(),
+          ),
+        );
+
+        return Center(
+          child: FittedBox(
+            fit: BoxFit.contain,
+            child: SizedBox(
+              width: device.screenSize.width,
+              height: device.screenSize.height,
+              child: frame,
+            ),
+          ),
+        );
+      },
     );
   }
 }

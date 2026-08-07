@@ -99,11 +99,12 @@ class _ReadoutRow extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
-      child: Row(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(width: 132, child: Text(label, style: labelStyle)),
-          Expanded(child: Text(value, style: valueStyle)),
+          Text(label, style: labelStyle),
+          const SizedBox(height: 2),
+          Text(value, style: valueStyle),
         ],
       ),
     );

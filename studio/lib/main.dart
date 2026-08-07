@@ -50,48 +50,41 @@ class _CycleStudioShellState extends State<CycleStudioShell> {
 
   @override
   Widget build(BuildContext context) {
+    final controlPanel = ControlPanel(
+      historyDraft: _historyDraft,
+      onHistoryDraftChanged: (draft) {
+        setState(() => _historyDraft = draft);
+      },
+      loggedDaysCount: _loggedDaysCount,
+      loggedToday: _loggedToday,
+      onLoggedDaysChanged: (count) {
+        setState(() => _loggedDaysCount = count);
+        _syncDailyLogs();
+      },
+      onLoggedTodayChanged: (logged) {
+        setState(() => _loggedToday = logged);
+        _syncDailyLogs();
+      },
+    );
+
     return Scaffold(
       body: LayoutBuilder(
         builder: (context, constraints) {
-          final stackVertically = constraints.maxWidth < 900;
-          final controlPanel = ControlPanel(
-            historyDraft: _historyDraft,
-            onHistoryDraftChanged: (draft) {
-              setState(() => _historyDraft = draft);
-            },
-            loggedDaysCount: _loggedDaysCount,
-            loggedToday: _loggedToday,
-            onLoggedDaysChanged: (count) {
-              setState(() => _loggedDaysCount = count);
-              _syncDailyLogs();
-            },
-            onLoggedTodayChanged: (logged) {
-              setState(() => _loggedToday = logged);
-              _syncDailyLogs();
-            },
-          );
+          final stackControls = constraints.maxWidth < 900;
 
-          if (stackVertically) {
+          if (stackControls) {
             return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 SizedBox(
-                  height: constraints.maxHeight * 0.45,
-                  child: controlPanel,
-                ),
-                const Divider(height: 1),
-                Expanded(
-                  child: ListView(
-                    padding: const EdgeInsets.all(16),
-                    children: [
-                      SizedBox(
-                        height: 720,
-                        child: const PreviewPanel(),
-                      ),
-                      const SizedBox(height: 16),
-                      const DebugPanel(),
-                    ],
+                  height: constraints.maxHeight * 0.42,
+                  child: ColoredBox(
+                    color: Theme.of(context).colorScheme.surfaceContainerLow,
+                    child: controlPanel,
                   ),
                 ),
+                const Divider(height: 1),
+                Expanded(child: _PreviewAndDebugRow()),
               ],
             );
           }
@@ -107,23 +100,44 @@ class _CycleStudioShellState extends State<CycleStudioShell> {
                 ),
               ),
               const VerticalDivider(width: 1),
-              Expanded(
-                child: ListView(
-                  padding: const EdgeInsets.all(24),
-                  children: [
-                    SizedBox(
-                      height: 760,
-                      child: const PreviewPanel(),
-                    ),
-                    const SizedBox(height: 20),
-                    const DebugPanel(),
-                  ],
-                ),
-              ),
+              const Expanded(child: _PreviewAndDebugRow()),
             ],
           );
         },
       ),
+    );
+  }
+}
+
+/// Preview and debug side by side — preview scroll stays inside the device frame.
+class _PreviewAndDebugRow extends StatelessWidget {
+  const _PreviewAndDebugRow();
+
+  static const _debugWidth = 300.0;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Expanded(
+          child: Padding(
+            padding: EdgeInsets.all(16),
+            child: PreviewPanel(),
+          ),
+        ),
+        const VerticalDivider(width: 1),
+        SizedBox(
+          width: _debugWidth,
+          child: ColoredBox(
+            color: Theme.of(context).colorScheme.surfaceContainerLowest,
+            child: const SingleChildScrollView(
+              padding: EdgeInsets.all(16),
+              child: DebugPanel(),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
