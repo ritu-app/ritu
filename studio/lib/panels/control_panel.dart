@@ -49,21 +49,8 @@ class ControlPanel extends StatelessWidget {
           label: Text(formatDisplayDate(controller.simulatedToday)),
         ),
         const SizedBox(height: 24),
-        Text('Presets', style: theme.textTheme.titleSmall),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            for (final preset in CyclePreset.values)
-              FilledButton.tonal(
-                onPressed: () async {
-                  await controller.applyPreset(preset);
-                  onHistoryDraftChanged(CycleHistoryDraft.fromPreset(preset));
-                },
-                child: Text(preset.label),
-              ),
-          ],
+        _PresetSelector(
+          onHistoryDraftChanged: onHistoryDraftChanged,
         ),
         const SizedBox(height: 24),
         CycleHistoryEditor(
@@ -114,4 +101,58 @@ String formatDisplayDate(DateTime date) {
     'Dec',
   ];
   return '${months[date.month - 1]} ${date.day}, ${date.year}';
+}
+
+class _PresetSelector extends StatefulWidget {
+  const _PresetSelector({required this.onHistoryDraftChanged});
+
+  final ValueChanged<CycleHistoryDraft> onHistoryDraftChanged;
+
+  @override
+  State<_PresetSelector> createState() => _PresetSelectorState();
+}
+
+class _PresetSelectorState extends State<_PresetSelector> {
+  CyclePreset _selected = CyclePreset.regular;
+
+  Future<void> _applyPreset(CyclePreset preset) async {
+    final controller = context.studioController;
+    await controller.applyPreset(preset);
+    widget.onHistoryDraftChanged(CycleHistoryDraft.fromPreset(preset));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Preset', style: theme.textTheme.titleSmall),
+        const SizedBox(height: 8),
+        DropdownMenu<CyclePreset>(
+          key: ValueKey(_selected),
+          initialSelection: _selected,
+          expandedInsets: EdgeInsets.zero,
+          dropdownMenuEntries: [
+            for (final preset in CyclePreset.values)
+              DropdownMenuEntry(value: preset, label: preset.label),
+          ],
+          onSelected: (preset) {
+            if (preset == null) return;
+            setState(() => _selected = preset);
+            _applyPreset(preset);
+          },
+        ),
+        const SizedBox(height: 10),
+        Text(
+          _selected.description,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+            height: 1.4,
+          ),
+        ),
+      ],
+    );
+  }
 }
