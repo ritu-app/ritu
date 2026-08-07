@@ -59,6 +59,12 @@ class MemoryDailyLogRepository implements DailyLogRepository {
   @override
   Future<int> getCurrentStreak() async => _computeStreak(_loggedDays);
 
+  /// Clears all entries — used by Cycle Studio daily-log controls.
+  Future<void> clearAll() async {
+    _store.dailyLogs.clear();
+    _store.notifyDailyLogs();
+  }
+
   @override
   Stream<int> watchCurrentStreak() async* {
     yield _computeStreak(_loggedDays);

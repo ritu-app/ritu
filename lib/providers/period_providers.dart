@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/date_format.dart';
 import '../data/models/period_log.dart';
 import 'repository_providers.dart';
+import 'simulated_today_provider.dart';
 
 final latestPeriodProvider = StreamProvider<PeriodLog?>((ref) {
   return ref.watch(periodRepositoryProvider).watchLatest();
@@ -21,8 +22,8 @@ final bleedDaysProvider = Provider<AsyncValue<Set<DateTime>>>((ref) {
 final daysSinceLastPeriodProvider = Provider<AsyncValue<int?>>((ref) {
   return ref.watch(latestPeriodProvider).whenData((latest) {
     if (latest == null) return null;
-    final now = dateOnly(DateTime.now());
-    return now.difference(dateOnly(latest.startedOn)).inDays;
+    final today = ref.watch(simulatedTodayProvider);
+    return today.difference(dateOnly(latest.startedOn)).inDays;
   });
 });
 

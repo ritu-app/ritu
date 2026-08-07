@@ -3,9 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/date_format.dart';
 import '../data/models/daily_log_entry.dart';
 import 'repository_providers.dart';
+import 'simulated_today_provider.dart';
 
 final todayLogProvider = StreamProvider<DailyLogEntry?>((ref) {
-  return ref.watch(dailyLogRepositoryProvider).watchByDate(DateTime.now());
+  return ref
+      .watch(dailyLogRepositoryProvider)
+      .watchByDate(ref.watch(simulatedTodayProvider));
 });
 
 final dailyLogByDateProvider = StreamProvider.family<DailyLogEntry?, DateTime>((

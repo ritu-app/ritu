@@ -13,15 +13,17 @@ SQLite data.
 ## 1. Goals
 
 1. Preview any screen that consumes cycle state (hero card, insights, journal
-   context line, etc.) without rebuilding the app or adding static use-cases.
+  context line, etc.) without rebuilding the app or adding static use-cases.
 2. Compose arbitrary period histories and see classification, phase ranges, and
-   UI update in real time.
+  UI update in real time.
 3. Validate partial vs full insights (< 3 vs ≥ 3 completed cycles) visually.
 4. Exercise the full phase × classification × tier matrix during design and QA.
 5. Share a deployable URL for design review (optional, same pattern as
-   Widgetbook → Vercel).
+  Widgetbook → Vercel).
 
 ---
+
+
 
 ## 2. Non-goals
 
@@ -32,6 +34,8 @@ SQLite data.
 
 ---
 
+
+
 ## 3. Repository layout
 
 Independent Flutter project, sibling to `widgetbook/`:
@@ -39,19 +43,30 @@ Independent Flutter project, sibling to `widgetbook/`:
 ```
 studio/
   pubspec.yaml          path: .. dependency on ritu
+  assets/images/        symlinks to ../assets/images/ (host-bundle PNGs)
   lib/
-    main.dart           split-pane shell
+    main.dart                 split-pane shell
+    models/
+      cycle_history_draft.dart
     scope/
       studio_scope.dart       mutable MemoryRituStore + ProviderScope
-      simulated_today.dart    override for "today"
+      ritu_repos.dart           RituRepos + onboarding seed helper
     panels/
-      control_panel.dart      inputs + presets
-      preview_panel.dart      device frame + selected screen
-      debug_panel.dart        raw CycleSnapshot readout
+      control_panel.dart        inputs + presets
+      preview_panel.dart        iPhone 13 frame + HomeScreen
+      debug_panel.dart          CycleSnapshot readout
+      cycle_history_editor.dart period history + daily log controls UI
     presets/
-      cycle_presets.dart      one-click fixture loaders
+      cycle_presets.dart        one-click fixture loaders
+      daily_log_controls.dart   seed logged-day count / logged today
   README.md
+  test/widget_test.dart         StudioScope smoke test
 ```
+
+Main package additions used by Studio (do not duplicate in `studio/`):
+
+- `lib/providers/simulated_today_provider.dart` — overridable “today”
+- `lib/providers/cycle_snapshot_provider.dart` — reactive debug readout
 
 Shared code lives in the main package (do not duplicate):
 
@@ -62,6 +77,8 @@ Shared code lives in the main package (do not duplicate):
 
 ---
 
+
+
 ## 4. UI layout
 
 Split-pane web app (responsive: stack vertically below ~900px width).
@@ -70,48 +87,47 @@ Split-pane web app (responsive: stack vertically below ~900px width).
 ┌──────────────────────────────┬─────────────────────────────┐
 │  Controls                    │  Preview                    │
 │                              │  ┌─────────────────────┐    │
-│  Screen selector [dropdown]  │  │  iPhone 13 frame    │    │
-│  Simulated today [date]      │  │                     │    │
-│                              │  │  <selected screen>  │    │
-│  ── Period history ──        │  │                     │    │
-│  [preset buttons]            │  └─────────────────────┘    │
-│  Cycle list editor           │                             │
-│  Period duration P           │  ── Debug readout ──        │
-│  [+ Add cycle]               │  Classification: Regular    │
+│  Simulated today [date]      │  │  iPhone 13 frame    │    │
+│                              │  │                     │    │
+│  ── Period history ──        │  │  HomeScreen (full   │    │
+│  [preset buttons]            │  │  app navigation)    │    │
+│  Cycle list editor           │  └─────────────────────┘    │
+│  Period duration P           │                             │
+│  [+ Add cycle]               │  ── Debug readout ──        │
+│  [Apply history]             │  Classification: Regular    │
 │                              │  MAD: 0.6                   │
-│  ── Daily logs (optional) ──  │  Cycle day: 14              │
+│  ── Daily logs ──            │  Cycle day: 14              │
 │  Logged days count           │  Phase: Follicular          │
 │  Logged today [toggle]       │  Tier: A                    │
 │                              │  Effective C: 28            │
 └──────────────────────────────┴─────────────────────────────┘
 ```
 
-### 4.1 Screen selector (v1)
 
-Dropdown of screens under test. Initial set:
 
-| Screen | Notes |
-|--------|-------|
-| Home (status card only) | Hero / phase card when built |
-| Insights | Partial vs full gating |
-| Journal | Context line with cycle day |
-| Settings → Period history | Period list |
+### 4.1 Preview (v1)
 
-Full `HomeScreen` with bottom nav is acceptable for v1 if isolating the hero
-is not yet practical.
+Preview mounts full `HomeScreen` inside the device frame. Users navigate to
+Insights, Journal, Settings → Period history, etc. via the real app UI — no
+screen dropdown in the control panel.
+
+Screens of interest:
+
+| Screen                    | Notes                        |
+| ------------------------- | ---------------------------- |
+| Home (status card)        | Hero / phase card when built |
+| Insights                  | Partial vs full gating       |
+| Journal                   | Context line with cycle day  |
+| Settings → Period history | Period list                  |
 
 ### 4.2 Simulated today
 
 Date picker defaulting to real today. All cycle math and "logged today" checks
 must read this value, not `DateTime.now()` directly.
 
-Implementation: a `Provider<DateTime>` override in `StudioScope`:
-
-```dart
-final simulatedTodayProvider = Provider<DateTime>((ref) => ...);
-```
-
-Wire `cycleSnapshotProvider` (and any provider using "now") to watch it.
+Implementation: `simulatedTodayProvider` in `lib/providers/simulated_today_provider.dart`,
+overridden in `StudioScope`. Wired into period, daily-log, and journal-entry
+providers; `cycleSnapshotProvider` reads it for the debug panel.
 
 ### 4.3 Period history builder
 
@@ -138,24 +154,30 @@ before full editor.
 
 One-click loads that call shared seed helpers:
 
-| Preset | Completed cycles | Classification | Notes |
-|--------|-------------------|----------------|-------|
-| Partial — 1 cycle | 1 | Unclassified | Partial insights |
-| Partial — 2 cycles | 2 | Unclassified | Partial insights |
-| Threshold — 3 cycles | 3 | (computed) | First classifiable |
-| Regular | 6 | Regular | Spec example: 28,27,29,28,27,28 |
-| Variable | 6 | Variable | Spec example: 21,35,23,33,25,31 |
-| Unpredictable | 6 | Unpredictable | Spec example: 21,46,24,43,22,40 |
-| Tier B short cycle | 1 (current) | Regular/Variable | P=5, C=21 |
-| Tier C irregular | 1 (current) | any | P=5, C=14 or C≤P |
-| Phase day matrix | 6 | Regular | C=28 P=5, simulated today = each phase |
+
+| Preset               | Completed cycles | Classification   | Notes                                  |
+| -------------------- | ---------------- | ---------------- | -------------------------------------- |
+| Partial — 1 cycle    | 1                | Unclassified     | Partial insights                       |
+| Partial — 2 cycles   | 2                | Unclassified     | Partial insights                       |
+| Threshold — 3 cycles | 3                | (computed)       | First classifiable                     |
+| Regular              | 6                | Regular          | Spec example: 28,27,29,28,27,28        |
+| Variable             | 6                | Variable         | Spec example: 21,35,23,33,25,31        |
+| Unpredictable        | 6                | Unpredictable    | Spec example: 21,46,24,43,22,40        |
+| Tier B short cycle   | 1 (current)      | Regular/Variable | P=5, C=21                              |
+| Tier C irregular     | 1 (current)      | any              | P=5, C=14 or C≤P                       |
+| Phase day matrix     | 6                | Regular          | C=28 P=5, simulated today = each phase |
+
 
 Presets live in `studio/lib/presets/` but call `lib/core/cycle/` for debug
 readout values.
 
 ---
 
+
+
 ## 5. Architecture
+
+
 
 ### 5.1 Data flow
 
@@ -192,10 +214,12 @@ Memory repos already notify stream listeners on mutation.
 
 From product rule + classification spec:
 
-| Completed cycles | Insights mode | Phase display |
-|------------------|---------------|---------------|
-| 0–2 | Partial | No classification-based phases |
-| ≥ 3 | Full | Classification + phases apply |
+
+| Completed cycles | Insights mode | Phase display                  |
+| ---------------- | ------------- | ------------------------------ |
+| 0–2              | Partial       | No classification-based phases |
+| ≥ 3              | Full          | Classification + phases apply  |
+
 
 Expose via `CycleSnapshot.insightsMode` (or equivalent) from
 `lib/core/cycle/`. Studio debug panel shows this prominently.
@@ -203,7 +227,19 @@ Expose via `CycleSnapshot.insightsMode` (or equivalent) from
 **Note:** Daily-log-based unlock (14-day pattern teaser on Insights) is
 orthogonal — studio controls both axes independently.
 
+### 4.5 Journal editor (not yet implemented)
+
+Control-panel controls to seed journal state for the Journal tab:
+
+- Today’s entry body (empty vs saved)
+- Optional past entries (count / sample text) for the list below the hero
+
+Writes via `MemoryJournalEntryRepository` so the context line and entry list
+update reactively. Navigate to Journal in the preview to verify.
+
 ---
+
+
 
 ## 6. Dependencies
 
@@ -223,6 +259,8 @@ Do **not** add Widgetbook as a dependency.
 
 ---
 
+
+
 ## 7. Running & deploying
 
 ```bash
@@ -236,45 +274,59 @@ Deploy (optional v2): mirror `.github/workflows/widgetbook-vercel.yml` with
 
 ---
 
+
+
 ## 8. Testing strategy
 
-| Layer | Tool |
-|-------|------|
-| Cycle math | `flutter test` on `test/cycle/` in root package (already spec-backed) |
-| Studio wiring | Manual QA via presets |
-| Screen regressions | Widgetbook frozen use-cases (not studio) |
+
+| Layer              | Tool                                                                  |
+| ------------------ | --------------------------------------------------------------------- |
+| Cycle math         | `flutter test` on `test/cycle/` in root package (already spec-backed) |
+| Studio wiring      | Manual QA via presets                                                 |
+| Screen regressions | Widgetbook frozen use-cases (not studio)                              |
+
 
 Studio does not need its own test suite in v1 beyond a smoke test that
-`StudioScope` mounts.
+`StudioScope` mounts — **done** (`studio/test/widget_test.dart`).
 
 ---
 
+
+
 ## 9. Implementation phases
+
+
 
 ### Phase 1 — Shell (MVP)
 
-- [ ] `studio/` project scaffold
-- [ ] `StudioScope` with mutable memory repos
-- [ ] `simulatedTodayProvider`
-- [ ] Split layout: control panel + iPhone frame
-- [ ] Screen dropdown: Home + Insights
-- [ ] Debug readout (`computeCycleSnapshot`)
-- [ ] 3 presets: Partial (2 cycles), Regular, Unpredictable
+- [x] `studio/` project scaffold
+- [x] `StudioScope` with mutable memory repos
+- [x] `simulatedTodayProvider` (+ `cycleSnapshotProvider`) in main package
+- [x] Split layout: control panel + iPhone frame (stacks below ~900px)
+- [x] Full `HomeScreen` preview (in-app navigation; no screen dropdown)
+- [x] Debug readout (`cycleSnapshotProvider` / `CycleSnapshot`)
+- [x] Presets: Partial (2 cycles), Regular, Unpredictable *(expanded in Phase 2)*
+- [x] Smoke test (`studio/test/widget_test.dart`)
+- [x] Image assets bundled via `studio/assets/images/` symlinks
 
 ### Phase 2 — History editor
 
-- [ ] Cycle-length list editor
-- [ ] All classification presets + Tier B/C
-- [ ] Daily log controls (count, logged today)
-- [ ] Journal + Settings screens in dropdown
+- [x] Cycle-length list editor (add / remove / reorder, per-row P, Apply)
+- [x] All classification presets + Tier B/C + phase-day matrix preset
+- [x] Daily log controls (logged days count slider, logged today toggle)
+- [x] Navigate to Journal, Insights, Settings → Period history via app UI
+- [ ] **Journal editor** — seed/edit journal entries (today + past) for context-line and list states
 
 ### Phase 3 — Polish
 
 - [ ] URL query params for shareable state (`?preset=regular&day=14`)
-- [ ] Deploy to Vercel
+- [ ] Deploy to Vercel (`studio.ritu.care`)
 - [ ] Phase-day scrubber (slider 1…C)
+- [ ] Optional: load real `ritu.sqlite` in browser (Drift WASM import)
 
 ---
+
+
 
 ## 10. References
 
@@ -282,5 +334,6 @@ Studio does not need its own test suite in v1 beyond a smoke test that
 - [cycle-phase-range-spec.html](./cycle-phase-range-spec.html)
 - [DATA.md](./DATA.md) — persistence model
 - `widgetbook/lib/support/seeded_app_scope.dart` — pattern reference (do not
-  merge into widgetbook)
+merge into widgetbook)
 - `lib/core/cycle/` — pure calculation module
+
