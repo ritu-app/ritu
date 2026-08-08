@@ -24,7 +24,18 @@ class AppAppearanceNotifier extends AsyncNotifier<AppAppearance> {
   }
 
   Future<void> clear() async {
-    state = const AsyncData(AppAppearance.system);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_appearancePrefsKey);
+    // Only write state once this notifier has finished its first build.
+    // Calling clear during AsyncLoading (e.g. Delete Data before Appearance
+    // was ever opened) would otherwise throw and abort the wipe flow.
+    if (!state.isLoading) {
+      state = const AsyncData(AppAppearance.system);
+    }
+  }
+
+  /// Clears the persisted preference without requiring the notifier to be ready.
+  static Future<void> clearPrefs() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_appearancePrefsKey);
   }

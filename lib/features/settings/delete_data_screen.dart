@@ -33,10 +33,19 @@ class _DeleteDataScreenState extends ConsumerState<DeleteDataScreen> {
     setState(() => _busy = true);
     try {
       await ref.read(profileRepositoryProvider).clearAllData();
-      await ref.read(appAppearanceProvider.notifier).clear();
+      // Appearance prefs are best-effort — never block returning to onboarding.
+      try {
+        await AppAppearanceNotifier.clearPrefs();
+      } catch (_) {}
       if (!mounted) return;
+      ref.invalidate(appAppearanceProvider);
       ref.invalidate(profileProvider);
       ref.read(appRestartProvider.notifier).state++;
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Couldn’t delete data: $error')),
+      );
     } finally {
       if (mounted) setState(() => _busy = false);
     }

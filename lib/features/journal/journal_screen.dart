@@ -27,9 +27,13 @@ class JournalScreen extends ConsumerStatefulWidget {
 
 class _JournalScreenState extends ConsumerState<JournalScreen> {
   final _controller = TextEditingController();
-  var _editingToday = false;
+  final _saveButtonKey = GlobalKey();
   var _showAllEntries = false;
+  var _saving = false;
+  var _syncingController = false;
   JournalEntry? _loadedTodayEntry;
+  /// Immediate post-save value so the UI doesn’t wait on the Drift stream.
+  JournalEntry? _optimisticToday;
 
   static const _heroBackground = Color(0xFFFDF2ED);
   static const _heroBorder = Color(0xFFE2DDD8);
@@ -66,22 +70,36 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _controller.addListener(() {
+      if (_syncingController || !mounted) return;
+      setState(() {});
+    });
+  }
+
+  @override
   void dispose() {
     _controller.dispose();
     super.dispose();
   }
 
   void _syncControllerFromRepo(JournalEntry? todayEntry, {required bool showInput}) {
-    if (!showInput || _editingToday) return;
+    if (!showInput) return;
     if (todayEntry?.id == _loadedTodayEntry?.id &&
         todayEntry?.body == _loadedTodayEntry?.body) {
       return;
     }
     _loadedTodayEntry = todayEntry;
-    _controller.text = todayEntry?.body ?? '';
+    final next = todayEntry?.body ?? '';
+    if (_controller.text == next) return;
+    _syncingController = true;
+    _controller.text = next;
+    _syncingController = false;
   }
 
   bool _canSave(JournalEntry? todayEntry) {
+    if (_saving) return false;
     final text = _controller.text.trim();
     if (text.isEmpty) return false;
     return todayEntry == null || text != todayEntry.body;
@@ -89,19 +107,29 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
 
   Future<void> _saveEntry() async {
     final text = _controller.text.trim();
-    if (text.isEmpty) return;
+    if (text.isEmpty || _saving) return;
 
-    await ref.read(journalEntryRepositoryProvider).upsert(
-          loggedOn: ref.read(simulatedTodayProvider),
-          body: text,
-        );
-
-    if (!mounted) return;
-    setState(() {
-      _editingToday = false;
-      _loadedTodayEntry = null;
-    });
+    setState(() => _saving = true);
     FocusScope.of(context).unfocus();
+
+    try {
+      final saved = await ref.read(journalEntryRepositoryProvider).upsert(
+            loggedOn: ref.read(simulatedTodayProvider),
+            body: text,
+          );
+      if (!mounted) return;
+      setState(() {
+        _optimisticToday = saved;
+        _loadedTodayEntry = saved;
+        _saving = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _saving = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Couldn’t save entry: $error')),
+      );
+    }
   }
 
   Future<void> _editTodayViaModal(JournalEntry entry) async {
@@ -144,28 +172,35 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
     final todayAsync = ref.watch(todayJournalEntryProvider);
     final pastAsync = ref.watch(pastJournalEntriesProvider);
 
-    final todayEntry = todayAsync.valueOrNull;
+    ref.listen(todayJournalEntryProvider, (previous, next) {
+      final entry = next.valueOrNull;
+      if (entry != null &&
+          _optimisticToday != null &&
+          entry.id == _optimisticToday!.id) {
+        setState(() => _optimisticToday = null);
+      }
+      final input = entry == null && _optimisticToday == null;
+      _syncControllerFromRepo(entry ?? _optimisticToday, showInput: input);
+    });
+
+    final todayEntry = todayAsync.valueOrNull ?? _optimisticToday;
     final pastEntries = pastAsync.valueOrNull ?? const [];
     final hasPastEntries = pastEntries.isNotEmpty;
     final entryCount =
         (todayEntry != null ? 1 : 0) + pastEntries.length;
-    final showInput =
-        hasPastEntries || todayEntry == null || _editingToday;
-    final showSavedCard = !showInput;
-    final showHelp = !hasPastEntries;
+    // Composer only until today’s entry exists; then show the saved card.
+    final showInput = todayEntry == null;
+    final showSavedCard = todayEntry != null;
+    final showHelp = !hasPastEntries && todayEntry == null;
     final showHero = entryCount < 2;
     final previewPast = pastEntries.take(2).toList();
 
-    ref.listen(todayJournalEntryProvider, (previous, next) {
-      final entry = next.valueOrNull;
-      final past = ref.read(pastJournalEntriesProvider).valueOrNull ?? [];
-      final input = past.isNotEmpty || entry == null || _editingToday;
-      _syncControllerFromRepo(entry, showInput: input);
-    });
     _syncControllerFromRepo(todayEntry, showInput: showInput);
 
+    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
+
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+      padding: EdgeInsets.fromLTRB(16, 8, 16, 24 + bottomInset),
       children: [
         Text(
           'Journal',
@@ -193,10 +228,11 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
         ],
         if (showInput)
           _ReflectionCard(
+            saveButtonKey: _saveButtonKey,
             controller: _controller,
             canSave: _canSave(todayEntry),
+            saving: _saving,
             onSave: _saveEntry,
-            onChanged: () => setState(() {}),
           ),
         if (showSavedCard)
           _SavedReflectionCard(
@@ -325,16 +361,18 @@ class _HeroCard extends StatelessWidget {
 
 class _ReflectionCard extends StatelessWidget {
   const _ReflectionCard({
+    required this.saveButtonKey,
     required this.controller,
     required this.canSave,
+    required this.saving,
     required this.onSave,
-    required this.onChanged,
   });
 
+  final GlobalKey saveButtonKey;
   final TextEditingController controller;
   final bool canSave;
+  final bool saving;
   final VoidCallback onSave;
-  final VoidCallback onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -379,10 +417,11 @@ class _ReflectionCard extends StatelessWidget {
             ),
             child: TextField(
               controller: controller,
-              onChanged: (_) => onChanged(),
               maxLines: null,
               expands: true,
               textAlignVertical: TextAlignVertical.top,
+              textInputAction: TextInputAction.done,
+              onEditingComplete: canSave ? onSave : null,
               style: GoogleFonts.dmSans(
                 fontSize: 13,
                 fontWeight: FontWeight.w400,
@@ -411,6 +450,7 @@ class _ReflectionCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           SizedBox(
+            key: saveButtonKey,
             width: double.infinity,
             height: 36,
             child: FilledButton(
@@ -430,7 +470,7 @@ class _ReflectionCard extends StatelessWidget {
                   height: 20 / 13,
                 ),
               ),
-              child: const Text('Save entry'),
+              child: Text(saving ? 'Saving…' : 'Save entry'),
             ),
           ),
         ],
