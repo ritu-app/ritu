@@ -17,6 +17,25 @@ String formatDisplayDate(DateTime date) {
   return '${months[date.month - 1]} ${date.day}, ${date.year}';
 }
 
+/// e.g. June 18 — full month name, no year (period history stats).
+String formatMonthDay(DateTime date) {
+  const months = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+  return '${months[date.month - 1]} ${date.day}';
+}
+
 /// e.g. Sep 17 — abbreviated month, no year (home status card).
 String formatShortMonthDay(DateTime date) {
   const months = [

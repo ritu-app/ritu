@@ -130,7 +130,8 @@ Single-row table for the person using this install.
 4. Setup finished → `markOnboardingCompleted`
 5. Cold start → if `onboarding_completed_at` is set → Home; else Splash / onboarding
 6. Settings → **Period Started** → `updateLatestStartedOn` (moves latest episode; `source = settings`)
-7. Settings → **Period History** → `addPastStart` / `deleteByStartedOn` as dates are added or removed (latest unchanged)
+7. Settings → **Period History** → list all episodes (Logged vs Manual); **+** opens
+   Add a period → `addPastStart` (`source = manual`); latest still editable via Period Started
 8. Settings → **Delete Data** → `clearAllData()` then remount at Splash
 
 ### `period_logs`
@@ -142,7 +143,8 @@ One row per **period episode** (not one row per bleed day).
 | `id` | `INTEGER` PK auto | |
 | `started_on` | `DATETIME` (date-only) | Unique |
 | `ended_on` | `DATETIME` nullable | Inclusive last bleed day; null if unknown |
-| `source` | `TEXT` | `onboarding_last`, `onboarding_past`, `calendar`, `settings` |
+| `source` | `TEXT` | `onboarding_last`, `onboarding_past`, `calendar`, `settings`, `manual` |
+| | | UI treats `manual` / `settings` / `onboarding_past` as **Manual**; others as **Logged** |
 | `created_at` | `DATETIME` | |
 | `updated_at` | `DATETIME` | |
 

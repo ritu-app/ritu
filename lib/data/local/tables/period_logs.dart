@@ -11,7 +11,8 @@ class PeriodLogs extends Table {
   /// Inclusive last bleed day. Null = unknown / still open.
   DateTimeColumn get endedOn => dateTime().nullable()();
 
-  /// Where this row came from: onboarding_last, onboarding_past, calendar, settings.
+  /// Where this row came from: onboarding_last, onboarding_past, calendar,
+  /// settings, manual.
   TextColumn get source => text()();
 
   DateTimeColumn get createdAt => dateTime()();

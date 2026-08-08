@@ -18,6 +18,8 @@ abstract final class RituColors {
   static const Color borderDisabled = Color(0xFFDADADA);
   static const Color fillElevated = Color(0xFFFFFFFF);
   static const Color fillSecondary = Color(0xFFEDF5F0);
+  /// Sage pill / badge fill (Figma fill-secondary-hover).
+  static const Color fillSecondaryHover = Color(0xFFB9D3C0);
   static const Color fillMuted = Color(0xFFEFEFEF);
   static const Color fillSubtle = Color(0xFFF9F7F4);
   static const Color fillAccent = Color(0xFFEFD8CE);

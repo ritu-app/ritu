@@ -5,6 +5,14 @@ class PeriodSources {
   static const onboardingPast = 'onboarding_past';
   static const calendar = 'calendar';
   static const settings = 'settings';
+  /// Backfilled from Period History (not logged in real time).
+  static const manual = 'manual';
+
+  /// True when the episode was recalled/backfilled rather than logged live.
+  static bool isManual(String source) =>
+      source == manual ||
+      source == settings ||
+      source == onboardingPast;
 }
 
 class PeriodLog {
@@ -23,6 +31,8 @@ class PeriodLog {
   final String source;
   final DateTime createdAt;
   final DateTime updatedAt;
+
+  bool get isManual => PeriodSources.isManual(source);
 
   /// Inclusive bleed days for calendar highlighting.
   Set<DateTime> get bleedDays {

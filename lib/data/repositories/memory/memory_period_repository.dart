@@ -145,7 +145,7 @@ class MemoryPeriodRepository implements PeriodRepository {
     return upsertPeriod(
       startedOn: start,
       endedOn: PeriodRepository.estimateEnd(start, typicalPeriodDays),
-      source: PeriodSources.settings,
+      source: PeriodSources.manual,
     );
   }
 

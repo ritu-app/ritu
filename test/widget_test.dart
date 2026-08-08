@@ -471,9 +471,13 @@ void main() {
     await profiles.upsertDisplayName('Maya');
     await profiles.setTypicalPeriodDays(5);
     await profiles.markOnboardingCompleted();
+
+    final today = dateOnly(DateTime.now());
+    final latestStart = today.subtract(const Duration(days: 3));
+    final pastStart = today.subtract(const Duration(days: 20));
     await periods.upsertPeriod(
-      startedOn: DateTime(2026, 6, 20),
-      endedOn: DateTime(2026, 6, 24),
+      startedOn: latestStart,
+      endedOn: latestStart.add(const Duration(days: 4)),
       source: PeriodSources.onboardingLast,
     );
 
@@ -488,36 +492,55 @@ void main() {
     await tester.tap(find.text('Period History'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Do you have past period dates?'), findsOneWidget);
-    expect(find.text('Add a date'), findsOneWidget);
-    expect(find.text('Save'), findsNothing);
+    expect(find.text('Period history'), findsOneWidget);
+    expect(find.text('Logged'), findsOneWidget);
+    expect(find.text('Current period'), findsOneWidget);
 
-    // Calendar is always visible; selecting a day only stages it — it's
-    // stored once "Add a date" is pressed.
-    await tester.ensureVisible(find.text('1'));
-    await tester.tap(find.text('1'));
+    await tester.tap(find.byIcon(LucideIcons.circlePlus));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(
+      find.text('Existing entries are marked so you don’t duplicate one'),
+      findsOneWidget,
+    );
+
+    // Move calendar to the month of the past start if needed.
+    final monthLabel = formatMonthYear(pastStart);
+    for (var i = 0; i < 3 && find.text(monthLabel).evaluate().isEmpty; i++) {
+      await tester.tap(find.byIcon(LucideIcons.chevronLeft).last);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+
+    final day = find.text('${pastStart.day}');
+    await tester.ensureVisible(day);
+    await tester.tap(day);
+    await tester.pump();
+    await tester.ensureVisible(find.text('4-5 days'));
+    await tester.tap(find.text('4-5 days'));
     await tester.pump();
 
     expect(await periods.getPastStartedOn(), isEmpty);
 
-    final addDate = find.widgetWithText(OutlinedButton, 'Add a date');
-    await tester.ensureVisible(addDate);
-    await tester.tap(addDate);
-    await tester.pumpAndSettle();
+    final savePeriod = find.widgetWithText(FilledButton, 'Save period');
+    await tester.ensureVisible(savePeriod);
+    await tester.tap(savePeriod);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
 
-    expect(find.text('Jun 1'), findsOneWidget);
+    expect(find.text('Manual'), findsOneWidget);
 
     final past = await periods.getPastStartedOn();
-    expect(past, [DateTime(2026, 6, 1)]);
+    expect(past, [pastStart]);
     expect(
       dateOnly((await periods.getLatest())!.startedOn),
-      DateTime(2026, 6, 20),
+      latestStart,
     );
-
-    await tester.tap(find.widgetWithIcon(IconButton, LucideIcons.chevronLeft));
-    await tester.pumpAndSettle();
-
-    expect(find.text('View and edit past dates'), findsOneWidget);
+    final all = await periods.getAll();
+    expect(all.last.source, PeriodSources.manual);
+    expect(all.where((p) => p.isManual), hasLength(1));
+    expect(all.where((p) => !p.isManual), hasLength(1));
   });
 
   rituTestWidgets('Custom Symptoms from Settings adds and removes body signals', (
