@@ -14,14 +14,14 @@ void main() {
       );
     });
 
-    test('weeks logged from day 14 on first cycle', () {
+    test('weeks so far from day 14 on first cycle', () {
       expect(
         unclassifiedStatusTrailingLabel(periodStartCount: 1, cycleDay: 14),
-        '2 weeks logged',
+        '2 weeks so far',
       );
       expect(
         unclassifiedStatusTrailingLabel(periodStartCount: 1, cycleDay: 21),
-        '3 weeks logged',
+        '3 weeks so far',
       );
     });
 

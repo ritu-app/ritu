@@ -9,7 +9,6 @@ import '../../providers/cycle_snapshot_provider.dart';
 import '../../providers/period_providers.dart';
 import '../../theme/ritu_colors.dart';
 import 'add_period_screen.dart';
-import 'period_started_screen.dart';
 
 /// Figma 922:4534 — Settings → Period History (Logged vs Manual).
 class PeriodHistoryScreen extends ConsumerWidget {
@@ -29,10 +28,10 @@ class PeriodHistoryScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _openLatest(BuildContext context) async {
+  Future<void> _openPeriod(BuildContext context, PeriodLog log) async {
     await Navigator.of(context).push<DateTime>(
       MaterialPageRoute<DateTime>(
-        builder: (_) => const PeriodStartedScreen(),
+        builder: (_) => AddPeriodScreen(editing: log),
       ),
     );
   }
@@ -141,7 +140,7 @@ class PeriodHistoryScreen extends ConsumerWidget {
                         else
                           _PeriodListCard(
                             periods: periods,
-                            onTapLatest: () => _openLatest(context),
+                            onTapPeriod: (log) => _openPeriod(context, log),
                           ),
                       ],
                     );
@@ -253,11 +252,11 @@ class _StatCell extends StatelessWidget {
 class _PeriodListCard extends StatelessWidget {
   const _PeriodListCard({
     required this.periods,
-    required this.onTapLatest,
+    required this.onTapPeriod,
   });
 
   final List<PeriodLog> periods;
-  final VoidCallback onTapLatest;
+  final ValueChanged<PeriodLog> onTapPeriod;
 
   @override
   Widget build(BuildContext context) {
@@ -280,7 +279,7 @@ class _PeriodListCard extends StatelessWidget {
                   ? null
                   : dateOnly(periods[i - 1].startedOn),
               showDivider: i < periods.length - 1,
-              onTap: i == 0 ? onTapLatest : null,
+              onTap: () => onTapPeriod(periods[i]),
             ),
           ],
         ],
@@ -405,12 +404,10 @@ class _PeriodRow extends StatelessWidget {
                   ],
                 ),
               ),
-              Icon(
+              const Icon(
                 LucideIcons.chevronRight,
                 size: 16,
-                color: onTap == null
-                    ? RituColors.textDisabled
-                    : RituColors.textTertiary,
+                color: RituColors.textTertiary,
               ),
             ],
           ),

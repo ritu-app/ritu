@@ -19,7 +19,9 @@ class RituCalendar extends StatelessWidget {
     this.previewDates = const {},
     this.onDateSelected,
     this.selectionStyle = RituCalendarSelectionStyle.filled,
+    this.minSelectableDate,
     this.maxSelectableDate,
+    this.monthNavigationEnabled = true,
   });
 
   final DateTime month;
@@ -39,8 +41,14 @@ class RituCalendar extends StatelessWidget {
   final ValueChanged<DateTime>? onDateSelected;
   final RituCalendarSelectionStyle selectionStyle;
 
+  /// Inclusive first day that can be selected. Days before this are disabled.
+  final DateTime? minSelectableDate;
+
   /// Inclusive last day that can be selected. Days after this are disabled.
   final DateTime? maxSelectableDate;
+
+  /// When false, chevrons and horizontal swipe cannot change months.
+  final bool monthNavigationEnabled;
 
   static const _monthNames = [
     'January',
@@ -82,9 +90,12 @@ class RituCalendar extends StatelessWidget {
   }
 
   bool _isSelectable(DateTime day) {
-    final max = maxSelectableDate;
-    if (max == null) return true;
-    return !dateOnly(day).isAfter(dateOnly(max));
+    final d = dateOnly(day);
+    final min = minSelectableDate == null ? null : dateOnly(minSelectableDate!);
+    final max = maxSelectableDate == null ? null : dateOnly(maxSelectableDate!);
+    if (min != null && d.isBefore(min)) return false;
+    if (max != null && d.isAfter(max)) return false;
+    return true;
   }
 
   void _goToPreviousMonth(DateTime firstOfMonth) {
@@ -104,22 +115,30 @@ class RituCalendar extends StatelessWidget {
     final startOffset = firstOfMonth.weekday % 7;
     final totalCells = startOffset + daysInMonth;
     final rowCount = ((totalCells + 6) / 7).floor();
+    final min = minSelectableDate == null ? null : dateOnly(minSelectableDate!);
     final max = maxSelectableDate == null ? null : dateOnly(maxSelectableDate!);
-    final canGoForward = max == null ||
-        DateTime(firstOfMonth.year, firstOfMonth.month + 1)
-            .isBefore(DateTime(max.year, max.month + 1));
+    final canGoBack = monthNavigationEnabled &&
+        (min == null ||
+            DateTime(firstOfMonth.year, firstOfMonth.month)
+                .isAfter(DateTime(min.year, min.month)));
+    final canGoForward = monthNavigationEnabled &&
+        (max == null ||
+            DateTime(firstOfMonth.year, firstOfMonth.month + 1)
+                .isBefore(DateTime(max.year, max.month + 1)));
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onHorizontalDragEnd: (details) {
-        final velocity = details.primaryVelocity ?? 0;
-        // Swipe left → next month; swipe right → previous month.
-        if (velocity < -200) {
-          if (canGoForward) _goToNextMonth(firstOfMonth);
-        } else if (velocity > 200) {
-          _goToPreviousMonth(firstOfMonth);
-        }
-      },
+      onHorizontalDragEnd: monthNavigationEnabled
+          ? (details) {
+              final velocity = details.primaryVelocity ?? 0;
+              // Swipe left → next month; swipe right → previous month.
+              if (velocity < -200) {
+                if (canGoForward) _goToNextMonth(firstOfMonth);
+              } else if (velocity > 200) {
+                if (canGoBack) _goToPreviousMonth(firstOfMonth);
+              }
+            }
+          : null,
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.fromLTRB(12, 16, 12, 24),
@@ -142,6 +161,7 @@ class RituCalendar extends StatelessWidget {
               children: [
                 _NavIcon(
                   icon: LucideIcons.chevronLeft,
+                  enabled: canGoBack,
                   onTap: () => _goToPreviousMonth(firstOfMonth),
                 ),
                 Expanded(
@@ -224,19 +244,21 @@ class RituCalendar extends StatelessWidget {
     final isMarked = selectable && _isMarked(date);
     final isEntry = selectable && _isEntry(date);
     final isPeriod = _isPeriod(date);
-    final isPreview = !isSelected && selectable && _isPreview(date);
+    // Preview span can extend past the selectable window (e.g. duration chips).
+    final isPreview = !isSelected && _isPreview(date);
     final isToday = _isToday(date);
     final showTodayDot = isPeriod && isToday;
     final dayColor = isPeriod
         ? RituColors.rosewood900
-        : !selectable
-            ? RituColors.textDisabled
-            : isSelected && selectionStyle == RituCalendarSelectionStyle.filled
-                ? RituColors.textInverse
+        : isPreview
+            ? RituColors.iconCritical
+            : !selectable
+                ? RituColors.textDisabled
                 : isSelected &&
-                        selectionStyle == RituCalendarSelectionStyle.dotted
-                    ? RituColors.iconCritical
-                    : isPreview
+                        selectionStyle == RituCalendarSelectionStyle.filled
+                    ? RituColors.textInverse
+                    : isSelected &&
+                            selectionStyle == RituCalendarSelectionStyle.dotted
                         ? RituColors.iconCritical
                         : RituColors.textPrimary;
 
