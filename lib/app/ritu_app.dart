@@ -11,10 +11,12 @@ import '../features/setup/notification_screen.dart';
 import '../features/setup/past_dates_screen.dart';
 import '../features/splash/splash_screen.dart';
 import '../providers/app_restart_provider.dart';
+import '../providers/daily_reminder_provider.dart';
 import '../providers/database_provider.dart';
 import '../providers/profile_providers.dart';
 import '../providers/repository_providers.dart';
 import '../providers/simulated_today_provider.dart';
+import '../services/daily_reminder_notifications.dart';
 import '../theme/ritu_theme.dart';
 
 class RituApp extends ConsumerWidget {
@@ -93,8 +95,19 @@ class _OnboardingFlow extends ConsumerWidget {
 
   Widget _notifications(BuildContext context, WidgetRef ref, String name) {
     return NotificationScreen(
-      onTurnOn: () => _goHome(ref),
-      onSkip: () => _goHome(ref),
+      onTurnOn: () async {
+        final granted = await DailyReminderNotifications.requestPermission();
+        if (granted) {
+          await ref.read(dailyReminderProvider.notifier).enableFromOnboarding();
+        } else {
+          await ref.read(dailyReminderProvider.notifier).setEnabled(false);
+        }
+        await _goHome(ref);
+      },
+      onSkip: () async {
+        await ref.read(dailyReminderProvider.notifier).setEnabled(false);
+        await _goHome(ref);
+      },
     );
   }
 

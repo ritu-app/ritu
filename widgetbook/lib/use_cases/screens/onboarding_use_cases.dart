@@ -55,5 +55,8 @@ Widget pastDatesScreenUseCase(BuildContext context) {
   path: '[Screens]/Onboarding',
 )
 Widget notificationScreenUseCase(BuildContext context) {
-  return NotificationScreen(onTurnOn: () {}, onSkip: () {});
+  return NotificationScreen(
+    onTurnOn: () async {},
+    onSkip: () async {},
+  );
 }

@@ -5,6 +5,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../providers/app_appearance_provider.dart';
 import '../../providers/app_restart_provider.dart';
+import '../../providers/daily_reminder_provider.dart';
 import '../../providers/profile_providers.dart';
 import '../../providers/repository_providers.dart';
 import '../../theme/ritu_colors.dart';
@@ -36,9 +37,11 @@ class _DeleteDataScreenState extends ConsumerState<DeleteDataScreen> {
       // Appearance prefs are best-effort — never block returning to onboarding.
       try {
         await AppAppearanceNotifier.clearPrefs();
+        await DailyReminderNotifier.clearPrefs();
       } catch (_) {}
       if (!mounted) return;
       ref.invalidate(appAppearanceProvider);
+      ref.invalidate(dailyReminderProvider);
       ref.invalidate(profileProvider);
       ref.read(appRestartProvider.notifier).state++;
     } catch (error) {

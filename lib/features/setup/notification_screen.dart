@@ -6,15 +6,32 @@ import '../../theme/ritu_colors.dart';
 import 'widgets/progress_dots.dart';
 import 'widgets/setup_footer.dart';
 
-class NotificationScreen extends StatelessWidget {
+class NotificationScreen extends StatefulWidget {
   const NotificationScreen({
     super.key,
     this.onTurnOn,
     this.onSkip,
   });
 
-  final VoidCallback? onTurnOn;
-  final VoidCallback? onSkip;
+  final Future<void> Function()? onTurnOn;
+  final Future<void> Function()? onSkip;
+
+  @override
+  State<NotificationScreen> createState() => _NotificationScreenState();
+}
+
+class _NotificationScreenState extends State<NotificationScreen> {
+  var _busy = false;
+
+  Future<void> _run(Future<void> Function()? action) async {
+    if (_busy || action == null) return;
+    setState(() => _busy = true);
+    try {
+      await action();
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -58,9 +75,10 @@ class NotificationScreen extends StatelessWidget {
               const Spacer(),
               SetupFooter(
                 primaryLabel: 'Turn on reminders',
-                onPrimary: onTurnOn ?? () {},
+                primaryEnabled: !_busy,
+                onPrimary: () => _run(widget.onTurnOn),
                 secondaryLabel: 'Skip for now',
-                onSecondary: onSkip ?? onTurnOn ?? () {},
+                onSecondary: () => _run(widget.onSkip ?? widget.onTurnOn),
               ),
               const SizedBox(height: 8),
             ],

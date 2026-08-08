@@ -4,7 +4,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../data/models/app_appearance.dart';
+import '../../data/models/daily_reminder.dart';
 import '../../providers/app_appearance_provider.dart';
+import '../../providers/daily_reminder_provider.dart';
 import '../../providers/period_providers.dart';
 import '../../providers/profile_providers.dart';
 import '../../providers/repository_providers.dart';
@@ -14,6 +16,7 @@ import '../../theme/ritu_colors.dart';
 import 'about_ritu_screen.dart';
 import 'app_appearance_screen.dart';
 import 'custom_symptoms_screen.dart';
+import 'daily_reminder_screen.dart';
 import 'delete_data_screen.dart';
 import 'edit_name_dialog.dart';
 import 'export_data_screen.dart';
@@ -173,11 +176,22 @@ class _SettingsBody extends ConsumerWidget {
     );
   }
 
+  Future<void> _openDailyReminder(BuildContext context) async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => const DailyReminderScreen(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final appearanceLabel =
         ref.watch(appAppearanceProvider).valueOrNull?.label ??
             AppAppearance.system.label;
+    final reminderSubtitle =
+        ref.watch(dailyReminderProvider).valueOrNull?.settingsSubtitle ??
+            DailyReminder.defaults.settingsSubtitle;
 
     return PopScope(
       canPop: false,
@@ -243,23 +257,24 @@ class _SettingsBody extends ConsumerWidget {
                     const SizedBox(height: 20),
                     const _SectionLabel('Reminder & Notifications'),
                     const SizedBox(height: 8),
-                    const _SettingsGroup(
+                    _SettingsGroup(
                       children: [
                         _SettingsRow(
                           icon: LucideIcons.bell,
                           iconBackground: RituColors.fillAttentionSecondary,
                           iconColor: RituColors.iconAttention,
                           title: 'Daily Reminder',
-                          subtitle: '8:00 AM',
+                          subtitle: reminderSubtitle,
+                          onTap: () => _openDailyReminder(context),
                         ),
-                        _SettingsRow(
+                        const _SettingsRow(
                           icon: LucideIcons.sparkles,
                           iconBackground: RituColors.fillAttentionSecondary,
                           iconColor: RituColors.iconAttention,
                           title: 'Insight Alerts',
                           subtitle: 'When Ritu spots something new',
                         ),
-                        _SettingsRow(
+                        const _SettingsRow(
                           icon: LucideIcons.moon,
                           iconBackground: RituColors.fillAttentionSecondary,
                           iconColor: RituColors.iconAttention,

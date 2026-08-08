@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -10,6 +12,7 @@ import '../../providers/cycle_snapshot_provider.dart';
 import '../../providers/daily_log_providers.dart';
 import '../../providers/period_providers.dart';
 import '../../providers/profile_providers.dart';
+import '../../services/daily_log_notification_navigation.dart';
 import '../../theme/ritu_colors.dart';
 import '../insights/insights_screen.dart';
 import '../journal/journal_screen.dart';
@@ -31,8 +34,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _tabIndex = 0;
   var _bannerDismissed = false;
   var _hideBottomNav = false;
+  var _logFlowOpen = false;
   String? _selectedMood;
   late DateTime _calendarMonth;
+  StreamSubscription<void>? _notificationLaunchSub;
 
   static const _moods = [
     ('😊', 'Radiant'),
@@ -47,12 +52,36 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     super.initState();
     final now = DateTime.now();
     _calendarMonth = DateTime(now.year, now.month);
+    _notificationLaunchSub =
+        DailyLogNotificationNavigation.requests.listen((_) {
+      _openDailyLogFromNotification();
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _openDailyLogFromNotification();
+    });
+  }
+
+  @override
+  void dispose() {
+    _notificationLaunchSub?.cancel();
+    super.dispose();
+  }
+
+  void _openDailyLogFromNotification() {
+    if (!DailyLogNotificationNavigation.takePending()) return;
+    unawaited(_openDailyLog());
   }
 
   Future<void> _openDailyLog() async {
-    await Navigator.of(
-      context,
-    ).push<bool>(MaterialPageRoute<bool>(builder: (_) => DailyLogFlow()));
+    if (_logFlowOpen || !mounted) return;
+    _logFlowOpen = true;
+    try {
+      await Navigator.of(
+        context,
+      ).push<bool>(MaterialPageRoute<bool>(builder: (_) => DailyLogFlow()));
+    } finally {
+      _logFlowOpen = false;
+    }
   }
 
   @override
