@@ -25,6 +25,7 @@ class JournalScreen extends ConsumerStatefulWidget {
 class _JournalScreenState extends ConsumerState<JournalScreen> {
   final _controller = TextEditingController();
   var _editingToday = false;
+  var _showAllEntries = false;
   JournalEntry? _loadedTodayEntry;
 
   static const _heroBackground = Color(0xFFFDF2ED);
@@ -122,15 +123,17 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
   }
 
   void _openAllEntries() {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => const JournalAllEntriesScreen(),
-      ),
-    );
+    setState(() => _showAllEntries = true);
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_showAllEntries) {
+      return JournalAllEntriesScreen(
+        onBack: () => setState(() => _showAllEntries = false),
+      );
+    }
+
     final todayAsync = ref.watch(todayJournalEntryProvider);
     final pastAsync = ref.watch(pastJournalEntriesProvider);
 

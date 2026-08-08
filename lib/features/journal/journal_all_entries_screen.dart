@@ -10,7 +10,11 @@ import '../../theme/ritu_colors.dart';
 import 'journal_entry_card.dart';
 
 class JournalAllEntriesScreen extends ConsumerStatefulWidget {
-  const JournalAllEntriesScreen({super.key});
+  const JournalAllEntriesScreen({super.key, this.onBack});
+
+  /// When set (Journal tab embed), back uses this instead of [Navigator.pop]
+  /// so the home bottom nav stays visible.
+  final VoidCallback? onBack;
 
   @override
   ConsumerState<JournalAllEntriesScreen> createState() =>
@@ -23,11 +27,25 @@ class _JournalAllEntriesScreenState
 
   final _searchController = TextEditingController();
   var _query = '';
+  var _menuOpen = false;
 
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _handleBack() {
+    if (widget.onBack != null) {
+      widget.onBack!();
+      return;
+    }
+    Navigator.of(context).pop();
+  }
+
+  void _closeMenu() {
+    if (!_menuOpen) return;
+    setState(() => _menuOpen = false);
   }
 
   List<_MonthGroup> _groupByMonth(List<JournalEntry> entries) {
@@ -60,154 +78,203 @@ class _JournalAllEntriesScreenState
     final filtered = _filtered(pastEntries);
     final groups = _groupByMonth(filtered);
 
-    return Scaffold(
-      backgroundColor: RituColors.backgroundPage,
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-              child: _AllEntriesHeader(
-                borderColor: _borderDefault,
+    // Figma 865:3175 — header top 8px in safe area; menu flush under icons.
+    const headerTop = 8.0;
+    const headerHeight = 25.0;
+
+    return ColoredBox(
+      color: RituColors.backgroundPage,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, headerTop, 16, 0),
+                child: _AllEntriesHeader(
+                  onBack: _handleBack,
+                  onMenuTap: () => setState(() => _menuOpen = !_menuOpen),
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: _SearchField(
-                controller: _searchController,
-                borderColor: _borderDefault,
-                onChanged: (value) => setState(() => _query = value),
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: _SearchField(
+                  controller: _searchController,
+                  borderColor: _borderDefault,
+                  onChanged: (value) => setState(() => _query = value),
+                ),
               ),
-            ),
-            const SizedBox(height: 20),
-            Expanded(
-              child: pastAsync.isLoading && pastEntries.isEmpty
-                  ? const Center(
-                      child: CircularProgressIndicator(
-                        color: RituColors.sage500,
-                      ),
-                    )
-                  : filtered.isEmpty
-                  ? Center(
-                      child: Text(
-                        _query.trim().isEmpty
-                            ? 'No past entries yet'
-                            : 'No matching entries',
-                        style: GoogleFonts.dmSans(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                          color: RituColors.textSecondary,
+              const SizedBox(height: 20),
+              Expanded(
+                child: pastAsync.isLoading && pastEntries.isEmpty
+                    ? const Center(
+                        child: CircularProgressIndicator(
+                          color: RituColors.sage500,
                         ),
-                      ),
-                    )
-                  : ListView.builder(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                      itemCount: groups.length,
-                      itemBuilder: (context, index) {
-                        final group = groups[index];
-                        return Padding(
-                          padding: EdgeInsets.only(
-                            bottom: index == groups.length - 1 ? 0 : 24,
+                      )
+                    : filtered.isEmpty
+                    ? Center(
+                        child: Text(
+                          _query.trim().isEmpty
+                              ? 'No past entries yet'
+                              : 'No matching entries',
+                          style: GoogleFonts.dmSans(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: RituColors.textSecondary,
                           ),
-                          child: _MonthSection(group: group),
-                        );
-                      },
-                    ),
+                        ),
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                        itemCount: groups.length,
+                        itemBuilder: (context, index) {
+                          final group = groups[index];
+                          return Padding(
+                            padding: EdgeInsets.only(
+                              bottom: index == groups.length - 1 ? 0 : 24,
+                            ),
+                            child: _MonthSection(group: group),
+                          );
+                        },
+                      ),
+              ),
+            ],
+          ),
+          if (_menuOpen) ...[
+            Positioned.fill(
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: _closeMenu,
+              ),
+            ),
+            // Figma 865:3277 — flush under header, overlaps search, right = 16.
+            Positioned(
+              top: headerTop + headerHeight,
+              right: 16,
+              child: _AllEntriesOverflowMenu(
+                borderColor: _borderDefault,
+                onSelect: _closeMenu,
+              ),
             ),
           ],
-        ),
+        ],
       ),
     );
   }
 }
 
 class _AllEntriesHeader extends StatelessWidget {
-  const _AllEntriesHeader({required this.borderColor});
+  const _AllEntriesHeader({
+    required this.onBack,
+    required this.onMenuTap,
+  });
 
-  final Color borderColor;
+  final VoidCallback onBack;
+  final VoidCallback onMenuTap;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        SizedBox(
-          width: 24,
-          height: 24,
-          child: IconButton(
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints.tightFor(width: 24, height: 24),
-            icon: const Icon(
-              LucideIcons.chevronLeft,
-              size: 24,
-              color: RituColors.textPrimary,
+    return SizedBox(
+      height: 25,
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: onBack,
+            behavior: HitTestBehavior.opaque,
+            child: const SizedBox(
+              width: 24,
+              height: 24,
+              child: Icon(
+                LucideIcons.chevronLeft,
+                size: 24,
+                color: RituColors.textPrimary,
+              ),
             ),
-            onPressed: () => Navigator.of(context).pop(),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              'All entries',
+              style: GoogleFonts.dmSerifDisplay(
+                fontSize: 18,
+                fontWeight: FontWeight.w400,
+                height: 25 / 18,
+                color: RituColors.textPrimary,
+              ),
+            ),
+          ),
+          GestureDetector(
+            onTap: onMenuTap,
+            behavior: HitTestBehavior.opaque,
+            child: const SizedBox(
+              width: 24,
+              height: 24,
+              child: Icon(
+                LucideIcons.ellipsis,
+                size: 24,
+                color: RituColors.textPrimary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Figma 865:3277 — cream panel, 12px pad/gap, radius 7.
+class _AllEntriesOverflowMenu extends StatelessWidget {
+  const _AllEntriesOverflowMenu({
+    required this.borderColor,
+    required this.onSelect,
+  });
+
+  final Color borderColor;
+  final VoidCallback onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      elevation: 0,
+      child: ConstrainedBox(
+        // Figma frame is 137; allow a hair more so DM Sans doesn't clip.
+        constraints: const BoxConstraints(minWidth: 137),
+        child: IntrinsicWidth(
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: RituColors.fillSubtle,
+              borderRadius: BorderRadius.circular(7),
+              border: Border.all(color: borderColor),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _menuRow(LucideIcons.funnel, 'Filter'),
+                const SizedBox(height: 12),
+                // Spelling matches Figma label.
+                _menuRow(LucideIcons.calendar, 'Calender'),
+                const SizedBox(height: 12),
+                _menuRow(LucideIcons.circleCheck, 'Select entries'),
+              ],
+            ),
           ),
         ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Text(
-            'All entries',
-            style: GoogleFonts.dmSerifDisplay(
-              fontSize: 18,
-              fontWeight: FontWeight.w400,
-              height: 25 / 18,
-              color: RituColors.textPrimary,
-            ),
-          ),
-        ),
-        PopupMenuButton<_AllEntriesMenuAction>(
-          icon: const Icon(
-            LucideIcons.ellipsis,
-            size: 24,
-            color: RituColors.textPrimary,
-          ),
-          padding: EdgeInsets.zero,
-          constraints: const BoxConstraints.tightFor(width: 24, height: 24),
-          offset: const Offset(-100, 28),
-          color: RituColors.fillSubtle,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(7),
-            side: BorderSide(color: borderColor),
-          ),
-          onSelected: (_) {
-            // Filter / Calendar / Select flows are not implemented yet.
-          },
-          itemBuilder: (context) => [
-            _menuItem(
-              _AllEntriesMenuAction.filter,
-              LucideIcons.funnel,
-              'Filter',
-            ),
-            _menuItem(
-              _AllEntriesMenuAction.calendar,
-              LucideIcons.calendar,
-              'Calendar',
-            ),
-            _menuItem(
-              _AllEntriesMenuAction.select,
-              LucideIcons.circleCheck,
-              'Select entries',
-            ),
-          ],
-        ),
-      ],
+      ),
     );
   }
 
-  PopupMenuItem<_AllEntriesMenuAction> _menuItem(
-    _AllEntriesMenuAction value,
-    IconData icon,
-    String label,
-  ) {
-    return PopupMenuItem(
-      value: value,
-      height: 36,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
+  Widget _menuRow(IconData icon, String label) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onSelect,
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 16, color: RituColors.textSecondary),
           const SizedBox(width: 8),
@@ -226,8 +293,6 @@ class _AllEntriesHeader extends StatelessWidget {
   }
 }
 
-enum _AllEntriesMenuAction { filter, calendar, select }
-
 class _SearchField extends StatelessWidget {
   const _SearchField({
     required this.controller,
@@ -241,57 +306,74 @@ class _SearchField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
+    final textStyle = GoogleFonts.dmSans(
+      fontSize: 11,
+      fontWeight: FontWeight.w500,
+      height: 18 / 11,
+      color: RituColors.textPrimary,
+    );
+    final hintStyle = GoogleFonts.dmSans(
+      fontSize: 11,
+      fontWeight: FontWeight.w500,
+      height: 18 / 11,
+      color: RituColors.textTertiary,
+    );
+
+    return Container(
       height: 36,
-      child: TextField(
-        controller: controller,
-        onChanged: onChanged,
-        style: GoogleFonts.dmSans(
-          fontSize: 11,
-          fontWeight: FontWeight.w500,
-          height: 18 / 11,
-          color: RituColors.textPrimary,
-        ),
-        decoration: InputDecoration(
-          isDense: true,
-          filled: true,
-          fillColor: RituColors.fillSubtle,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 20,
-            vertical: 8,
-          ),
-          prefixIcon: const Padding(
-            padding: EdgeInsets.only(left: 20, right: 8),
-            child: Icon(
-              LucideIcons.search,
-              size: 16,
-              color: RituColors.textTertiary,
-            ),
-          ),
-          prefixIconConstraints: const BoxConstraints(
-            minWidth: 44,
-            minHeight: 16,
-          ),
-          hintText: 'Search entries',
-          hintStyle: GoogleFonts.dmSans(
-            fontSize: 11,
-            fontWeight: FontWeight.w500,
-            height: 18 / 11,
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      decoration: BoxDecoration(
+        color: RituColors.fillSubtle,
+        borderRadius: BorderRadius.circular(9999),
+        border: Border.all(color: borderColor),
+      ),
+      alignment: Alignment.centerLeft,
+      child: Row(
+        children: [
+          const Icon(
+            LucideIcons.search,
+            size: 16,
             color: RituColors.textTertiary,
           ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(9999),
-            borderSide: BorderSide(color: borderColor),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Theme(
+              data: Theme.of(context).copyWith(
+                inputDecorationTheme: const InputDecorationTheme(
+                  filled: false,
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  disabledBorder: InputBorder.none,
+                  errorBorder: InputBorder.none,
+                  focusedErrorBorder: InputBorder.none,
+                  contentPadding: EdgeInsets.zero,
+                  isDense: true,
+                ),
+              ),
+              child: TextField(
+                controller: controller,
+                onChanged: onChanged,
+                cursorColor: RituColors.sage500,
+                style: textStyle,
+                decoration: InputDecoration(
+                  isDense: true,
+                  isCollapsed: true,
+                  filled: false,
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  disabledBorder: InputBorder.none,
+                  errorBorder: InputBorder.none,
+                  focusedErrorBorder: InputBorder.none,
+                  contentPadding: EdgeInsets.zero,
+                  hintText: 'Search entries',
+                  hintStyle: hintStyle,
+                ),
+              ),
+            ),
           ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(9999),
-            borderSide: BorderSide(color: borderColor),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(9999),
-            borderSide: BorderSide(color: borderColor),
-          ),
-        ),
+        ],
       ),
     );
   }
