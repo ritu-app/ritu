@@ -29,8 +29,13 @@ class _AddPeriodScreenState extends ConsumerState<AddPeriodScreen> {
   @override
   void initState() {
     super.initState();
-    final now = DateTime.now();
-    _visibleMonth = DateTime(now.year, now.month);
+    // Land on a month that still has selectable days (before the latest
+    // period). Current month is often fully disabled for backfill.
+    final latest = ref.read(latestPeriodProvider).valueOrNull;
+    final maxSelectable = latest == null
+        ? dateOnly(DateTime.now())
+        : dateOnly(latest.startedOn).subtract(const Duration(days: 1));
+    _visibleMonth = DateTime(maxSelectable.year, maxSelectable.month);
   }
 
   String _durationLabel(PeriodDuration option) => switch (option) {
@@ -75,6 +80,9 @@ class _AddPeriodScreenState extends ConsumerState<AddPeriodScreen> {
     final periods = ref.watch(allPeriodsProvider).valueOrNull ?? const [];
     final existingStarts = {
       for (final log in periods) dateOnly(log.startedOn),
+    };
+    final periodDates = {
+      for (final log in periods) ...log.bleedDays,
     };
     final latest = ref.watch(latestPeriodProvider).valueOrNull;
     final maxSelectable = latest == null
@@ -136,7 +144,7 @@ class _AddPeriodScreenState extends ConsumerState<AddPeriodScreen> {
                   RituCalendar(
                     month: _visibleMonth,
                     selectedDate: _selectedDate,
-                    entryDates: existingStarts,
+                    periodDates: periodDates,
                     maxSelectableDate: maxSelectable,
                     onMonthChanged: (month) {
                       setState(() => _visibleMonth = month);

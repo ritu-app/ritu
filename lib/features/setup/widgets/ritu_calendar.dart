@@ -87,6 +87,14 @@ class RituCalendar extends StatelessWidget {
     return !dateOnly(day).isAfter(dateOnly(max));
   }
 
+  void _goToPreviousMonth(DateTime firstOfMonth) {
+    onMonthChanged(DateTime(firstOfMonth.year, firstOfMonth.month - 1));
+  }
+
+  void _goToNextMonth(DateTime firstOfMonth) {
+    onMonthChanged(DateTime(firstOfMonth.year, firstOfMonth.month + 1));
+  }
+
   @override
   Widget build(BuildContext context) {
     final firstOfMonth = _normalizedMonth;
@@ -101,85 +109,104 @@ class RituCalendar extends StatelessWidget {
         DateTime(firstOfMonth.year, firstOfMonth.month + 1)
             .isBefore(DateTime(max.year, max.month + 1));
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: RituColors.fillElevated,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: RituColors.borderSubtle),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            children: [
-              _NavIcon(
-                icon: LucideIcons.chevronLeft,
-                onTap: () => onMonthChanged(
-                  DateTime(firstOfMonth.year, firstOfMonth.month - 1),
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onHorizontalDragEnd: (details) {
+        final velocity = details.primaryVelocity ?? 0;
+        // Swipe left → next month; swipe right → previous month.
+        if (velocity < -200) {
+          if (canGoForward) _goToNextMonth(firstOfMonth);
+        } else if (velocity > 200) {
+          _goToPreviousMonth(firstOfMonth);
+        }
+      },
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.fromLTRB(12, 16, 12, 24),
+        decoration: BoxDecoration(
+          color: RituColors.fillElevated,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: RituColors.borderSubtle),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                _NavIcon(
+                  icon: LucideIcons.chevronLeft,
+                  onTap: () => _goToPreviousMonth(firstOfMonth),
                 ),
-              ),
-              Expanded(
-                child: Text(
-                  '${_monthNames[firstOfMonth.month - 1]} ${firstOfMonth.year}',
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.dmSans(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    height: 24 / 15,
-                    color: RituColors.textPrimary,
-                  ),
-                ),
-              ),
-              _NavIcon(
-                icon: LucideIcons.chevronRight,
-                enabled: canGoForward,
-                onTap: () => onMonthChanged(
-                  DateTime(firstOfMonth.year, firstOfMonth.month + 1),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              for (final day in _weekdays)
-                SizedBox(
-                  width: 30,
+                Expanded(
                   child: Text(
-                    day,
+                    '${_monthNames[firstOfMonth.month - 1]} ${firstOfMonth.year}',
                     textAlign: TextAlign.center,
                     style: GoogleFonts.dmSans(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w500,
-                      height: 14 / 10,
-                      color: RituColors.textDisabled,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      height: 24 / 15,
+                      color: RituColors.textPrimary,
                     ),
                   ),
                 ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          for (var row = 0; row < rowCount; row++) ...[
-            if (row > 0) const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                for (var col = 0; col < 7; col++)
-                  _buildDayCell(startOffset, daysInMonth, row * 7 + col),
+                _NavIcon(
+                  icon: LucideIcons.chevronRight,
+                  enabled: canGoForward,
+                  onTap: () => _goToNextMonth(firstOfMonth),
+                ),
               ],
             ),
+            const SizedBox(height: 12),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      for (final day in _weekdays)
+                        SizedBox(
+                          width: 30,
+                          child: Text(
+                            day,
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.dmSans(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w500,
+                              height: 14 / 10,
+                              color: RituColors.textDisabled,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  for (var row = 0; row < rowCount; row++) ...[
+                    if (row > 0) const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        for (var col = 0; col < 7; col++)
+                          _buildDayCell(
+                            startOffset,
+                            daysInMonth,
+                            row * 7 + col,
+                          ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
           ],
-        ],
+        ),
       ),
     );
   }
@@ -198,15 +225,16 @@ class RituCalendar extends StatelessWidget {
     final isEntry = selectable && _isEntry(date);
     final isPeriod = _isPeriod(date);
     final isPreview = !isSelected && selectable && _isPreview(date);
-    final isToday = selectable && _isToday(date);
+    final isToday = _isToday(date);
     final showTodayDot = isPeriod && isToday;
-    final dayColor = !selectable
-        ? RituColors.textDisabled
-        : isPeriod
-            ? RituColors.rosewood900
+    final dayColor = isPeriod
+        ? RituColors.rosewood900
+        : !selectable
+            ? RituColors.textDisabled
             : isSelected && selectionStyle == RituCalendarSelectionStyle.filled
                 ? RituColors.textInverse
-                : isSelected && selectionStyle == RituCalendarSelectionStyle.dotted
+                : isSelected &&
+                        selectionStyle == RituCalendarSelectionStyle.dotted
                     ? RituColors.iconCritical
                     : isPreview
                         ? RituColors.iconCritical
@@ -220,43 +248,48 @@ class RituCalendar extends StatelessWidget {
       child: SizedBox(
         width: 30,
         height: 36,
-        child: isPeriod && selectable
+        // Period days stay highlighted even when outside the selectable range
+        // (e.g. the latest episode on Add a period).
+        child: isPeriod
             ? Center(
-                child: Container(
-                  width: 30,
-                  height: 30,
-                  alignment: Alignment.center,
-                  decoration: const BoxDecoration(
-                    color: RituColors.cycleMenstrual,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Stack(
+                child: Opacity(
+                  opacity: selectable ? 1 : 0.7,
+                  child: Container(
+                    width: 30,
+                    height: 30,
                     alignment: Alignment.center,
-                    children: [
-                      Text(
-                        '$dayNumber',
-                        style: GoogleFonts.dmSans(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          height: 1,
-                          color: dayColor,
+                    decoration: const BoxDecoration(
+                      color: RituColors.cycleMenstrual,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Text(
+                          '$dayNumber',
+                          style: GoogleFonts.dmSans(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            height: 1,
+                            color: dayColor,
+                          ),
                         ),
-                      ),
-                      if (showTodayDot)
-                        const Positioned(
-                          bottom: 3,
-                          child: SizedBox(
-                            width: 4,
-                            height: 4,
-                            child: DecoratedBox(
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: RituColors.white,
+                        if (showTodayDot)
+                          const Positioned(
+                            bottom: 3,
+                            child: SizedBox(
+                              width: 4,
+                              height: 4,
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: RituColors.white,
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               )
@@ -337,15 +370,20 @@ class _NavIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: enabled ? onTap : null,
-      behavior: HitTestBehavior.opaque,
-      child: Icon(
-        icon,
-        size: 16,
-        color: enabled
-            ? RituColors.textDisabled
-            : RituColors.textDisabled.withValues(alpha: 0.35),
+    return SizedBox(
+      width: 44,
+      height: 44,
+      child: IconButton(
+        onPressed: enabled ? onTap : null,
+        padding: EdgeInsets.zero,
+        constraints: const BoxConstraints.tightFor(width: 44, height: 44),
+        icon: Icon(
+          icon,
+          size: 18,
+          color: enabled
+              ? RituColors.textDisabled
+              : RituColors.textDisabled.withValues(alpha: 0.35),
+        ),
       ),
     );
   }
