@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../data/models/app_appearance.dart';
+import '../../providers/app_appearance_provider.dart';
 import '../../providers/period_providers.dart';
 import '../../providers/profile_providers.dart';
 import '../../providers/repository_providers.dart';
@@ -10,6 +12,7 @@ import '../../providers/symptom_providers.dart';
 import '../../core/date_format.dart';
 import '../../theme/ritu_colors.dart';
 import 'about_ritu_screen.dart';
+import 'app_appearance_screen.dart';
 import 'custom_symptoms_screen.dart';
 import 'delete_data_screen.dart';
 import 'edit_name_dialog.dart';
@@ -162,8 +165,20 @@ class _SettingsBody extends ConsumerWidget {
     );
   }
 
+  Future<void> _openAppAppearance(BuildContext context) async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => const AppAppearanceScreen(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final appearanceLabel =
+        ref.watch(appAppearanceProvider).valueOrNull?.label ??
+            AppAppearance.system.label;
+
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
@@ -192,7 +207,7 @@ class _SettingsBody extends ConsumerWidget {
                     _SettingsGroup(
                       children: [
                         _SettingsRow(
-                          icon: LucideIcons.calendar,
+                          icon: LucideIcons.calendar1,
                           iconBackground: RituColors.fillPositiveSecondary,
                           iconColor: RituColors.sage600,
                           title: 'Period Started',
@@ -200,7 +215,7 @@ class _SettingsBody extends ConsumerWidget {
                           onTap: () => _editPeriodStarted(context),
                         ),
                         _SettingsRow(
-                          icon: LucideIcons.history,
+                          icon: LucideIcons.undo2,
                           iconBackground: RituColors.fillPositiveSecondary,
                           iconColor: RituColors.sage600,
                           title: 'Period History',
@@ -215,7 +230,7 @@ class _SettingsBody extends ConsumerWidget {
                           subtitle: 'Unclassified – needs 3 cycles',
                         ),
                         _SettingsRow(
-                          icon: LucideIcons.circlePlus,
+                          icon: LucideIcons.badgePlus,
                           iconBackground: RituColors.fillPositiveSecondary,
                           iconColor: RituColors.sage600,
                           title: 'Custom Symptoms',
@@ -255,6 +270,22 @@ class _SettingsBody extends ConsumerWidget {
                       ],
                     ),
                     const SizedBox(height: 20),
+                    const _SectionLabel('App Preferences'),
+                    const SizedBox(height: 8),
+                    _SettingsGroup(
+                      children: [
+                        _SettingsRow(
+                          icon: LucideIcons.sunMoon,
+                          iconBackground: RituColors.fillPositiveSecondary,
+                          iconColor: RituColors.sage600,
+                          title: 'App Appearance',
+                          subtitle: appearanceLabel,
+                          showDivider: false,
+                          onTap: () => _openAppAppearance(context),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
                     const _SectionLabel('Data & Privacy'),
                     const SizedBox(height: 8),
                     _SettingsGroup(
@@ -267,7 +298,7 @@ class _SettingsBody extends ConsumerWidget {
                           subtitle: 'Off',
                         ),
                         _SettingsRow(
-                          icon: LucideIcons.share,
+                          icon: LucideIcons.stickyNoteCheck,
                           iconBackground: RituColors.fillPositiveSecondary,
                           iconColor: RituColors.sage600,
                           title: 'Export Data',
@@ -275,7 +306,7 @@ class _SettingsBody extends ConsumerWidget {
                           onTap: () => _openExportData(context),
                         ),
                         const _SettingsRow(
-                          icon: LucideIcons.chartColumn,
+                          icon: LucideIcons.chartNoAxesCombined,
                           iconBackground: RituColors.fillAttentionSecondary,
                           iconColor: RituColors.iconAttention,
                           title: 'Usage Analytics',
@@ -298,20 +329,20 @@ class _SettingsBody extends ConsumerWidget {
                     _SettingsGroup(
                       children: [
                         _SettingsRow(
-                          icon: LucideIcons.circleHelp,
+                          icon: LucideIcons.circleQuestionMark,
                           iconBackground: RituColors.fillInfoSecondary,
                           iconColor: RituColors.iconInfo,
                           title: 'Help & Support',
                           onTap: () => _openHelpSupport(context),
                         ),
                         const _SettingsRow(
-                          icon: LucideIcons.lock,
+                          icon: LucideIcons.lockKeyhole,
                           iconBackground: RituColors.fillInfoSecondary,
                           iconColor: RituColors.iconInfo,
                           title: 'Privacy Policy',
                         ),
                         const _SettingsRow(
-                          icon: LucideIcons.fileText,
+                          icon: LucideIcons.receiptText,
                           iconBackground: RituColors.fillInfoSecondary,
                           iconColor: RituColors.iconInfo,
                           title: 'Terms of Service',
@@ -408,8 +439,8 @@ class _ProfileCard extends StatelessWidget {
           child: Row(
             children: [
               Container(
-                width: 52,
-                height: 52,
+                width: 48,
+                height: 48,
                 alignment: Alignment.center,
                 decoration: const BoxDecoration(
                   shape: BoxShape.circle,

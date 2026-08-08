@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:ritu/app/ritu_app.dart';
 import 'package:ritu/core/date_format.dart';
@@ -35,6 +36,7 @@ void main() {
   late AppDatabase database;
 
   setUp(() {
+    SharedPreferences.setMockInitialValues({});
     database = AppDatabase.memory();
   });
 

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../providers/app_appearance_provider.dart';
 import '../../providers/app_restart_provider.dart';
 import '../../providers/profile_providers.dart';
 import '../../providers/repository_providers.dart';
@@ -32,6 +33,7 @@ class _DeleteDataScreenState extends ConsumerState<DeleteDataScreen> {
     setState(() => _busy = true);
     try {
       await ref.read(profileRepositoryProvider).clearAllData();
+      await ref.read(appAppearanceProvider.notifier).clear();
       if (!mounted) return;
       ref.invalidate(profileProvider);
       ref.read(appRestartProvider.notifier).state++;
