@@ -3,21 +3,33 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../theme/ritu_colors.dart';
 
-Future<bool> showJournalDeleteDialog(BuildContext context) {
+Future<bool> showJournalDeleteDialog(
+  BuildContext context, {
+  int count = 1,
+}) {
   return showDialog<bool>(
         context: context,
         barrierColor: const Color(0xB3000000),
-        builder: (dialogContext) => const _JournalDeleteDialog(),
+        builder: (dialogContext) => _JournalDeleteDialog(count: count),
       ).then(
         (value) => value ?? false,
       );
 }
 
 class _JournalDeleteDialog extends StatelessWidget {
-  const _JournalDeleteDialog();
+  const _JournalDeleteDialog({this.count = 1});
+
+  final int count;
 
   @override
   Widget build(BuildContext context) {
+    final title = count <= 1
+        ? 'Delete this entry?'
+        : 'Delete $count entries?';
+    final body = count <= 1
+        ? 'This can\'t be undone. Your entry will be permanently removed'
+        : 'This can\'t be undone. These entries will be permanently removed';
+
     return Dialog(
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: 16),
@@ -37,7 +49,7 @@ class _JournalDeleteDialog extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Delete this entry?',
+                title,
                 style: GoogleFonts.dmSans(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
@@ -46,7 +58,7 @@ class _JournalDeleteDialog extends StatelessWidget {
                 ),
               ),
               Text(
-                'This can\'t be undone. Your entry will be permanently removed',
+                body,
                 style: GoogleFonts.dmSans(
                   fontSize: 13,
                   fontWeight: FontWeight.w400,

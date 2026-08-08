@@ -14,6 +14,7 @@ class RituCalendar extends StatelessWidget {
     required this.onMonthChanged,
     this.selectedDate,
     this.markedDates = const {},
+    this.entryDates = const {},
     this.periodDates = const {},
     this.previewDates = const {},
     this.onDateSelected,
@@ -25,6 +26,10 @@ class RituCalendar extends StatelessWidget {
   final ValueChanged<DateTime> onMonthChanged;
   final DateTime? selectedDate;
   final Set<DateTime> markedDates;
+
+  /// Days with a journal (or similar) entry — sage dot under the day number.
+  final Set<DateTime> entryDates;
+
   final Set<DateTime> periodDates;
 
   /// Days to render as plain colored text (no fill) — e.g. an estimated
@@ -61,6 +66,9 @@ class RituCalendar extends StatelessWidget {
 
   bool _isMarked(DateTime day) =>
       markedDates.any((d) => _isSameDay(d, day));
+
+  bool _isEntry(DateTime day) =>
+      entryDates.any((d) => _isSameDay(d, day));
 
   bool _isPeriod(DateTime day) =>
       periodDates.any((d) => _isSameDay(d, day));
@@ -187,6 +195,7 @@ class RituCalendar extends StatelessWidget {
     final isSelected =
         selectable && selectedDate != null && _isSameDay(selectedDate!, date);
     final isMarked = selectable && _isMarked(date);
+    final isEntry = selectable && _isEntry(date);
     final isPeriod = _isPeriod(date);
     final isPreview = !isSelected && selectable && _isPreview(date);
     final isToday = selectable && _isToday(date);
@@ -286,6 +295,7 @@ class RituCalendar extends StatelessWidget {
                         ),
                       ),
                       if (isMarked ||
+                          isEntry ||
                           isToday ||
                           (selectionStyle ==
                                   RituCalendarSelectionStyle.dotted &&
@@ -298,10 +308,10 @@ class RituCalendar extends StatelessWidget {
                             child: DecoratedBox(
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: isToday
-                                    ? RituColors.sage600
-                                    : isMarked
-                                        ? RituColors.cycleMenstrual
+                                color: isMarked
+                                    ? RituColors.cycleMenstrual
+                                    : isToday
+                                        ? RituColors.sage600
                                         : RituColors.sage500,
                               ),
                             ),

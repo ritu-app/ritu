@@ -13,9 +13,14 @@ import 'journal_entry_menu.dart';
 import 'journal_entry_modal.dart';
 
 class JournalEntryCard extends ConsumerWidget {
-  const JournalEntryCard({super.key, required this.entry});
+  const JournalEntryCard({
+    super.key,
+    required this.entry,
+    this.showMenu = true,
+  });
 
   final JournalEntry entry;
+  final bool showMenu;
 
   Future<void> _editEntry(BuildContext context, WidgetRef ref) async {
     final periods = ref.read(allPeriodsProvider).valueOrNull ?? const [];
@@ -87,11 +92,12 @@ class JournalEntryCard extends ConsumerWidget {
                   ),
                 ),
               ),
-              JournalEntryMenuButton(
-                onEdit: () => _editEntry(context, ref),
-                onView: () => _viewEntry(context, ref),
-                onDelete: () => _confirmDelete(context, ref),
-              ),
+              if (showMenu)
+                JournalEntryMenuButton(
+                  onEdit: () => _editEntry(context, ref),
+                  onView: () => _viewEntry(context, ref),
+                  onDelete: () => _confirmDelete(context, ref),
+                ),
             ],
           ),
           const SizedBox(height: 12),

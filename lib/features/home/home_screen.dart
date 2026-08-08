@@ -30,6 +30,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _tabIndex = 0;
   var _bannerDismissed = false;
+  var _hideBottomNav = false;
   String? _selectedMood;
   late DateTime _calendarMonth;
 
@@ -149,7 +150,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   hasLoggedToday: todayLog != null,
                   onLogToday: _openDailyLog,
                 ),
-                2 => const JournalScreen(),
+                2 => JournalScreen(
+                  onSelectionModeChanged: (active) {
+                    setState(() => _hideBottomNav = active);
+                  },
+                ),
                 3 => SummaryScreen(
                   loggedDaysCount: loggedDaysCount,
                   patternDaysRequired: widget.patternDaysRequired,
@@ -157,10 +162,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 _ => _PlaceholderTab(label: _tabLabel(_tabIndex)),
               },
             ),
-            _BottomNav(
-              currentIndex: _tabIndex,
-              onTap: (index) => setState(() => _tabIndex = index),
-            ),
+            if (!_hideBottomNav)
+              _BottomNav(
+                currentIndex: _tabIndex,
+                onTap: (index) => setState(() => _tabIndex = index),
+              ),
           ],
         ),
       ),

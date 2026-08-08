@@ -16,7 +16,10 @@ import 'journal_entry_modal.dart';
 
 /// Journal tab: daily reflection with persisted entries.
 class JournalScreen extends ConsumerStatefulWidget {
-  const JournalScreen({super.key});
+  const JournalScreen({super.key, this.onSelectionModeChanged});
+
+  /// Notifies Home when All entries multi-select should hide the tab bar.
+  final ValueChanged<bool>? onSelectionModeChanged;
 
   @override
   ConsumerState<JournalScreen> createState() => _JournalScreenState();
@@ -130,7 +133,11 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
   Widget build(BuildContext context) {
     if (_showAllEntries) {
       return JournalAllEntriesScreen(
-        onBack: () => setState(() => _showAllEntries = false),
+        onBack: () {
+          widget.onSelectionModeChanged?.call(false);
+          setState(() => _showAllEntries = false);
+        },
+        onSelectionModeChanged: widget.onSelectionModeChanged,
       );
     }
 
