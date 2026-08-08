@@ -26,6 +26,13 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<!-- Required by file_picker (backup import) even when those APIs are unused. -->
+	<key>NSCameraUsageDescription</key>
+	<string>Ritu may use the camera if you capture a document while importing a backup file.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Ritu may use your location when you select a backup file stored on your device.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Ritu needs access so you can choose a backup file to restore your journal data.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
