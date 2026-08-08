@@ -3,6 +3,7 @@ import 'package:ritu/core/date_format.dart';
 
 import '../models/cycle_history_draft.dart';
 import '../presets/cycle_presets.dart';
+import '../presets/journal_controls.dart';
 import '../scope/studio_scope.dart';
 import 'cycle_history_editor.dart';
 
@@ -15,6 +16,10 @@ class ControlPanel extends StatelessWidget {
     required this.loggedToday,
     required this.onLoggedDaysChanged,
     required this.onLoggedTodayChanged,
+    required this.journalTodayBody,
+    required this.pastJournalCount,
+    required this.onJournalTodayBodyChanged,
+    required this.onPastJournalCountChanged,
   });
 
   final CycleHistoryDraft historyDraft;
@@ -23,6 +28,10 @@ class ControlPanel extends StatelessWidget {
   final bool loggedToday;
   final ValueChanged<int> onLoggedDaysChanged;
   final ValueChanged<bool> onLoggedTodayChanged;
+  final String journalTodayBody;
+  final int pastJournalCount;
+  final ValueChanged<String> onJournalTodayBodyChanged;
+  final ValueChanged<int> onPastJournalCountChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -66,6 +75,13 @@ class ControlPanel extends StatelessWidget {
           loggedToday: loggedToday,
           onLoggedDaysChanged: onLoggedDaysChanged,
           onLoggedTodayChanged: onLoggedTodayChanged,
+        ),
+        const SizedBox(height: 24),
+        JournalControls(
+          todayBody: journalTodayBody,
+          pastEntryCount: pastJournalCount,
+          onTodayBodyChanged: onJournalTodayBodyChanged,
+          onPastEntryCountChanged: onPastJournalCountChanged,
         ),
       ],
     );

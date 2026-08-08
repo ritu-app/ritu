@@ -13,6 +13,7 @@ import 'package:ritu/providers/simulated_today_provider.dart';
 import '../models/cycle_history_draft.dart';
 import '../presets/cycle_presets.dart';
 import '../presets/daily_log_controls.dart';
+import '../presets/journal_controls.dart';
 import 'ritu_repos.dart';
 
 /// Mutable in-memory app state for Cycle Studio.
@@ -24,6 +25,7 @@ class StudioController {
     required this.applyPreset,
     required this.applyHistory,
     required this.applyDailyLogs,
+    required this.applyJournal,
     required this.loadHistoryDraft,
   });
 
@@ -36,6 +38,10 @@ class StudioController {
     required int loggedDaysCount,
     required bool loggedToday,
   }) applyDailyLogs;
+  final Future<void> Function({
+    required String todayBody,
+    required int pastEntryCount,
+  }) applyJournal;
   final Future<CycleHistoryDraft> Function() loadHistoryDraft;
 }
 
@@ -115,6 +121,18 @@ class _StudioScopeState extends State<StudioScope> {
     );
   }
 
+  Future<void> _applyJournal({
+    required String todayBody,
+    required int pastEntryCount,
+  }) {
+    return applyJournalState(
+      repos: _repos!,
+      simulatedToday: _simulatedToday,
+      todayBody: todayBody,
+      pastEntryCount: pastEntryCount,
+    );
+  }
+
   Future<CycleHistoryDraft> _loadHistoryDraft() async {
     final logs = await _repos!.periods.getAll();
     return CycleHistoryDraft.fromPeriodLogs(
@@ -145,6 +163,7 @@ class _StudioScopeState extends State<StudioScope> {
       applyPreset: _applyPreset,
       applyHistory: _applyHistory,
       applyDailyLogs: _applyDailyLogs,
+      applyJournal: _applyJournal,
       loadHistoryDraft: _loadHistoryDraft,
     );
 

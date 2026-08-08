@@ -55,7 +55,10 @@ class CycleHistoryEditor extends StatelessWidget {
           divisions: _cycleDayMax - _cycleDayMin,
           label: '$cycleDay',
           onChanged: (value) {
-            final updated = draft.copyWith(currentCycleDay: value.round());
+            final updated = draft.withCurrentCycleDay(
+              cycleDay: value.round(),
+              simulatedToday: simulatedToday,
+            );
             onDraftChanged(updated);
             onLiveApply(updated);
           },

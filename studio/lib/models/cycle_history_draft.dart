@@ -127,6 +127,40 @@ class CycleHistoryDraft {
     return starts;
   }
 
+  /// Moves only the newest period start so [cycleDay] matches [simulatedToday].
+  ///
+  /// Older starts stay fixed; the newest row's cycle length absorbs the change.
+  /// Returns [this] when the new latest start would collide with the previous
+  /// start or fall after [simulatedToday].
+  CycleHistoryDraft withCurrentCycleDay({
+    required int cycleDay,
+    required DateTime simulatedToday,
+  }) {
+    final day = cycleDay.clamp(1, 99);
+    if (rows.isEmpty) return copyWith(currentCycleDay: day);
+
+    final today = dateOnly(simulatedToday);
+    final newLatest = today.subtract(Duration(days: day - 1));
+    if (newLatest.isAfter(today)) return this;
+
+    if (rows.length == 1) {
+      return copyWith(currentCycleDay: day);
+    }
+
+    final starts = computedStarts(today);
+    final previous = starts[starts.length - 2];
+    if (!previous.isBefore(newLatest)) return this;
+
+    final updated = rows.map((row) => row.copyWith()).toList(growable: false);
+    final last = rows.length - 1;
+    updated[last] = CycleHistoryRow(
+      cycleLength: newLatest.difference(previous).inDays,
+      periodDuration: rows[last].periodDuration,
+    );
+
+    return CycleHistoryDraft(currentCycleDay: day, rows: updated);
+  }
+
   /// Sets the period start for [index], keeping other starts fixed.
   ///
   /// Rebuilds cycle lengths (and [currentCycleDay] when the newest start moves)

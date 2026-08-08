@@ -227,15 +227,16 @@ Expose via `CycleSnapshot.insightsMode` (or equivalent) from
 **Note:** Daily-log-based unlock (14-day pattern teaser on Insights) is
 orthogonal — studio controls both axes independently.
 
-### 4.5 Journal editor (not yet implemented)
+### 4.5 Journal editor
 
 Control-panel controls to seed journal state for the Journal tab:
 
-- Today’s entry body (empty vs saved)
-- Optional past entries (count / sample text) for the list below the hero
+- Today’s entry body (empty clears today’s row; non-empty upserts for simulated today)
+- Past entries slider `0–10` with canned sample text for the list below the hero
 
-Writes via `MemoryJournalEntryRepository` so the context line and entry list
-update reactively. Navigate to Journal in the preview to verify.
+Writes via `MemoryJournalEntryRepository` (`clearAll` + upserts) so the
+context line and entry list update reactively. Navigate to Journal in the
+preview to verify. Journal saves in the preview use `simulatedTodayProvider`.
 
 ---
 
@@ -315,7 +316,7 @@ Studio does not need its own test suite in v1 beyond a smoke test that
 - [x] All classification presets + Tier B/C + phase-day matrix preset
 - [x] Daily log controls (logged days count slider, logged today toggle)
 - [x] Navigate to Journal, Insights, Settings → Period history via app UI
-- [ ] **Journal editor** — seed/edit journal entries (today + past) for context-line and list states
+- [x] **Journal editor** — seed/edit journal entries (today + past) for context-line and list states
 
 ### Phase 3 — Polish
 

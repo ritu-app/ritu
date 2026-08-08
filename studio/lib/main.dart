@@ -40,11 +40,20 @@ class _CycleStudioShellState extends State<CycleStudioShell> {
       CycleHistoryDraft.fromPreset(CyclePreset.regular);
   var _loggedDaysCount = 0;
   var _loggedToday = false;
+  var _journalTodayBody = '';
+  var _pastJournalCount = 0;
 
   void _syncDailyLogs() {
     context.studioController.applyDailyLogs(
       loggedDaysCount: _loggedDaysCount,
       loggedToday: _loggedToday,
+    );
+  }
+
+  void _syncJournal() {
+    context.studioController.applyJournal(
+      todayBody: _journalTodayBody,
+      pastEntryCount: _pastJournalCount,
     );
   }
 
@@ -64,6 +73,16 @@ class _CycleStudioShellState extends State<CycleStudioShell> {
       onLoggedTodayChanged: (logged) {
         setState(() => _loggedToday = logged);
         _syncDailyLogs();
+      },
+      journalTodayBody: _journalTodayBody,
+      pastJournalCount: _pastJournalCount,
+      onJournalTodayBodyChanged: (body) {
+        setState(() => _journalTodayBody = body);
+        _syncJournal();
+      },
+      onPastJournalCountChanged: (count) {
+        setState(() => _pastJournalCount = count);
+        _syncJournal();
       },
     );
 

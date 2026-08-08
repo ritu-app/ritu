@@ -84,4 +84,10 @@ class MemoryJournalEntryRepository implements JournalEntryRepository {
     _store.journalEntries.removeWhere((_, entry) => entry.id == id);
     _store.notifyJournalEntries();
   }
+
+  /// Studio-only helper — wipe all journal rows before re-seeding.
+  Future<void> clearAll() async {
+    _store.journalEntries.clear();
+    _store.notifyJournalEntries();
+  }
 }

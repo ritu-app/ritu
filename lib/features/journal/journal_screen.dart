@@ -8,6 +8,7 @@ import '../../data/repositories/journal_entry_repository.dart';
 import '../../providers/journal_entry_providers.dart';
 import '../../providers/period_providers.dart';
 import '../../providers/repository_providers.dart';
+import '../../providers/simulated_today_provider.dart';
 import '../../theme/ritu_colors.dart';
 import 'journal_all_entries_screen.dart';
 import 'journal_entry_card.dart';
@@ -87,7 +88,7 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
     if (text.isEmpty) return;
 
     await ref.read(journalEntryRepositoryProvider).upsert(
-          loggedOn: DateTime.now(),
+          loggedOn: ref.read(simulatedTodayProvider),
           body: text,
         );
 
@@ -136,10 +137,13 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
     final todayEntry = todayAsync.valueOrNull;
     final pastEntries = pastAsync.valueOrNull ?? const [];
     final hasPastEntries = pastEntries.isNotEmpty;
+    final entryCount =
+        (todayEntry != null ? 1 : 0) + pastEntries.length;
     final showInput =
         hasPastEntries || todayEntry == null || _editingToday;
     final showSavedCard = !showInput;
     final showHelp = !hasPastEntries;
+    final showHero = entryCount < 2;
     final previewPast = pastEntries.take(2).toList();
 
     ref.listen(todayJournalEntryProvider, (previous, next) {
@@ -173,8 +177,10 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
           ),
         ),
         const SizedBox(height: 20),
-        const _HeroCard(),
-        const SizedBox(height: 20),
+        if (showHero) ...[
+          const _HeroCard(),
+          const SizedBox(height: 20),
+        ],
         if (showInput)
           _ReflectionCard(
             controller: _controller,
@@ -326,6 +332,7 @@ class _ReflectionCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
+        color: RituColors.fillSubtle,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: RituColors.textDisabled),
       ),
