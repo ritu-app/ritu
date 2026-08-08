@@ -299,8 +299,8 @@ void main() {
     await tester.tap(find.text('Delete Data'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Delete all data?'), findsOneWidget);
-    await tester.tap(find.text('Delete'));
+    expect(find.text('Delete everything'), findsOneWidget);
+    await tester.tap(find.text('Delete all data'));
     await tester.pumpAndSettle();
 
     expect(find.text('Get started'), findsOneWidget);

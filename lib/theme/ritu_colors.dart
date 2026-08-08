@@ -26,6 +26,8 @@ abstract final class RituColors {
   static const Color fillAttentionSecondary = Color(0xFFFFFBEF);
   static const Color fillInfoSecondary = Color(0xFFF8F6FC);
   static const Color fillCriticalSecondary = Color(0xFFFCF4F4);
+  /// Warning / delete callout surface (Figma fill-critical).
+  static const Color fillCritical = Color(0xFFEFD0D0);
   static const Color iconAttention = Color(0xFFC49A3A);
   static const Color iconInfo = Color(0xFF8B7BB5);
   static const Color iconCritical = Color(0xFFC45C5C);

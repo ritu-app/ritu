@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '../../providers/app_restart_provider.dart';
 import '../../providers/period_providers.dart';
 import '../../providers/profile_providers.dart';
 import '../../providers/repository_providers.dart';
@@ -11,6 +10,7 @@ import '../../providers/symptom_providers.dart';
 import '../../core/date_format.dart';
 import '../../theme/ritu_colors.dart';
 import 'custom_symptoms_screen.dart';
+import 'delete_data_screen.dart';
 import 'edit_name_dialog.dart';
 import 'export_data_screen.dart';
 import 'period_history_screen.dart';
@@ -54,70 +54,18 @@ class SettingsScreen extends ConsumerWidget {
           periodStartedLabel: periodStartedLabel,
           pastPeriodCount: pastPeriodCount,
           customSymptomCount: customSymptomCount,
-          onDeleteData: () => _confirmAndDeleteData(context, ref),
+          onDeleteData: () => _openDeleteData(context),
         );
       },
     );
   }
 
-  Future<void> _confirmAndDeleteData(
-    BuildContext context,
-    WidgetRef ref,
-  ) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          backgroundColor: RituColors.fillElevated,
-          title: Text(
-            'Delete all data?',
-            style: GoogleFonts.dmSans(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: RituColors.textPrimary,
-            ),
-          ),
-          content: Text(
-            'This permanently removes your profile and all local data on this device. You can’t undo this.',
-            style: GoogleFonts.dmSans(
-              fontSize: 14,
-              fontWeight: FontWeight.w400,
-              height: 20 / 14,
-              color: RituColors.textSecondary,
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: Text(
-                'Cancel',
-                style: GoogleFonts.dmSans(
-                  fontWeight: FontWeight.w600,
-                  color: RituColors.textSecondary,
-                ),
-              ),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: Text(
-                'Delete',
-                style: GoogleFonts.dmSans(
-                  fontWeight: FontWeight.w600,
-                  color: RituColors.iconCritical,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
+  Future<void> _openDeleteData(BuildContext context) async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => const DeleteDataScreen(),
+      ),
     );
-
-    if (confirmed != true || !context.mounted) return;
-
-    await ref.read(profileRepositoryProvider).clearAllData();
-    if (!context.mounted) return;
-    ref.invalidate(profileProvider);
-    ref.read(appRestartProvider.notifier).state++;
   }
 }
 
