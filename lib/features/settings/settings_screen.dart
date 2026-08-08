@@ -13,6 +13,7 @@ import 'custom_symptoms_screen.dart';
 import 'delete_data_screen.dart';
 import 'edit_name_dialog.dart';
 import 'export_data_screen.dart';
+import 'help_support_screen.dart';
 import 'period_history_screen.dart';
 import 'period_started_screen.dart';
 
@@ -140,6 +141,14 @@ class _SettingsBody extends ConsumerWidget {
     await Navigator.of(context).push<void>(
       MaterialPageRoute<void>(
         builder: (_) => const ExportDataScreen(),
+      ),
+    );
+  }
+
+  Future<void> _openHelpSupport(BuildContext context) async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => const HelpSupportScreen(),
       ),
     );
   }
@@ -277,21 +286,22 @@ class _SettingsBody extends ConsumerWidget {
                     const SizedBox(height: 20),
                     const _SectionLabel('Support & About'),
                     const SizedBox(height: 8),
-                    const _SettingsGroup(
+                    _SettingsGroup(
                       children: [
                         _SettingsRow(
                           icon: LucideIcons.circleHelp,
                           iconBackground: RituColors.fillInfoSecondary,
                           iconColor: RituColors.iconInfo,
                           title: 'Help & Support',
+                          onTap: () => _openHelpSupport(context),
                         ),
-                        _SettingsRow(
+                        const _SettingsRow(
                           icon: LucideIcons.lock,
                           iconBackground: RituColors.fillInfoSecondary,
                           iconColor: RituColors.iconInfo,
                           title: 'Privacy Policy',
                         ),
-                        _SettingsRow(
+                        const _SettingsRow(
                           icon: LucideIcons.fileText,
                           iconBackground: RituColors.fillInfoSecondary,
                           iconColor: RituColors.iconInfo,
