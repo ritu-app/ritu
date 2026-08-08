@@ -16,50 +16,105 @@ class JournalEntryMenuButton extends StatelessWidget {
   final VoidCallback onView;
   final VoidCallback onDelete;
 
-  @override
-  Widget build(BuildContext context) {
-    return PopupMenuButton<_JournalEntryAction>(
-      icon: const Icon(
-        LucideIcons.ellipsis,
-        size: 24,
-        color: RituColors.textSecondary,
-      ),
-      padding: EdgeInsets.zero,
-      offset: const Offset(-90, 28),
-      color: RituColors.backgroundPage,
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(7),
-        side: const BorderSide(color: Color(0xFFE2DDD8)),
-      ),
-      onSelected: (action) {
-        switch (action) {
-          case _JournalEntryAction.edit:
-            onEdit();
-          case _JournalEntryAction.view:
-            onView();
-          case _JournalEntryAction.delete:
-            onDelete();
-        }
+  static const _borderDefault = Color(0xFFE2DDD8);
+
+  Future<void> _open(BuildContext context) async {
+    final button = context.findRenderObject() as RenderBox?;
+    if (button == null || !button.hasSize) return;
+
+    final origin = button.localToGlobal(Offset.zero);
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    // Sit just under the ellipsis, right-aligned with the icon.
+    final top = origin.dy + button.size.height + 4;
+    final right = screenWidth - (origin.dx + button.size.width);
+
+    final action = await showDialog<_JournalEntryAction>(
+      context: context,
+      barrierColor: Colors.transparent,
+      useSafeArea: false,
+      builder: (dialogContext) {
+        return Stack(
+          children: [
+            Positioned.fill(
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => Navigator.of(dialogContext).pop(),
+              ),
+            ),
+            Positioned(
+              right: right.clamp(8.0, screenWidth - 8),
+              top: top,
+              child: Material(
+                color: Colors.transparent,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(minWidth: 110),
+                  child: IntrinsicWidth(
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: RituColors.fillSubtle,
+                        borderRadius: BorderRadius.circular(7),
+                        border: Border.all(color: _borderDefault),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _menuRow(
+                            dialogContext,
+                            _JournalEntryAction.edit,
+                            LucideIcons.pen,
+                            'Edit',
+                          ),
+                          const SizedBox(height: 12),
+                          _menuRow(
+                            dialogContext,
+                            _JournalEntryAction.view,
+                            LucideIcons.eye,
+                            'View',
+                          ),
+                          const SizedBox(height: 12),
+                          _menuRow(
+                            dialogContext,
+                            _JournalEntryAction.delete,
+                            LucideIcons.trash2,
+                            'Delete',
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
       },
-      itemBuilder: (context) => [
-        _menuItem(_JournalEntryAction.edit, LucideIcons.pen, 'Edit'),
-        _menuItem(_JournalEntryAction.view, LucideIcons.eye, 'View'),
-        _menuItem(_JournalEntryAction.delete, LucideIcons.trash2, 'Delete'),
-      ],
     );
+
+    switch (action) {
+      case _JournalEntryAction.edit:
+        onEdit();
+      case _JournalEntryAction.view:
+        onView();
+      case _JournalEntryAction.delete:
+        onDelete();
+      case null:
+        break;
+    }
   }
 
-  PopupMenuItem<_JournalEntryAction> _menuItem(
-    _JournalEntryAction value,
+  Widget _menuRow(
+    BuildContext context,
+    _JournalEntryAction action,
     IconData icon,
     String label,
   ) {
-    return PopupMenuItem(
-      value: value,
-      height: 28,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => Navigator.of(context).pop(action),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 16, color: RituColors.textSecondary),
           const SizedBox(width: 8),
@@ -73,6 +128,23 @@ class JournalEntryMenuButton extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => _open(context),
+      behavior: HitTestBehavior.opaque,
+      child: const SizedBox(
+        width: 24,
+        height: 24,
+        child: Icon(
+          LucideIcons.ellipsis,
+          size: 24,
+          color: RituColors.textSecondary,
+        ),
       ),
     );
   }
