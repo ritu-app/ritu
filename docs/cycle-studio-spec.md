@@ -322,6 +322,7 @@ Studio does not need its own test suite in v1 beyond a smoke test that
 
 - [ ] URL query params for shareable state (`?preset=regular&day=14`)
 - [x] Deploy to Vercel — `.github/workflows/studio-vercel.yml` → `studio.ritu.care` *(needs `VERCEL_STUDIO_PROJECT_ID` secret + DNS)*
+- [x] Export `ritu.backup` JSON for device import (Settings → Export Data → Import)
 - [ ] Phase-day scrubber (slider 1…C)
 - [ ] Optional: load real `ritu.sqlite` in browser (Drift WASM import)
 

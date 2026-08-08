@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ritu/core/date_format.dart';
+import 'package:ritu/data/backup/ritu_backup_service.dart';
 import 'package:ritu/data/repositories/memory/memory_daily_log_repository.dart';
 import 'package:ritu/data/repositories/memory/memory_journal_entry_repository.dart';
 import 'package:ritu/data/repositories/memory/memory_period_repository.dart';
@@ -26,6 +27,7 @@ class StudioController {
     required this.applyHistory,
     required this.applyDailyLogs,
     required this.applyJournal,
+    required this.exportBackupJson,
     required this.loadHistoryDraft,
   });
 
@@ -42,6 +44,7 @@ class StudioController {
     required String todayBody,
     required int pastEntryCount,
   }) applyJournal;
+  final Future<String> Function() exportBackupJson;
   final Future<CycleHistoryDraft> Function() loadHistoryDraft;
 }
 
@@ -141,6 +144,21 @@ class _StudioScopeState extends State<StudioScope> {
     );
   }
 
+  Future<String> _exportBackupJson() {
+    final repos = _repos!;
+    return RituBackupService(
+      profiles: repos.profiles,
+      periods: repos.periods,
+      dailyLogs: repos.dailyLogs,
+      journalEntries: repos.journalEntries,
+      symptoms: repos.symptoms,
+    ).exportJson(
+      includeLogs: true,
+      includeJournal: true,
+      includeSettings: true,
+    );
+  }
+
   @override
   void dispose() {
     _store?.dispose();
@@ -164,6 +182,7 @@ class _StudioScopeState extends State<StudioScope> {
       applyHistory: _applyHistory,
       applyDailyLogs: _applyDailyLogs,
       applyJournal: _applyJournal,
+      exportBackupJson: _exportBackupJson,
       loadHistoryDraft: _loadHistoryDraft,
     );
 

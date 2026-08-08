@@ -238,6 +238,9 @@ fixture sharing. Codec: `lib/data/backup/ritu_backup.dart`. Service:
 - Unchecked sections are omitted from the file
 - **Import** is replace-all (`clearAllData` then restore). The file must include
   a `profile`. Row IDs may be reassigned; uniqueness is by date / symptom name.
+- Cycle Studio can export the same format (**Export JSON for device**) for
+  fixture testing on a phone. Period starts after wall-clock today will fail
+  phone import — keep Studio’s simulated today on/before today.
 - PDF / CSV export and Insights export are not implemented yet
 
 ## Planned extensions (not implemented yet)

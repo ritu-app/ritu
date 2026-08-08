@@ -5,6 +5,7 @@ import '../models/cycle_history_draft.dart';
 import '../presets/cycle_presets.dart';
 import '../presets/journal_controls.dart';
 import '../scope/studio_scope.dart';
+import '../util/download_text_file.dart';
 import 'cycle_history_editor.dart';
 
 class ControlPanel extends StatelessWidget {
@@ -83,8 +84,48 @@ class ControlPanel extends StatelessWidget {
           onTodayBodyChanged: onJournalTodayBodyChanged,
           onPastEntryCountChanged: onPastJournalCountChanged,
         ),
+        const SizedBox(height: 24),
+        Text('Device backup', style: theme.textTheme.titleSmall),
+        const SizedBox(height: 8),
+        Text(
+          'Download a ritu.backup JSON to import on a phone via '
+          'Settings → Export Data → Import from file. '
+          'Keep simulated today on or before wall-clock today so period '
+          'starts import cleanly.',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 12),
+        FilledButton.icon(
+          onPressed: () => _exportBackup(context, controller),
+          icon: const Icon(Icons.download_outlined, size: 18),
+          label: const Text('Export JSON for device'),
+        ),
       ],
     );
+  }
+
+  Future<void> _exportBackup(
+    BuildContext context,
+    StudioController controller,
+  ) async {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final json = await controller.exportBackupJson();
+      final stamp = DateTime.now().toIso8601String().split('T').first;
+      downloadTextFile(
+        filename: 'ritu-studio-$stamp.json',
+        contents: json,
+      );
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Backup downloaded')),
+      );
+    } catch (error) {
+      messenger.showSnackBar(
+        SnackBar(content: Text('Export failed: $error')),
+      );
+    }
   }
 
   Future<void> _pickDate(
