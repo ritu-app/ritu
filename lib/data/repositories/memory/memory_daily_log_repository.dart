@@ -41,6 +41,13 @@ class MemoryDailyLogRepository implements DailyLogRepository {
   }
 
   @override
+  Future<List<DailyLogEntry>> getAll() async {
+    final entries = _store.dailyLogs.values.toList()
+      ..sort((a, b) => b.loggedOn.compareTo(a.loggedOn));
+    return entries;
+  }
+
+  @override
   Future<bool> hasLoggedOn(DateTime date) async {
     return await getByDate(date) != null;
   }

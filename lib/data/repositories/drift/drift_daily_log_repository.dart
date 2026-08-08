@@ -72,6 +72,14 @@ class DriftDailyLogRepository implements DailyLogRepository {
   }
 
   @override
+  Future<List<DailyLogEntry>> getAll() async {
+    final rows = await (_db.select(_db.dailyLogs)
+          ..orderBy([(t) => OrderingTerm.desc(t.loggedOn)]))
+        .get();
+    return rows.map(_mapEntry).toList();
+  }
+
+  @override
   Future<bool> hasLoggedOn(DateTime date) async {
     return await getByDate(date) != null;
   }

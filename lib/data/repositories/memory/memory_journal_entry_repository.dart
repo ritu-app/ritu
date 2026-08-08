@@ -22,6 +22,13 @@ class MemoryJournalEntryRepository implements JournalEntryRepository {
   }
 
   @override
+  Future<List<JournalEntry>> getAll() async {
+    final entries = _store.journalEntries.values.toList()
+      ..sort((a, b) => b.loggedOn.compareTo(a.loggedOn));
+    return entries;
+  }
+
+  @override
   Future<List<JournalEntry>> getPastEntries({
     required DateTime before,
     int limit = 50,

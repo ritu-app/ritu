@@ -8,6 +8,9 @@ abstract class JournalEntryRepository {
 
   Stream<JournalEntry?> watchByDate(DateTime date);
 
+  /// All journal entries (including today), newest [loggedOn] first.
+  Future<List<JournalEntry>> getAll();
+
   /// Entries before [before] (exclusive), newest first.
   Future<List<JournalEntry>> getPastEntries({
     required DateTime before,

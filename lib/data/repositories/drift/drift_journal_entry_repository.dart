@@ -39,6 +39,14 @@ class DriftJournalEntryRepository implements JournalEntryRepository {
   }
 
   @override
+  Future<List<JournalEntry>> getAll() async {
+    final rows = await (_db.select(_db.journalEntries)
+          ..orderBy([(t) => OrderingTerm.desc(t.loggedOn)]))
+        .get();
+    return rows.map(_mapEntry).toList();
+  }
+
+  @override
   Future<List<JournalEntry>> getPastEntries({
     required DateTime before,
     int limit = 50,

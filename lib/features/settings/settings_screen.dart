@@ -12,6 +12,7 @@ import '../../core/date_format.dart';
 import '../../theme/ritu_colors.dart';
 import 'custom_symptoms_screen.dart';
 import 'edit_name_dialog.dart';
+import 'export_data_screen.dart';
 import 'period_history_screen.dart';
 import 'period_started_screen.dart';
 
@@ -187,6 +188,14 @@ class _SettingsBody extends ConsumerWidget {
     );
   }
 
+  Future<void> _openExportData(BuildContext context) async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => const ExportDataScreen(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return PopScope(
@@ -291,12 +300,13 @@ class _SettingsBody extends ConsumerWidget {
                           title: 'iCloud Backup',
                           subtitle: 'Off',
                         ),
-                        const _SettingsRow(
+                        _SettingsRow(
                           icon: LucideIcons.share,
                           iconBackground: RituColors.fillPositiveSecondary,
                           iconColor: RituColors.sage600,
                           title: 'Export Data',
                           subtitle: 'Download a complete copy of everything',
+                          onTap: () => _openExportData(context),
                         ),
                         const _SettingsRow(
                           icon: LucideIcons.chartColumn,

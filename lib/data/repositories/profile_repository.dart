@@ -15,6 +15,9 @@ abstract class ProfileRepository {
 
   Future<Profile> markOnboardingCompleted();
 
+  /// Full profile replace used by JSON backup import.
+  Future<Profile> restoreProfile(Profile profile);
+
   /// Wipes all local tables (profile, period logs, …).
   Future<void> clearAllData();
 }

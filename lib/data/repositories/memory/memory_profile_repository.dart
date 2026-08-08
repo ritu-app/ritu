@@ -69,6 +69,26 @@ class MemoryProfileRepository implements ProfileRepository {
   }
 
   @override
+  Future<Profile> restoreProfile(Profile profile) async {
+    final trimmed = profile.displayName.trim();
+    if (trimmed.isEmpty) {
+      throw ArgumentError.value(
+        profile.displayName,
+        'displayName',
+        'must not be empty',
+      );
+    }
+    _store.profile = Profile(
+      displayName: trimmed,
+      createdAt: profile.createdAt,
+      onboardingCompletedAt: profile.onboardingCompletedAt,
+      typicalPeriodDays: profile.typicalPeriodDays,
+    );
+    _store.notifyProfile();
+    return _store.profile!;
+  }
+
+  @override
   Future<void> clearAllData() async {
     _store.clearAll();
   }

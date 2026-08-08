@@ -91,5 +91,29 @@ class DriftProfileRepository implements ProfileRepository {
   }
 
   @override
+  Future<Profile> restoreProfile(Profile profile) async {
+    final trimmed = profile.displayName.trim();
+    if (trimmed.isEmpty) {
+      throw ArgumentError.value(
+        profile.displayName,
+        'displayName',
+        'must not be empty',
+      );
+    }
+
+    await _db.into(_db.profiles).insertOnConflictUpdate(
+          ProfilesCompanion.insert(
+            id: const Value(_singletonId),
+            displayName: trimmed,
+            createdAt: profile.createdAt,
+            onboardingCompletedAt: Value(profile.onboardingCompletedAt),
+            typicalPeriodDays: Value(profile.typicalPeriodDays),
+          ),
+        );
+
+    return (await getProfile())!;
+  }
+
+  @override
   Future<void> clearAllData() => _db.clearAllData();
 }

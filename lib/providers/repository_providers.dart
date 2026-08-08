@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../data/backup/ritu_backup_service.dart';
 import '../data/repositories/daily_log_repository.dart';
 import '../data/repositories/drift/drift_daily_log_repository.dart';
 import '../data/repositories/drift/drift_journal_entry_repository.dart';
@@ -30,4 +31,14 @@ final dailyLogRepositoryProvider = Provider<DailyLogRepository>((ref) {
 
 final journalEntryRepositoryProvider = Provider<JournalEntryRepository>((ref) {
   return DriftJournalEntryRepository(ref.watch(databaseProvider));
+});
+
+final rituBackupServiceProvider = Provider<RituBackupService>((ref) {
+  return RituBackupService(
+    profiles: ref.watch(profileRepositoryProvider),
+    periods: ref.watch(periodRepositoryProvider),
+    dailyLogs: ref.watch(dailyLogRepositoryProvider),
+    journalEntries: ref.watch(journalEntryRepositoryProvider),
+    symptoms: ref.watch(symptomRepositoryProvider),
+  );
 });

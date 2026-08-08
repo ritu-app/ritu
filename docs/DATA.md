@@ -213,6 +213,33 @@ One row per **calendar day**, filled in by the Home "Log today" flow (`DailyLogF
 
 Schema v6 migrated any leftover `daily_logs.notes` into this table (skipping days that already had a journal row) and dropped the old column.
 
+## JSON backup (`ritu.backup`)
+
+Settings → **Export Data** writes a versioned JSON file for on-device backup /
+fixture sharing. Codec: `lib/data/backup/ritu_backup.dart`. Service:
+`lib/data/backup/ritu_backup_service.dart`.
+
+```json
+{
+  "format": "ritu.backup",
+  "version": 1,
+  "exportedAt": "…ISO…",
+  "profile": { "displayName", "createdAt", "onboardingCompletedAt", "typicalPeriodDays" },
+  "periodLogs": [ { "startedOn", "endedOn", "source", "createdAt", "updatedAt" } ],
+  "dailyLogs": [ { "loggedOn", "flowIntensity", "crampIntensity", "moods", "energyLevel", "sleepQuality", "wellbeing", "symptoms", "createdAt", "updatedAt" } ],
+  "journalEntries": [ { "loggedOn", "body", "createdAt", "updatedAt" } ],
+  "customSymptoms": [ { "name", "createdAt" } ]
+}
+```
+
+- **Export Includes → Logs** = `periodLogs` + `dailyLogs`
+- **Journal entries** = `journalEntries`
+- **Settings** = `profile` + `customSymptoms`
+- Unchecked sections are omitted from the file
+- **Import** is replace-all (`clearAllData` then restore). The file must include
+  a `profile`. Row IDs may be reassigned; uniqueness is by date / symptom name.
+- PDF / CSV export and Insights export are not implemented yet
+
 ## Planned extensions (not implemented yet)
 
 | Table | Purpose |
@@ -233,4 +260,5 @@ When adding a table:
 
 - Data stays in the app’s sandboxed storage.
 - Copy on the name screen (“stays on your phone”) matches this architecture.
-- Export / sharing (Summary) should be explicit user actions when those features exist—not background sync.
+- Export / import (Settings → Export Data) is an explicit user action — not
+  background sync. Import replaces all local data after confirmation.
