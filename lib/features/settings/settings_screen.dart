@@ -9,6 +9,7 @@ import '../../providers/repository_providers.dart';
 import '../../providers/symptom_providers.dart';
 import '../../core/date_format.dart';
 import '../../theme/ritu_colors.dart';
+import 'about_ritu_screen.dart';
 import 'custom_symptoms_screen.dart';
 import 'delete_data_screen.dart';
 import 'edit_name_dialog.dart';
@@ -149,6 +150,14 @@ class _SettingsBody extends ConsumerWidget {
     await Navigator.of(context).push<void>(
       MaterialPageRoute<void>(
         builder: (_) => const HelpSupportScreen(),
+      ),
+    );
+  }
+
+  Future<void> _openAboutRitu(BuildContext context) async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => const AboutRituScreen(),
       ),
     );
   }
@@ -313,6 +322,7 @@ class _SettingsBody extends ConsumerWidget {
                           iconColor: RituColors.iconInfo,
                           title: 'About Ritu',
                           showDivider: false,
+                          onTap: () => _openAboutRitu(context),
                         ),
                       ],
                     ),
