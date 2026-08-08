@@ -31,8 +31,23 @@ class _ExportDataScreenState extends ConsumerState<ExportDataScreen> {
   bool get _canSave =>
       !_busy && (_includeLogs || _includeJournal || _includeSettings);
 
+  /// iOS requires a non-zero [sharePositionOrigin] for the share sheet popover.
+  Rect _sharePositionOrigin(BuildContext context) {
+    final box = context.findRenderObject() as RenderBox?;
+    if (box != null && box.hasSize && box.size.width > 0 && box.size.height > 0) {
+      return box.localToGlobal(Offset.zero) & box.size;
+    }
+    final size = MediaQuery.sizeOf(context);
+    return Rect.fromCenter(
+      center: Offset(size.width / 2, size.height / 2),
+      width: 1,
+      height: 1,
+    );
+  }
+
   Future<void> _export() async {
     if (!_canSave) return;
+    final shareOrigin = _sharePositionOrigin(context);
     setState(() => _busy = true);
     try {
       final json = await ref.read(rituBackupServiceProvider).exportJson(
@@ -49,6 +64,7 @@ class _ExportDataScreenState extends ConsumerState<ExportDataScreen> {
       await Share.shareXFiles(
         [XFile(file.path, mimeType: 'application/json')],
         subject: 'Ritu data export',
+        sharePositionOrigin: shareOrigin,
       );
     } catch (error) {
       if (!mounted) return;
