@@ -6,12 +6,15 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/cycle/cycle.dart';
+import '../../core/home_greeting.dart';
 import '../../core/date_format.dart';
 import '../../data/repositories/daily_log_repository.dart';
 import '../../providers/cycle_snapshot_provider.dart';
 import '../../providers/daily_log_providers.dart';
+import '../../providers/home_greeting_provider.dart';
 import '../../providers/period_providers.dart';
 import '../../providers/profile_providers.dart';
+import 'home_greeting_header.dart';
 import '../../services/daily_log_notification_navigation.dart';
 import '../../theme/ritu_colors.dart';
 import '../insights/insights_screen.dart';
@@ -95,6 +98,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final bannerAsync = ref.watch(showSpeedUpBannerProvider);
     final todayLogAsync = ref.watch(todayLogProvider);
     final streakAsync = ref.watch(currentStreakProvider);
+    final greetingAsync = ref.watch(homeGreetingProvider);
 
     final profile = profileAsync.valueOrNull;
     if (profileAsync.isLoading && profile == null) {
@@ -132,6 +136,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         (bannerAsync.valueOrNull ?? false) && !_bannerDismissed;
     final todayLog = todayLogAsync.valueOrNull;
     final streak = streakAsync.valueOrNull ?? 0;
+    final greeting = greetingAsync.valueOrNull;
 
     return Scaffold(
       backgroundColor: RituColors.backgroundPage,
@@ -143,6 +148,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               child: switch (_tabIndex) {
                 0 => _HomeTab(
                   name: name,
+                  greeting: greeting,
                   cycleDay: snapshot?.cycleDay,
                   lastPeriodLabel: lastPeriodLabel,
                   nextPeriodLabel: nextPeriodLabel,
@@ -213,6 +219,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 class _HomeTab extends StatelessWidget {
   const _HomeTab({
     required this.name,
+    this.greeting,
     required this.cycleDay,
     required this.lastPeriodLabel,
     required this.nextPeriodLabel,
@@ -236,6 +243,7 @@ class _HomeTab extends StatelessWidget {
   });
 
   final String name;
+  final HomeGreeting? greeting;
   final int? cycleDay;
   final String? lastPeriodLabel;
   final String? nextPeriodLabel;
@@ -262,17 +270,33 @@ class _HomeTab extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
       children: [
-        _Header(
-          name: name,
-          streak: streak,
-          onSettingsTap: () {
-            Navigator.of(context).push<String>(
-              MaterialPageRoute<String>(
-                builder: (_) => const SettingsScreen(),
+        if (greeting != null)
+          HomeGreetingHeader(
+            greeting: greeting!,
+            name: name,
+            streak: streak,
+            onSettingsTap: () {
+              Navigator.of(context).push<String>(
+                MaterialPageRoute<String>(
+                  builder: (_) => const SettingsScreen(),
+                ),
+              );
+            },
+          )
+        else
+          const SizedBox(
+            height: 54,
+            child: Center(
+              child: SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: RituColors.sage500,
+                ),
               ),
-            );
-          },
-        ),
+            ),
+          ),
         const SizedBox(height: 16),
         _StatusCard(
           cycleDay: cycleDay,
@@ -328,87 +352,6 @@ class _HomeTab extends StatelessWidget {
           month: calendarMonth,
           periodDates: periodDates,
           onMonthChanged: onMonthChanged,
-        ),
-      ],
-    );
-  }
-}
-
-class _Header extends StatelessWidget {
-  const _Header({
-    required this.name,
-    required this.onSettingsTap,
-    this.streak = 0,
-  });
-
-  final String name;
-  final VoidCallback onSettingsTap;
-  final int streak;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Welcome,',
-                style: GoogleFonts.dmSans(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  height: 20 / 13,
-                  color: RituColors.textSecondary,
-                ),
-              ),
-              Text(
-                '$name ✨',
-                style: GoogleFonts.dmSerifDisplay(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w400,
-                  height: 34 / 28,
-                  color: RituColors.textPrimary,
-                ),
-              ),
-            ],
-          ),
-        ),
-        Row(
-          children: [
-            Icon(
-              LucideIcons.flame,
-              size: 20,
-              color: streak > 0
-                  ? RituColors.iconAttention
-                  : RituColors.textDisabled,
-            ),
-            const SizedBox(width: 4),
-            Text(
-              '$streak',
-              style: GoogleFonts.dmSans(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: streak > 0
-                    ? RituColors.iconAttention
-                    : RituColors.textDisabled,
-              ),
-            ),
-            const SizedBox(width: 12),
-            GestureDetector(
-              onTap: onSettingsTap,
-              behavior: HitTestBehavior.opaque,
-              child: const Padding(
-                padding: EdgeInsets.all(4),
-                child: Icon(
-                  LucideIcons.settings,
-                  size: 22,
-                  color: RituColors.textDisabled,
-                ),
-              ),
-            ),
-          ],
         ),
       ],
     );

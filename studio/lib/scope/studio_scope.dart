@@ -9,6 +9,9 @@ import 'package:ritu/data/repositories/memory/memory_profile_repository.dart';
 import 'package:ritu/data/repositories/memory/memory_ritu_store.dart';
 import 'package:ritu/data/repositories/memory/memory_symptom_repository.dart';
 import 'package:ritu/providers/repository_providers.dart';
+import 'package:ritu/core/home_greeting.dart';
+import 'package:ritu/providers/home_greeting_provider.dart';
+import 'package:ritu/providers/simulated_clock_provider.dart';
 import 'package:ritu/providers/simulated_today_provider.dart';
 
 import '../models/cycle_history_draft.dart';
@@ -22,7 +25,9 @@ class StudioController {
   StudioController({
     required this.repos,
     required this.simulatedToday,
+    required this.simulatedClock,
     required this.setSimulatedToday,
+    required this.setGreetingTimeWindow,
     required this.applyPreset,
     required this.applyHistory,
     required this.applyDailyLogs,
@@ -33,7 +38,9 @@ class StudioController {
 
   final RituRepos repos;
   final DateTime simulatedToday;
+  final DateTime simulatedClock;
   final ValueChanged<DateTime> setSimulatedToday;
+  final ValueChanged<GreetingTimeWindow> setGreetingTimeWindow;
   final Future<void> Function(CyclePreset preset) applyPreset;
   final Future<void> Function(CycleHistoryDraft draft) applyHistory;
   final Future<void> Function({
@@ -66,12 +73,14 @@ class _StudioScopeState extends State<StudioScope> {
   MemoryRituStore? _store;
   RituRepos? _repos;
   late DateTime _simulatedToday;
+  late GreetingTimeWindow _greetingTimeWindow;
   var _ready = false;
 
   @override
   void initState() {
     super.initState();
     _simulatedToday = dateOnly(DateTime.now());
+    _greetingTimeWindow = greetingTimeWindowFor(DateTime.now());
     _init();
   }
 
@@ -103,6 +112,13 @@ class _StudioScopeState extends State<StudioScope> {
   void _setSimulatedToday(DateTime date) {
     setState(() => _simulatedToday = dateOnly(date));
   }
+
+  void _setGreetingTimeWindow(GreetingTimeWindow window) {
+    setState(() => _greetingTimeWindow = window);
+  }
+
+  DateTime get _simulatedClock =>
+      sampleClockForWindow(_greetingTimeWindow, _simulatedToday);
 
   Future<void> _applyPreset(CyclePreset preset) {
     return applyPreset(_repos!, preset, _simulatedToday);
@@ -177,7 +193,9 @@ class _StudioScopeState extends State<StudioScope> {
     final liveController = StudioController(
       repos: repos,
       simulatedToday: _simulatedToday,
+      simulatedClock: _simulatedClock,
       setSimulatedToday: _setSimulatedToday,
+      setGreetingTimeWindow: _setGreetingTimeWindow,
       applyPreset: _applyPreset,
       applyHistory: _applyHistory,
       applyDailyLogs: _applyDailyLogs,
@@ -194,6 +212,10 @@ class _StudioScopeState extends State<StudioScope> {
         dailyLogRepositoryProvider.overrideWithValue(repos.dailyLogs),
         journalEntryRepositoryProvider.overrideWithValue(repos.journalEntries),
         simulatedTodayProvider.overrideWith((ref) => _simulatedToday),
+        simulatedClockProvider.overrideWith((ref) => _simulatedClock),
+        homeGreetingOverridesProvider.overrideWith(
+          (ref) => const HomeGreetingOverrides(skipSessionCommit: true),
+        ),
       ],
       child: _StudioControllerScope(
         controller: liveController,
@@ -213,7 +235,8 @@ class _StudioControllerScope extends InheritedWidget {
 
   @override
   bool updateShouldNotify(_StudioControllerScope oldWidget) {
-    return controller.simulatedToday != oldWidget.controller.simulatedToday;
+    return controller.simulatedToday != oldWidget.controller.simulatedToday ||
+        controller.simulatedClock != oldWidget.controller.simulatedClock;
   }
 }
 

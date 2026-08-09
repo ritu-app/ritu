@@ -12,6 +12,7 @@ import 'package:ritu/data/repositories/period_repository.dart';
 import 'package:ritu/data/repositories/profile_repository.dart';
 import 'package:ritu/data/repositories/symptom_repository.dart';
 import 'package:ritu/providers/repository_providers.dart';
+import 'package:ritu/providers/home_greeting_provider.dart';
 
 /// The four repositories a use-case's [SeededAppScope.seed] callback can use
 /// to fake data before the wrapped screen is shown.
@@ -99,6 +100,9 @@ class _SeededAppScopeState extends State<SeededAppScope> {
         symptomRepositoryProvider.overrideWithValue(repos.symptoms),
         dailyLogRepositoryProvider.overrideWithValue(repos.dailyLogs),
         journalEntryRepositoryProvider.overrideWithValue(repos.journalEntries),
+        homeGreetingOverridesProvider.overrideWith(
+          (ref) => const HomeGreetingOverrides(skipSessionCommit: true),
+        ),
       ],
       child: Builder(builder: widget.builder),
     );

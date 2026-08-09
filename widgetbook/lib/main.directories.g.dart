@@ -20,6 +20,8 @@ import 'package:ritu_widgetbook/use_cases/components/log_slider_card_use_cases.d
     as _ritu_widgetbook_use_cases_components_log_slider_card_use_cases;
 import 'package:ritu_widgetbook/use_cases/components/progress_dots_use_cases.dart'
     as _ritu_widgetbook_use_cases_components_progress_dots_use_cases;
+import 'package:ritu_widgetbook/use_cases/screens/home_greeting_use_cases.dart'
+    as _ritu_widgetbook_use_cases_screens_home_greeting_use_cases;
 import 'package:ritu_widgetbook/use_cases/screens/home_use_cases.dart'
     as _ritu_widgetbook_use_cases_screens_home_use_cases;
 import 'package:ritu_widgetbook/use_cases/screens/journal_use_cases.dart'
@@ -158,6 +160,17 @@ final directories = <_widgetbook.WidgetbookNode>[
       _widgetbook.WidgetbookFolder(
         name: 'Home',
         children: [
+          _widgetbook.WidgetbookComponent(
+            name: 'HomeGreetingHeader',
+            useCases: [
+              _widgetbook.WidgetbookUseCase(
+                name: 'Greeting',
+                builder:
+                    _ritu_widgetbook_use_cases_screens_home_greeting_use_cases
+                        .homeGreetingUseCase,
+              ),
+            ],
+          ),
           _widgetbook.WidgetbookComponent(
             name: 'HomeScreen',
             useCases: [

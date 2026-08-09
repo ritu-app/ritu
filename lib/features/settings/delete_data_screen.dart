@@ -8,6 +8,7 @@ import '../../providers/app_restart_provider.dart';
 import '../../providers/daily_reminder_provider.dart';
 import '../../providers/profile_providers.dart';
 import '../../providers/repository_providers.dart';
+import '../../services/home_greeting_prefs.dart';
 import '../../theme/ritu_colors.dart';
 
 /// Figma 471:2102 — Settings → Delete Data confirmation screen.
@@ -38,6 +39,7 @@ class _DeleteDataScreenState extends ConsumerState<DeleteDataScreen> {
       try {
         await AppAppearanceNotifier.clearPrefs();
         await DailyReminderNotifier.clearPrefs();
+        await HomeGreetingSession.clearPrefs();
       } catch (_) {}
       if (!mounted) return;
       ref.invalidate(appAppearanceProvider);

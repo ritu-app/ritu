@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ritu/core/date_format.dart';
+import 'package:ritu/core/home_greeting.dart';
 
 import '../models/cycle_history_draft.dart';
 import '../presets/cycle_presets.dart';
@@ -57,6 +58,36 @@ class ControlPanel extends StatelessWidget {
           onPressed: () => _pickDate(context, controller),
           icon: const Icon(Icons.calendar_today_outlined, size: 18),
           label: Text(formatDisplayDate(controller.simulatedToday)),
+        ),
+        const SizedBox(height: 24),
+        Text('Time of day', style: theme.textTheme.titleSmall),
+        const SizedBox(height: 8),
+        DropdownMenu<GreetingTimeWindow>(
+          key: ValueKey(controller.simulatedClock),
+          initialSelection: greetingTimeWindowFor(controller.simulatedClock),
+          expandedInsets: EdgeInsets.zero,
+          dropdownMenuEntries: const [
+            DropdownMenuEntry(
+              value: GreetingTimeWindow.morning,
+              label: 'Morning (5:00–10:59)',
+            ),
+            DropdownMenuEntry(
+              value: GreetingTimeWindow.afternoon,
+              label: 'Afternoon (11:00–15:59)',
+            ),
+            DropdownMenuEntry(
+              value: GreetingTimeWindow.evening,
+              label: 'Evening (16:00–19:59)',
+            ),
+            DropdownMenuEntry(
+              value: GreetingTimeWindow.night,
+              label: 'Night (20:00–4:59)',
+            ),
+          ],
+          onSelected: (window) {
+            if (window == null) return;
+            controller.setGreetingTimeWindow(window);
+          },
         ),
         const SizedBox(height: 24),
         _PresetSelector(

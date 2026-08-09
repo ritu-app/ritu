@@ -129,6 +129,11 @@ Implementation: `simulatedTodayProvider` in `lib/providers/simulated_today_provi
 overridden in `StudioScope`. Wired into period, daily-log, and journal-entry
 providers; `cycleSnapshotProvider` reads it for the debug panel.
 
+**Time of day** for home greetings: `simulatedClockProvider` in
+`lib/providers/simulated_clock_provider.dart`, overridden in `StudioScope` from
+the control-panel dropdown (Morning / Afternoon / Evening / Night). See
+[home-greeting-spec.md](./home-greeting-spec.md).
+
 ### 4.3 Period history builder
 
 Authoring model: **cycle lengths**, not raw calendar math in the UI.
