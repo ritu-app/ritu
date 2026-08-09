@@ -61,4 +61,12 @@ void main() {
       '~Oct 9-15',
     );
   });
+
+  test('formatCycleRangeLabel uses shortest and longest sample', () {
+    expect(
+      formatCycleRangeLabel(const [21, 46, 24, 43, 22, 40]),
+      'Cycle ranged 21-46 days',
+    );
+    expect(formatCycleRangeLabel(const []), isNull);
+  });
 }

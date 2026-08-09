@@ -189,6 +189,11 @@ final directories = <_widgetbook.WidgetbookNode>[
                 builder: _ritu_widgetbook_use_cases_screens_home_use_cases
                     .homeNotLoggedUseCase,
               ),
+              _widgetbook.WidgetbookUseCase(
+                name: 'Unpredictable classification',
+                builder: _ritu_widgetbook_use_cases_screens_home_use_cases
+                    .homeUnpredictableUseCase,
+              ),
             ],
           ),
         ],

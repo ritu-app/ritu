@@ -117,6 +117,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final name = profile.displayName;
     final snapshot = snapshotAsync.valueOrNull;
     final latest = latestAsync.valueOrNull;
+    final sampleCycleLengths = snapshot?.sample ?? const [];
     final lastPeriodLabel =
         latest == null ? null : formatShortMonthDay(latest.startedOn);
     final cycleLength =
@@ -156,6 +157,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   periodStartCount: periodStartCount,
                   classification: classification,
                   todayPhase: snapshot?.todayPhase,
+                  sampleCycleLengths: sampleCycleLengths,
+                  onBleed: snapshot?.todayPhase == CyclePhase.menstrual &&
+                      classification == CycleClassification.unpredictable,
                   patternDaysLogged: loggedDaysCount.clamp(
                     0,
                     widget.patternDaysRequired,
@@ -227,6 +231,8 @@ class _HomeTab extends StatelessWidget {
     required this.periodStartCount,
     required this.classification,
     required this.todayPhase,
+    required this.sampleCycleLengths,
+    this.onBleed = false,
     required this.patternDaysLogged,
     required this.patternDaysRequired,
     required this.showSpeedUpBanner,
@@ -251,6 +257,8 @@ class _HomeTab extends StatelessWidget {
   final int periodStartCount;
   final CycleClassification classification;
   final CyclePhase? todayPhase;
+  final List<int> sampleCycleLengths;
+  final bool onBleed;
   final int patternDaysLogged;
   final int patternDaysRequired;
   final bool showSpeedUpBanner;
@@ -306,7 +314,15 @@ class _HomeTab extends StatelessWidget {
           periodStartCount: periodStartCount,
           classification: classification,
           todayPhase: todayPhase,
+          sampleCycleLengths: sampleCycleLengths,
+          onBleed: onBleed,
         ),
+        if (classification == CycleClassification.unpredictable &&
+            cycleDay != null &&
+            lastPeriodLabel != null) ...[
+          const SizedBox(height: 12),
+          const _UnpredictableNotice(),
+        ],
         const SizedBox(height: 12),
         todayLog == null
             ? _CheckInCard(
@@ -367,6 +383,8 @@ class _StatusCard extends StatelessWidget {
     required this.periodStartCount,
     required this.classification,
     required this.todayPhase,
+    required this.sampleCycleLengths,
+    this.onBleed = false,
   });
 
   final int? cycleDay;
@@ -376,6 +394,8 @@ class _StatusCard extends StatelessWidget {
   final int periodStartCount;
   final CycleClassification classification;
   final CyclePhase? todayPhase;
+  final List<int> sampleCycleLengths;
+  final bool onBleed;
 
   @override
   Widget build(BuildContext context) {
@@ -391,6 +411,15 @@ class _StatusCard extends StatelessWidget {
         effectiveCycleLength: effectiveCycleLength,
         todayPhase: todayPhase,
         estimatedPhases: classification == CycleClassification.variable,
+      );
+    }
+
+    if (hasPeriod && classification == CycleClassification.unpredictable) {
+      return _UnpredictableStatusCard(
+        cycleDay: cycleDay!,
+        lastPeriodLabel: lastPeriodLabel!,
+        cycleRangeLabel: formatCycleRangeLabel(sampleCycleLengths),
+        onBleed: onBleed,
       );
     }
 
@@ -648,6 +677,163 @@ class _PhaseStatusCard extends StatelessWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Unpredictable classification hero — blush gradient, badge, cycle range.
+class _UnpredictableStatusCard extends StatelessWidget {
+  const _UnpredictableStatusCard({
+    required this.cycleDay,
+    required this.lastPeriodLabel,
+    required this.cycleRangeLabel,
+    this.onBleed = false,
+  });
+
+  final int cycleDay;
+  final String lastPeriodLabel;
+  final String? cycleRangeLabel;
+  final bool onBleed;
+
+  static const _illustrationAsset = 'assets/images/phase_unpredictable.png';
+
+  String get _daySubtitle =>
+      onBleed ? 'days into your period' : 'days into your cycle';
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        gradient: const LinearGradient(
+          begin: Alignment(-0.95, -0.25),
+          end: Alignment(0.95, 0.35),
+          colors: [
+            RituColors.gradientBe1,
+            RituColors.gradientBe2,
+          ],
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: RituColors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(9999),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2.5,
+                        ),
+                        child: Text(
+                          'Unpredictable',
+                          style: GoogleFonts.dmSans(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                            height: 18 / 11,
+                            color: RituColors.textDisabled,
+                          ),
+                        ),
+                      ),
+                    ),
+                    Text(
+                      '$cycleDay',
+                      style: GoogleFonts.dmSerifDisplay(
+                        fontSize: 52,
+                        fontWeight: FontWeight.w400,
+                        height: 54 / 52,
+                        color: RituColors.textInverse,
+                      ),
+                    ),
+                    Text(
+                      _daySubtitle,
+                      style: GoogleFonts.dmSans(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w400,
+                        height: 20 / 13,
+                        color: RituColors.textInverse,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(
+                width: 100,
+                height: 97,
+                child: Image(
+                  image: AssetImage(_illustrationAsset),
+                  fit: BoxFit.contain,
+                  alignment: Alignment.centerRight,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Container(height: 1, color: RituColors.white.withValues(alpha: 0.35)),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Last period $lastPeriodLabel',
+                  style: GoogleFonts.dmSans(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    height: 18 / 11,
+                    color: RituColors.textInverse,
+                  ),
+                ),
+              ),
+              if (cycleRangeLabel != null)
+                Text(
+                  cycleRangeLabel!,
+                  style: GoogleFonts.dmSans(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    height: 18 / 11,
+                    color: RituColors.textInverse,
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _UnpredictableNotice extends StatelessWidget {
+  const _UnpredictableNotice();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: RituColors.fillCritical,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Text(
+        "Your cycles vary quite a bit — Ritu can't reliably estimate phases or your next period. Patterns here are based on what you log, not cycle timing.",
+        style: GoogleFonts.dmSans(
+          fontSize: 13,
+          fontWeight: FontWeight.w400,
+          height: 20 / 13,
+          color: RituColors.textCritical,
+        ),
       ),
     );
   }

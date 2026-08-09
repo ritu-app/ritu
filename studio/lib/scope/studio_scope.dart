@@ -211,10 +211,15 @@ class _StudioScopeState extends State<StudioScope> {
         symptomRepositoryProvider.overrideWithValue(repos.symptoms),
         dailyLogRepositoryProvider.overrideWithValue(repos.dailyLogs),
         journalEntryRepositoryProvider.overrideWithValue(repos.journalEntries),
-        simulatedTodayProvider.overrideWith((ref) => _simulatedToday),
-        simulatedClockProvider.overrideWith((ref) => _simulatedClock),
-        homeGreetingOverridesProvider.overrideWith(
-          (ref) => const HomeGreetingOverrides(skipSessionCommit: true),
+        simulatedTodayProvider.overrideWithValue(_simulatedToday),
+        simulatedClockProvider.overrideWithValue(_simulatedClock),
+        homeGreetingOverridesProvider.overrideWithValue(
+          const HomeGreetingOverrides(
+            skipSessionCommit: true,
+            isFirstOpenToday: false,
+            isFirstHomeVisit: false,
+            daysSinceLastOpen: 0,
+          ),
         ),
       ],
       child: _StudioControllerScope(

@@ -52,6 +52,9 @@ abstract final class RituColors {
   /// Moonlit-lilac gradient (Regular luteal hero).
   static const Color gradientLilac1 = Color(0xFF474056);
   static const Color gradientLilac2 = Color(0xFF7E7393);
+  /// Blush-embrace gradient (Unpredictable hero).
+  static const Color gradientBe1 = Color(0xFF6D5049);
+  static const Color gradientBe2 = Color(0xFFB58C7D);
   static const Color gradientVb1 = Color(0xFF5F8F7A);
   static const Color gradientVb2 = Color(0xFF8EB29C);
   static const Color gradientVb3 = Color(0xFFDCE9E1);

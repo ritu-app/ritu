@@ -91,6 +91,7 @@ flutter:
     - assets/images/phase_menstrual.png
     - assets/images/phase_ovulatory.png
     - assets/images/phase_luteal.png
+    - assets/images/phase_unpredictable.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

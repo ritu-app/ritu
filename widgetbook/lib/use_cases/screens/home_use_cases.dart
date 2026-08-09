@@ -72,3 +72,33 @@ Widget homeEmptyUseCase(BuildContext context) {
     builder: (context) => const HomeScreen(),
   );
 }
+
+@widgetbook.UseCase(
+  name: 'Unpredictable classification',
+  type: HomeScreen,
+  path: '[Screens]/Home',
+)
+Widget homeUnpredictableUseCase(BuildContext context) {
+  return SeededAppScope(
+    seed: (repos) async {
+      await seedOnboardedProfile(repos);
+
+      // Spec unpredictable sample: [21, 46, 24, 43, 22, 40] → MAD ≈ 10.3.
+      const cycleLengths = [21, 46, 24, 43, 22, 40];
+      final latestStart = DateTime.now().subtract(const Duration(days: 10));
+      var start = latestStart;
+      await repos.periods.upsertPeriod(
+        startedOn: start,
+        source: PeriodSources.onboardingLast,
+      );
+      for (final length in cycleLengths) {
+        start = start.subtract(Duration(days: length));
+        await repos.periods.addPastStart(
+          startedOn: start,
+          typicalPeriodDays: 5,
+        );
+      }
+    },
+    builder: (context) => const HomeScreen(),
+  );
+}

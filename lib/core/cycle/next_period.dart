@@ -61,3 +61,18 @@ String? formatNextPeriodLabel({
   if (next == null) return null;
   return formatShortMonthDay(next);
 }
+
+/// Footer fragment for unpredictable users: `Cycle ranged 21-46 days`.
+String? formatCycleRangeLabel(List<int> sampleCycleLengths) {
+  if (sampleCycleLengths.isEmpty) return null;
+
+  var shortest = sampleCycleLengths.first;
+  var longest = sampleCycleLengths.first;
+  for (final length in sampleCycleLengths) {
+    if (length < shortest) shortest = length;
+    if (length > longest) longest = length;
+  }
+  if (shortest < 1 || longest < 1) return null;
+
+  return 'Cycle ranged $shortest-$longest days';
+}
