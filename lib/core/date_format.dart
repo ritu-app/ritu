@@ -36,23 +36,37 @@ String formatMonthDay(DateTime date) {
   return '${months[date.month - 1]} ${date.day}';
 }
 
+const _shortMonths = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+];
+
 /// e.g. Sep 17 — abbreviated month, no year (home status card).
 String formatShortMonthDay(DateTime date) {
-  const months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ];
-  return '${months[date.month - 1]} ${date.day}';
+  return '${_shortMonths[date.month - 1]} ${date.day}';
+}
+
+/// Variable next-period range, e.g. `~Oct 9-15` or `~Oct 28-Nov 3`.
+String formatEstimatedShortMonthDayRange(DateTime start, DateTime end) {
+  final from = dateOnly(start);
+  final to = dateOnly(end);
+  if (isSameCalendarDay(from, to)) {
+    return '~${formatShortMonthDay(from)}';
+  }
+  if (from.year == to.year && from.month == to.month) {
+    return '~${_shortMonths[from.month - 1]} ${from.day}-${to.day}';
+  }
+  return '~${formatShortMonthDay(from)}-${formatShortMonthDay(to)}';
 }
 
 /// e.g. June 17 • 2026

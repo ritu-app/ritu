@@ -117,12 +117,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         latest == null ? null : formatShortMonthDay(latest.startedOn);
     final cycleLength =
         snapshot?.effectiveCycleLength ?? snapshot?.mean?.round();
-    final nextStart = nextPeriodStart(
+    final classification =
+        snapshot?.classification ?? CycleClassification.unclassified;
+    final nextPeriodLabel = formatNextPeriodLabel(
       lastPeriodStartedOn: latest?.startedOn,
       effectiveCycleLength: cycleLength,
+      sampleCycleLengths: snapshot?.sample ?? const [],
+      asRange: classification == CycleClassification.variable,
     );
-    final nextPeriodLabel =
-        nextStart == null ? null : formatShortMonthDay(nextStart);
     final periodStartCount = allPeriodsAsync.valueOrNull?.length ?? 0;
     final periodDates = bleedDaysAsync.valueOrNull ?? {};
     final loggedDaysCount = loggedDaysAsync.valueOrNull ?? 0;
@@ -146,9 +148,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   nextPeriodLabel: nextPeriodLabel,
                   effectiveCycleLength: cycleLength,
                   periodStartCount: periodStartCount,
-                  classification:
-                      snapshot?.classification ??
-                      CycleClassification.unclassified,
+                  classification: classification,
                   todayPhase: snapshot?.todayPhase,
                   patternDaysLogged: loggedDaysCount.clamp(
                     0,
@@ -437,13 +437,17 @@ class _StatusCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hasPeriod = cycleDay != null && lastPeriodLabel != null;
-    if (hasPeriod && classification == CycleClassification.regular) {
-      return _RegularStatusCard(
+    final showPhaseCard = hasPeriod &&
+        (classification == CycleClassification.regular ||
+            classification == CycleClassification.variable);
+    if (showPhaseCard) {
+      return _PhaseStatusCard(
         cycleDay: cycleDay!,
         lastPeriodLabel: lastPeriodLabel!,
         nextPeriodLabel: nextPeriodLabel,
         effectiveCycleLength: effectiveCycleLength,
         todayPhase: todayPhase,
+        estimatedPhases: classification == CycleClassification.variable,
       );
     }
 
@@ -527,14 +531,16 @@ class _StatusCard extends StatelessWidget {
   }
 }
 
-/// Regular classification hero — phase-colored gradient, badge, next period.
-class _RegularStatusCard extends StatelessWidget {
-  const _RegularStatusCard({
+/// Regular / Variable classification hero — phase-colored gradient, badge,
+/// next period (exact date or estimated range).
+class _PhaseStatusCard extends StatelessWidget {
+  const _PhaseStatusCard({
     required this.cycleDay,
     required this.lastPeriodLabel,
     required this.nextPeriodLabel,
     required this.effectiveCycleLength,
     required this.todayPhase,
+    this.estimatedPhases = false,
   });
 
   final int cycleDay;
@@ -542,6 +548,9 @@ class _RegularStatusCard extends StatelessWidget {
   final String? nextPeriodLabel;
   final int? effectiveCycleLength;
   final CyclePhase? todayPhase;
+
+  /// Variable users: `~` on non-menstrual phase names.
+  final bool estimatedPhases;
 
   static const _menstrualAsset = 'assets/images/phase_menstrual.png';
   static const _follicularAsset = 'assets/images/phase_follicular.png';
@@ -622,7 +631,10 @@ class _RegularStatusCard extends StatelessWidget {
                             vertical: 2.5,
                           ),
                           child: Text(
-                            phaseDisplayLabel(todayPhase!),
+                            phaseDisplayLabel(
+                              todayPhase!,
+                              estimated: estimatedPhases,
+                            ),
                             style: GoogleFonts.dmSans(
                               fontSize: 11,
                               fontWeight: FontWeight.w500,

@@ -278,6 +278,58 @@ void main() {
     },
   );
 
+  Future<void> seedVariableHistory() async {
+    final profiles = DriftProfileRepository(database);
+    final periods = DriftPeriodRepository(database);
+    await profiles.upsertDisplayName('Maya');
+    await profiles.setTypicalPeriodDays(5);
+    await profiles.markOnboardingCompleted();
+
+    // Spec Variable sample [21, 35, 23, 33, 25, 31] → 7 starts.
+    // Midpoint C = 28; day 9 is follicular.
+    const lengths = [21, 35, 23, 33, 25, 31];
+    var cursor = DateTime(2025, 6, 1);
+    final starts = <DateTime>[cursor];
+    for (final length in lengths) {
+      cursor = cursor.add(Duration(days: length));
+      starts.add(cursor);
+    }
+    for (final start in starts) {
+      await periods.upsertPeriod(
+        startedOn: start,
+        endedOn: start.add(const Duration(days: 4)),
+        source: PeriodSources.settings,
+      );
+    }
+  }
+
+  rituTestWidgets(
+    'Variable user sees estimated phase and next-period range',
+    (tester) async {
+      await seedVariableHistory();
+      final latest = await DriftPeriodRepository(database).getLatest();
+      final lastStart = dateOnly(latest!.startedOn);
+      final today = lastStart.add(const Duration(days: 8)); // cycle day 9
+
+      await tester.pumpWidget(
+        createRituApp(database: database, simulatedToday: today),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('~Follicular phase'), findsOneWidget);
+      expect(find.text('days into your cycle'), findsOneWidget);
+      expect(
+        find.text('Last period ${formatShortMonthDay(lastStart)}'),
+        findsOneWidget,
+      );
+      // shortest 21 / longest 35 from last start
+      final early = lastStart.add(const Duration(days: 21));
+      final late = lastStart.add(const Duration(days: 35));
+      final expectedRange = formatEstimatedShortMonthDayRange(early, late);
+      expect(find.text('Next period $expectedRange'), findsOneWidget);
+    },
+  );
+
   rituTestWidgets('Delete Data clears profile and returns to splash', (
     tester,
   ) async {

@@ -97,6 +97,7 @@ CycleSnapshot computeCycleSnapshot({
       mad: classificationResult.mad,
       cycleDay: cycleDay,
       periodDuration: active?.periodDuration(throughDate: referenceDate),
+      effectiveCycleLength: _effectiveCycleLength(classificationResult, lengths),
       todayPhase: CyclePhase.menstrual,
       phaseConfidence: PhaseConfidence.logged,
     );

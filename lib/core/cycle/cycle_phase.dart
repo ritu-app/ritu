@@ -7,13 +7,21 @@ enum CyclePhase {
 }
 
 /// User-facing phase label, e.g. "Follicular phase".
-String phaseDisplayLabel(CyclePhase phase) {
-  return switch (phase) {
+///
+/// When [estimated] is true (Variable classification), non-menstrual phases
+/// are prefixed with `~` — e.g. "~Follicular phase". Menstrual stays exact
+/// because bleed days are logged.
+String phaseDisplayLabel(CyclePhase phase, {bool estimated = false}) {
+  final label = switch (phase) {
     CyclePhase.menstrual => 'Menstrual phase',
     CyclePhase.follicular => 'Follicular phase',
     CyclePhase.ovulatory => 'Ovulatory phase',
     CyclePhase.luteal => 'Luteal phase',
   };
+  if (estimated && phase != CyclePhase.menstrual) {
+    return '~$label';
+  }
+  return label;
 }
 
 /// How confidently a phase label is shown.
