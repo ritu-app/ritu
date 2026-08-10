@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Home Hero Card — Data Source & Confidence Spec — Ritu</title>
+<style>
+  :root {
+    --text: #1F2328;
+    --text-muted: #59636E;
+    --border: #D1D9E0;
+    --bg-subtle: #F6F8FA;
+    --link: #0969DA;
+    --code-bg: #F6F8FA;
+    --accent: #1A7F5A;
+    --warn-bg: #FFF1F0;
+    --warn-border: #FFCCC7;
+    --warn-text: #82251C;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    color: var(--text);
+    background: #fff;
+    line-height: 1.6;
+    font-size: 16px;
+  }
+  .page {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 48px 32px 96px;
+  }
+  h1 {
+    font-size: 30px;
+    font-weight: 600;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 12px;
+    margin: 0 0 8px;
+  }
+  h2 {
+    font-size: 21px;
+    font-weight: 600;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 8px;
+    margin: 40px 0 16px;
+  }
+  h3 {
+    font-size: 16.5px;
+    font-weight: 600;
+    margin: 28px 0 12px;
+  }
+  h4 {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 20px 0 8px;
+    color: var(--text);
+  }
+  p { margin: 12px 0; }
+  code {
+    font-family: "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 85%;
+    background: var(--code-bg);
+    border-radius: 4px;
+    padding: 2px 6px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0 20px;
+    font-size: 14px;
+  }
+  th, td {
+    border: 1px solid var(--border);
+    padding: 8px 12px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th {
+    background: var(--bg-subtle);
+    font-weight: 600;
+  }
+  tr:nth-child(even) td { background: #FBFCFD; }
+  .badge {
+    display: inline-block;
+    font-size: 11.5px;
+    font-weight: 600;
+    padding: 2px 10px;
+    border-radius: 12px;
+  }
+  .badge-neutral { background: #EDEDED; color: #444; }
+  .badge-hedged { background: #FFF8C5; color: #7D5A00; }
+  .badge-confident { background: #DAFBE1; color: #1A7F37; }
+  .callout {
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    background: var(--bg-subtle);
+    border-radius: 4px;
+    padding: 12px 16px;
+    margin: 16px 0;
+    font-size: 14.5px;
+  }
+  .callout b { color: var(--text); }
+  .open-q {
+    border: 1px solid var(--warn-border);
+    border-left: 3px solid #CF222E;
+    background: var(--warn-bg);
+    border-radius: 4px;
+    padding: 12px 16px;
+    margin: 16px 0;
+    font-size: 14.5px;
+  }
+  .open-q b { color: var(--warn-text); }
+  ul, ol { padding-left: 24px; }
+  li { margin: 4px 0; }
+  .toc {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px 20px;
+    background: var(--bg-subtle);
+    margin-bottom: 32px;
+    font-size: 14px;
+  }
+  .toc-title { font-weight: 600; margin-bottom: 8px; }
+  .toc a { color: var(--link); text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+  .toc ol { margin: 0; padding-left: 20px; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<h1>Home Hero Card — Data Source &amp; Confidence Spec</h1>
+<p style="color:var(--text-muted);font-size:14.5px;margin-top:-4px;">Governs when the home hero card shows the neutral pre-classification state vs. the hedged (Variable-style) card vs. the confident (exact phase) card, based on where a user's period dates came from.</p>
+
+<div class="toc">
+  <div class="toc-title">Contents</div>
+  <ol>
+    <li><a href="#s1">Overview</a></li>
+    <li><a href="#s2">Date Types</a></li>
+    <li><a href="#s3">Hero Card States</a></li>
+    <li><a href="#s4">Rule 1 — Neutral Card Duration</a></li>
+    <li><a href="#s5">Rule 2 — Right-Side Text Counter</a></li>
+    <li><a href="#s6">Rule 3 — Confident vs. Hedged Card</a></li>
+    <li><a href="#s7">Illustrative Scenarios</a></li>
+    <li><a href="#s8">Manual Dates → Logged Dates Needed (Reference Table)</a></li>
+    <li><a href="#s9">Full Progression — Card Per Cycle Completed</a></li>
+    <li><a href="#s10">Decision Log</a></li>
+    <li><a href="#s11">Edge Cases — Inactivity &amp; Missing Data</a></li>
+  </ol>
+</div>
+
+<h2 id="s1">1. Overview</h2>
+<p>A period start date can enter a user's record two ways: <b>logged live</b> (daily check-in, added the day it happens) or <b>manual</b> (typed in from memory — the onboarding "last period" question, the optional "past dates" step, or the Settings "Add a date" recovery flow). Both count identically toward classification eligibility. They are <b>not</b> treated identically when deciding how confident the hero card is allowed to look.</p>
+
+<h2 id="s2">2. Date Types</h2>
+<table>
+  <tr><th>Type</th><th>Source</th><th>Confidence</th></tr>
+  <tr><td><b>Logged</b></td><td>Daily check-in, entered the day it happens</td><td>Full — real-time, not remembered</td></tr>
+  <tr><td><b>Manual</b></td><td>Onboarding "last period" date · onboarding "past dates" (optional) · Settings "Add a date"</td><td>Reduced — recalled from memory, may be off by a day or more</td></tr>
+</table>
+<div class="callout"><b>Every date already carries this tag today</b> (Period History ledger shows Logged vs. Manual badges) — this spec does not require a new field, only new logic that reads the existing tag.</div>
+
+<h2 id="s3">3. Hero Card States</h2>
+<table>
+  <tr><th>State</th><th>What it looks like</th><th>When it shows</th></tr>
+  <tr><td><span class="badge badge-neutral">Neutral</span></td><td>Big day-count number, "days into your cycle," no phase name, sage-to-tan gradient</td><td>Until BOTH: classification minimum met (3 cycles/4 dates) AND one full cycle logged live — see Rule 1</td></tr>
+  <tr><td><span class="badge badge-confident">Confident</span></td><td>Exact day + phase name, full-opacity strip, no tilde</td><td>Classification resolved to <b>Regular</b> AND at least one cycle in the active window has both endpoints Logged — guaranteed true at first unlock, per Rule 1</td></tr>
+  <tr><td><span class="badge badge-hedged">Hedged</span></td><td>Variable-style: tilde, "~Day 14," "probably [phase]," ~55% strip opacity</td><td>Classification resolved to <b>Variable</b>, OR a later Manual date (e.g. via "Add a date") temporarily removes the only clean cycle for a Regular-classified user — see Rule 3 / 6.3</td></tr>
+  <tr><td>Unpredictable — Menstrual</td><td>Full Rosewood color, no tilde, no day number needed beyond bleeding days</td><td>Classification resolved to <b>Unpredictable</b> AND the same data-trust gate as Regular/Variable has opened (one clean logged cycle) — see Section 3.1</td></tr>
+  <tr><td>Unpredictable — Honest card</td><td>Plain neutral card, no phase color ever, "X days since last period," no next-period estimate</td><td>Classification resolved to <b>Unpredictable</b> AND the gate has opened, every day that isn't a period day — see Section 3.1</td></tr>
+</table>
+
+<h3>3.1 Unpredictable still passes through the same data-trust gate</h3>
+<p>Unpredictable never attempts a phase calculation, for any data source — that part of Section 3.1's original reasoning was correct and is unchanged. But <b>trusting the classification result itself is a separate question from trusting a phase calculation</b>, and Unpredictable does not get a pass on that. If anything it deserves the same bar or higher: it is the most consequential label the app can assign (permanently removes the phase strip, changes tone across the whole home screen, can carry a doctor-flag connotation) — assigning it off nothing but remembered onboarding dates would show a heavy conclusion without having watched a single real cycle.</p>
+<p><b>Resolved rule:</b> Unpredictable follows the identical gate as Regular and Variable — the hero card stays Neutral until <i>both</i> classification is eligible AND one full cycle has been logged live (both endpoints Logged). Only once that gate opens does the result (Regular / Variable / Unpredictable) decide which of the three treatments displays:</p>
+<table>
+  <tr><th>Classification result</th><th>Card once the gate opens</th></tr>
+  <tr><td>Regular</td><td>Confident</td></tr>
+  <tr><td>Variable</td><td>Hedged</td></tr>
+  <tr><td>Unpredictable</td><td>Menstrual card (period days) / Honest card (all other days)</td></tr>
+</table>
+<p>The number of cycles she must log live before this gate opens follows the exact same table as Regular/Variable — see Sections 8–9 — regardless of which of the three results she eventually gets. The manual-date count determines the wait; the classification result only determines which card appears once the wait is over.</p>
+
+<h2 id="s4">4. Rule 1 — Neutral Card Duration</h2>
+<p><b>The neutral card shows for every user until <i>both</i> of the following are true:</b></p>
+<ol>
+  <li>Classification minimum is met — 3 completed cycles / 4 total period start dates (Manual or Logged, either counts).</li>
+  <li>At least <b>one full cycle has been logged live in the app</b> — both its start and end date came from real-time daily logging, not memory.</li>
+</ol>
+<p>Whichever condition is satisfied later is what the user is waiting on. This closes the edge case from Section 8 below: a user who enters 4 manual dates at onboarding satisfies condition 1 immediately, but still sees the Neutral card until she personally logs through one real cycle in the app — condition 2 is never skipped, regardless of how much manual history she supplies.</p>
+
+<h2 id="s5">5. Rule 2 — Right-Side Text Counter</h2>
+<p>The small right-side text under the hero number switches units exactly once, permanently, the moment the first cycle completes. It never reverts to days/weeks afterward.</p>
+<table>
+  <tr><th>Phase</th><th>Trigger</th><th>Unit shown</th><th>Example labels</th></tr>
+  <tr><td>Cycle 1<br>(signup → 2nd period date logged)</td><td>No completed cycle exists yet</td><td>Days / weeks</td><td>"No history yet" → "1 week logged" → "2 weeks logged" → "3 weeks logged"</td></tr>
+  <tr><td>Cycle 2 onward<br>(1st cycle complete → forever after)</td><td>2nd period date logged, 1st cycle closes</td><td>Cycles (ordinal, current)</td><td>"2 cycles so far" → "3 cycles so far" → "4 cycles so far"...</td></tr>
+</table>
+<div class="callout"><b>Ordinal, not completed-count:</b> the cycle number shown is always the cycle the user is <i>currently in</i>, the same convention as the big day-count number (Day 14 means the current day, never a completed total). "2 cycles so far" means she is living through cycle 2, not that 2 cycles have finished.</div>
+
+<h3>5.1 Full progression table — user enters only her last-period date, then logs normally</h3>
+<table>
+  <tr><th>Stage</th><th>Condition</th><th>Right-side label</th><th>Card type</th></tr>
+  <tr><td>Cycle 1, Day 1–6</td><td>Only the initial last-period date exists; &lt;1 week elapsed</td><td>No history yet</td><td>Neutral</td></tr>
+  <tr><td>Cycle 1, Day 7–13</td><td>1 week elapsed, 2nd period not yet logged</td><td>1 week logged</td><td>Neutral</td></tr>
+  <tr><td>Cycle 1, Day 14–20</td><td>2 weeks elapsed</td><td>2 weeks logged</td><td>Neutral</td></tr>
+  <tr><td>Cycle 1, Day 21+</td><td>3+ weeks elapsed</td><td>3 weeks logged</td><td>Neutral</td></tr>
+  <tr><td>Cycle 2 begins</td><td>2nd period date logged → Cycle 1 complete</td><td>2 cycles so far</td><td>Neutral</td></tr>
+  <tr><td>Cycle 3 begins</td><td>3rd period date logged → Cycle 2 complete</td><td>3 cycles so far</td><td>Neutral</td></tr>
+  <tr><td>Cycle 4 begins</td><td>4th period date logged → Cycle 3 complete → classification minimum met</td><td>—</td><td>Classification runs; see Rule 3</td></tr>
+</table>
+
+<h2 id="s6">6. Rule 3 — Confident vs. Hedged Card</h2>
+<p>Once both conditions in Rule 1 are satisfied and the Neutral card ends, the underlying Regular / Variable / Unpredictable math has already run (per the Classification Spec) using every date, Manual or Logged. <b>What date source changes is display only:</b></p>
+<div class="callout">
+  <b>Confident card</b> shows once at least one completed cycle in the active window has <b>both</b> endpoints Logged — which, per the updated Rule 1, is guaranteed to already be true the moment the Neutral card ends. So for a user's <i>first</i> resolved card, it goes straight to Confident (if the math says Regular) — there is no separate Hedged stop at initial unlock.<br><br>
+  <b>Hedged still applies later in the app's life</b> — see 6.3.
+</div>
+
+<h3>6.1 Why a manual date affects two cycles, not one</h3>
+<p>A manual date is a shared boundary — it is simultaneously the end of the cycle before it and the start of the cycle after it. Both adjacent cycle lengths inherit the reduced confidence. Do not implement this as "only the cycle that starts on a manual date is affected."</p>
+<h3>6.2 Self-resolving over time</h3>
+<p>Because classification always uses a rolling window (max 6 cycles, per the Classification Spec), a Manual date eventually ages out of the window as real logging accumulates. No extra flag or reset logic is needed.</p>
+<h3>6.3 When Hedged still shows, after initial unlock</h3>
+<p>Rule 1's "one clean cycle" gate only guarantees a clean cycle exists <i>the first time</i> the card leaves Neutral. Later in the app's life, a user can use the Settings "Add a date" recovery flow (e.g. after a data gap, reinstall, or forgotten log) to insert a new Manual date. If that Manual date lands inside the current 6-cycle rolling window and no other cycle in the window is fully clean, the hero card drops back to Hedged until a new clean cycle is logged. This is the ongoing mechanic Hedged exists for — not the initial-unlock moment, which Rule 1 now always resolves straight to Confident.</p>
+
+<h2 id="s7">7. Illustrative Scenarios</h2>
+
+<h3>7.1 No manual dates — pure daily logging from day one</h3>
+<p>4 Logged dates → 3 completed cycles, all clean.</p>
+<p><b>Result:</b> Confident card, immediately upon classification resolving. No hedged stop in between.</p>
+
+<h3>7.2 Only the onboarding "last period" date is manual, everything after is logged</h3>
+<table>
+  <tr><th>Date</th><th>Type</th></tr>
+  <tr><td>d0 (initial last period)</td><td>Manual</td></tr>
+  <tr><td>d1</td><td>Logged</td></tr>
+  <tr><td>d2</td><td>Logged</td></tr>
+  <tr><td>d3</td><td>Logged</td></tr>
+</table>
+<p>Cycle 1 (d0→d1): hedged (one manual end). Cycle 2 (d1→d2): clean. Cycle 3 (d2→d3): clean.</p>
+<p><b>Result:</b> the classification minimum (3 cycles) and the "at least 1 clean cycle" condition are satisfied at the same moment → Confident card as soon as classification resolves. No extra wait versus the no-manual-dates case.</p>
+
+<h3>7.3 User adds 3 manual past dates at onboarding, then logs going forward</h3>
+<table>
+  <tr><th>Date</th><th>Type</th></tr>
+  <tr><td>d0, d1, d2, d3 (onboarding)</td><td>Manual (×4)</td></tr>
+  <tr><td>d4 (first logged)</td><td>Logged</td></tr>
+  <tr><td>d5 (second logged)</td><td>Logged</td></tr>
+</table>
+<p>Classification is already eligible at d3 (3 cycles from manual dates alone) — math runs, but every cycle is manual-bounded → Hedged card. Cycle (d3→d4): still hedged, one manual end. Cycle (d4→d5): clean.</p>
+<p><b>Result:</b> Hedged card from the moment classification resolves at d3, until d5 is logged, at which point the card flips to Confident.</p>
+
+<h2 id="s8">8. Manual Dates → Logged Dates Needed (Reference Table)</h2>
+<p>This table exists because the relationship between "how many manual dates a user starts with" and "how many she must log before the Neutral card ends" is <b>not linear</b> — easy to assume fewer manual dates always means less waiting, which isn't quite true. Per the <b>decided rule</b> (Rule 1): <b>the Neutral card only ends once one full cycle has been logged live, no matter how many manual dates surround it or how early classification math becomes eligible.</b></p>
+<table>
+  <tr><th>Manual dates entered at onboarding</th><th>Logged dates she must add before Neutral card ends</th><th>What shows once it ends</th><th>Why</th></tr>
+  <tr><td>0 (no manual dates at all)</td><td>4 (satisfies classification minimum on its own)</td><td>Confident / Hedged / Unpredictable card — whichever the math resolves to</td><td>Classification minimum and "1 clean cycle" condition are met at the exact same moment — every cycle is already clean.</td></tr>
+  <tr><td>1 past date</td><td>3 more logged dates</td><td>Confident / Hedged / Unpredictable card</td><td>3 more dates hits the classification minimum and naturally produces 2 clean cycles along the way.</td></tr>
+  <tr><td>2 past dates</td><td>2 more logged dates</td><td>Confident / Hedged / Unpredictable card</td><td>2 more dates hits the classification minimum and produces exactly 1 clean cycle.</td></tr>
+  <tr><td>3 past dates</td><td>2 more logged dates (<b>not 1</b>)</td><td>Confident / Hedged / Unpredictable card</td><td>Only 1 more date is needed to hit the classification minimum — but that date still pairs with a manual date on one end, so a <b>2nd</b> logged date is required to produce 1 fully clean cycle.</td></tr>
+  <tr><td>4 past dates (classification-eligible from onboarding alone)</td><td>2 more logged dates</td><td>Confident / Hedged / Unpredictable card</td><td>Classification math is already eligible at onboarding, but the Neutral card still holds — per Rule 1 — until she logs 2 real dates, producing 1 clean cycle. This applies even if the manual dates alone already point toward an Unpredictable result.</td></tr>
+</table>
+<div class="callout"><b>Card shown while waiting, in every row above:</b> Neutral. Never Hedged at this stage — Hedged is reserved for later in the app's life, after a user has already reached Confident once and then adds a new Manual date via "Add a date" (see Section 6.3).</div>
+<div class="callout"><b>Implementation check:</b> Neutral card persists while <code>NOT (classification minimum met AND at least one cycle in window has Logged on both endpoints)</code>. Once both are true, run the classification math and show the result directly — Confident if Regular, Hedged if Variable.</div>
+
+<h2 id="s9">9. Full Progression — Card Per Cycle Completed</h2>
+<p>The table above shows only the endpoint. This shows every step along the way, since classification eligibility (3 cycles/4 dates) and "a clean cycle exists" often arrive at different moments — the card only leaves Neutral when <i>both</i> are true, whichever is later.</p>
+
+<h3>0 manual dates</h3>
+<table>
+  <tr><th>After cycle completes</th><th>Classification eligible?</th><th>Clean cycle exists?</th><th>Card</th></tr>
+  <tr><td>Cycle 1</td><td>No</td><td>Yes</td><td>Neutral</td></tr>
+  <tr><td>Cycle 2</td><td>No</td><td>Yes</td><td>Neutral</td></tr>
+  <tr><td>Cycle 3</td><td>Yes</td><td>Yes</td><td><b>Confident</b> (Regular) or <b>Hedged</b> (Variable)</td></tr>
+</table>
+
+<h3>1 manual date</h3>
+<table>
+  <tr><th>After cycle completes</th><th>Classification eligible?</th><th>Clean cycle exists?</th><th>Card</th></tr>
+  <tr><td>Cycle 1 (manual→logged)</td><td>No</td><td>No</td><td>Neutral</td></tr>
+  <tr><td>Cycle 2 (logged→logged)</td><td>No</td><td>Yes</td><td>Neutral — still waiting on classification minimum</td></tr>
+  <tr><td>Cycle 3 (logged→logged)</td><td>Yes</td><td>Yes</td><td><b>Confident</b>, <b>Hedged</b>, or <b>Unpredictable card</b></td></tr>
+</table>
+
+<h3>2 manual dates</h3>
+<table>
+  <tr><th>After cycle completes</th><th>Classification eligible?</th><th>Clean cycle exists?</th><th>Card</th></tr>
+  <tr><td>Cycle 1 (manual→manual)</td><td>No</td><td>No</td><td>Neutral</td></tr>
+  <tr><td>Cycle 2 (manual→logged)</td><td>No</td><td>No</td><td>Neutral</td></tr>
+  <tr><td>Cycle 3 (logged→logged)</td><td>Yes</td><td>Yes</td><td><b>Confident</b>, <b>Hedged</b>, or <b>Unpredictable card</b></td></tr>
+</table>
+
+<h3>3 manual dates</h3>
+<table>
+  <tr><th>After cycle completes</th><th>Classification eligible?</th><th>Clean cycle exists?</th><th>Card</th></tr>
+  <tr><td>Cycle 1 (manual→manual)</td><td>No</td><td>No</td><td>Neutral</td></tr>
+  <tr><td>Cycle 2 (manual→manual)</td><td>No</td><td>No</td><td>Neutral</td></tr>
+  <tr><td>Cycle 3 (manual→logged)</td><td><b>Yes</b></td><td>No — this cycle still has a manual end</td><td><b>Neutral, even though classification is already eligible</b></td></tr>
+  <tr><td>Cycle 4 (logged→logged)</td><td>Yes</td><td>Yes</td><td><b>Confident</b>, <b>Hedged</b>, or <b>Unpredictable card</b></td></tr>
+</table>
+
+<h3>4 manual dates</h3>
+<table>
+  <tr><th>After cycle completes</th><th>Classification eligible?</th><th>Clean cycle exists?</th><th>Card</th></tr>
+  <tr><td>Cycles 1–3 (all manual)</td><td><b>Yes, immediately at onboarding</b></td><td>No</td><td><b>Neutral, even though classification is already eligible</b></td></tr>
+  <tr><td>Cycle 4 (manual→logged)</td><td>Yes</td><td>No — one end still manual</td><td>Neutral</td></tr>
+  <tr><td>Cycle 5 (logged→logged)</td><td>Yes</td><td>Yes</td><td><b>Confident</b>, <b>Hedged</b>, or <b>Unpredictable card</b></td></tr>
+</table>
+
+<div class="callout"><b>Pattern to note:</b> the card only flips away from Neutral the moment a clean cycle appears. Classification eligibility can arrive earlier (rows with 3–4 manual dates) but sits idle until a clean cycle catches up. At the flip moment, the classification result — Regular, Variable, or Unpredictable — decides which of the three treatments displays (see Section 3.1). The wait itself is identical across all three; only the resulting card differs.</div>
+
+<h2 id="s10">10. Decision Log</h2>
+<div class="callout">
+Every user must log at least one full cycle live in the app — both endpoints Logged, not Manual — before the hero card leaves the Neutral state, regardless of how many manual dates were supplied at onboarding or whether classification math is already eligible. This is now captured as part of Rule 1 (Section 4) and reflected throughout Sections 6, 8, and 9.
+</div>
+
+<h2 id="s11">11. Edge Cases — Inactivity &amp; Missing Data</h2>
+<p>The rules above assume a user who logs each new period reasonably close to when it happens. This section covers what the hero card does when that assumption breaks — no period date exists yet, she stops logging after a while, or a classified user's expected next period stops arriving on schedule.</p>
+
+<h3>11.1 No period date entered at all</h3>
+<p>A user can skip the onboarding "last period" question entirely (Screen 4's "Skip — I'll log from today"). In this case there is no period start date in the system, so there is nothing for the day-count math (today − last period date) to calculate from.</p>
+<div class="callout"><b>Rule:</b> show a distinct empty/welcome state — no day number, no "days into your cycle" copy, since both are meaningless without a start date. Copy: "Log your first period to get started." This state is stable, not a countdown — it looks identical whether she skips for 1 day or 30; nothing about it should imply lateness, since there is no baseline yet to be late against.</div>
+<p>The moment she logs her first period date, the day counter begins fresh at Day 1. Because this first date came from a live log rather than memory, it is tagged <b>Logged</b>, not Manual — meaning this path is automatically the cleanest possible start (the "0 manual dates" row in Section 8's reference table).</p>
+
+<h3>11.2 Has a period date, but stops logging afterward</h3>
+<p>This is a distinct case from 11.1 — a start date exists, so day-count math is valid, but the user stops opening the app or logging further entries. The key correction: <b>two different counters power the card, and only one of them should be affected by inactivity.</b></p>
+<table>
+  <tr><th>Element</th><th>Driven by</th><th>Behavior if she stops logging</th></tr>
+  <tr><td>Big number ("14 days into your cycle")</td><td>Calendar math: today − last period date</td><td>Keeps incrementing — this is always accurate and requires no logging to calculate</td></tr>
+  <tr><td>Right-side text ("2 weeks logged")</td><td>Count of actual daily log entries she has made</td><td><b>Freezes</b> at whatever she last actually logged — must not climb with elapsed time, since "logged" is a factual claim about what she did</td></tr>
+</table>
+<div class="callout"><b>Concrete example:</b> she logs daily for exactly 1 week, then goes quiet. Checking back on day 42: big number shows <b>42</b> ("42 days into your cycle" — true, calendar-wise). Right-side text still shows <b>"1 week logged"</b> — frozen, because that is the true amount of history that exists. It resumes climbing only once she logs again.</div>
+<p><b>Soft nudge, pre-classification only:</b> once elapsed days pass a soft threshold (recommend ~45 days with no new period logged), soften the card's tone — e.g. "Log your next period when it starts," right-side text switching to "No pattern yet." This is copy softening only, layered on top of the frozen logged-days counter above; it must never claim "overdue," since pre-classification there is no personal average yet to be late against (see Section 11.3 for when "overdue" language is appropriate).</p>
+
+<h3>11.3 Classified user's expected next period doesn't arrive (Regular/Variable "Overdue" fallback)</h3>
+<p>Once classified, this is the mirror image of Phase-Range Spec Tier C (a cycle too <i>short</i> for the phase formula). Here the cycle is running <i>longer</i> than the model can responsibly extrapolate — most visibly, a Regular/Variable user reaches what should be her Luteal phase and no next period arrives, so there is no new cycle to reset into.</p>
+<table>
+  <tr><th>Classification</th><th>Trigger for fallback</th><th>What shows</th></tr>
+  <tr><td>Regular</td><td>Day count exceeds her personal average cycle length (C)</td><td>Drop the phase strip and phase name. Reuse the neutral card component with cycle-specific copy: "This cycle is running longer than usual." Last period date stays visible; right side reads "No phase estimate."</td></tr>
+  <tr><td>Variable</td><td>Day count exceeds the longest cycle in her recorded range</td><td>Same fallback — do not stretch the hedge further into an extended "~Day 40+"; switch to the same neutral "running longer than usual" treatment rather than implying false precision.</td></tr>
+  <tr><td>Unpredictable</td><td>Never triggers</td><td>No change needed — the existing Honest card ("X days since last period," no day number, no estimate) already absorbs any length of gap gracefully. This is a strength of that design, not a gap to fix.</td></tr>
+</table>
+<div class="callout"><b>Why this doesn't affect her classification:</b> one long cycle is exactly the kind of single outlier the Classification Spec already protects against — MAD averages all 6 deviations specifically so "one outlier is smoothed into the result rather than dominating it." This fallback only changes what <i>this cycle's card</i> displays, not her Regular/Variable label.</div>
+<div class="callout"><b>Self-resolving:</b> the moment she logs the next period date, the cycle closes, the day count resets to 1, the Menstrual card shows immediately, and the long cycle's actual length becomes one more data point feeding the next classification pass — no manual reset or extra flag required.</div>
+
+<h3>11.4 A classified user stops logging regularly (general case)</h3>
+<p>This is 11.3's parent case, stated generally: once classified, the hero card recomputes day count and phase automatically every day from her most recent period start date and her personal C (Regular) or range (Variable) — no new input is required for the phase strip to advance day-to-day. Daily mood/symptom logging lapses do not affect the hero card at all (that only affects Insights/Journal). Only a lapse in <i>period-date</i> logging matters here, and it resolves to whichever of the two outcomes above applies: the Overdue fallback (11.3) if she's within one cycle's overdue window, or accumulating inactivity that eventually feeds into a future reclassification if the pattern continues across multiple cycles.</p>
+
+</div>
+</body>
+</html>

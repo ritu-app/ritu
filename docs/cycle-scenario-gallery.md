@@ -4,8 +4,9 @@ Illustrative user scenarios for the **Home hero data-source / confidence** rules
 
 **Sources**
 
-- Downloads: `ritu-hero-card-data-source-spec.html`, `ritu-period-boundary-detection-spec.html`
-- Repo: `docs/cycle-classification-spec.html`, `lib/core/cycle/*`, `lib/features/home/home_screen.dart`
+- `docs/ritu-hero-card-data-source-spec.html`
+- `docs/ritu-period-boundary-detection-spec.html`
+- `docs/cycle-classification-spec.html`, `lib/core/cycle/*`, `lib/features/home/home_screen.dart`
 
 **Status legend**
 

@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Period Boundary Detection Spec — Ritu</title>
+<style>
+  :root {
+    --text: #1F2328;
+    --text-muted: #59636E;
+    --border: #D1D9E0;
+    --bg-subtle: #F6F8FA;
+    --link: #0969DA;
+    --code-bg: #F6F8FA;
+    --accent: #1A7F5A;
+    --warn-bg: #FFF1F0;
+    --warn-border: #FFCCC7;
+    --warn-text: #82251C;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    color: var(--text);
+    background: #fff;
+    line-height: 1.6;
+    font-size: 16px;
+  }
+  .page {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 48px 32px 96px;
+  }
+  h1 {
+    font-size: 30px;
+    font-weight: 600;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 12px;
+    margin: 0 0 8px;
+  }
+  h2 {
+    font-size: 21px;
+    font-weight: 600;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 8px;
+    margin: 40px 0 16px;
+  }
+  h3 {
+    font-size: 16.5px;
+    font-weight: 600;
+    margin: 28px 0 12px;
+  }
+  h4 {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 20px 0 8px;
+    color: var(--text);
+  }
+  p { margin: 12px 0; }
+  code {
+    font-family: "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 85%;
+    background: var(--code-bg);
+    border-radius: 4px;
+    padding: 2px 6px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0 20px;
+    font-size: 14px;
+  }
+  th, td {
+    border: 1px solid var(--border);
+    padding: 8px 12px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th {
+    background: var(--bg-subtle);
+    font-weight: 600;
+  }
+  tr:nth-child(even) td { background: #FBFCFD; }
+  .badge {
+    display: inline-block;
+    font-size: 11.5px;
+    font-weight: 600;
+    padding: 2px 10px;
+    border-radius: 12px;
+  }
+  .badge-yes { background: #DAFBE1; color: #1A7F37; }
+  .badge-no { background: #FFEBE9; color: #CF222E; }
+  .callout {
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    background: var(--bg-subtle);
+    border-radius: 4px;
+    padding: 12px 16px;
+    margin: 16px 0;
+    font-size: 14.5px;
+  }
+  .callout b { color: var(--text); }
+  .open-q {
+    border: 1px solid var(--warn-border);
+    border-left: 3px solid #CF222E;
+    background: var(--warn-bg);
+    border-radius: 4px;
+    padding: 12px 16px;
+    margin: 16px 0;
+    font-size: 14.5px;
+  }
+  .open-q b { color: var(--warn-text); }
+  ul, ol { padding-left: 24px; }
+  li { margin: 4px 0; }
+  .toc {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px 20px;
+    background: var(--bg-subtle);
+    margin-bottom: 32px;
+    font-size: 14px;
+  }
+  .toc-title { font-weight: 600; margin-bottom: 8px; }
+  .toc a { color: var(--link); text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+  .toc ol { margin: 0; padding-left: 20px; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<h1>Period Boundary Detection Spec</h1>
+<p style="color:var(--text-muted);font-size:14.5px;margin-top:-4px;">Governs how the app decides where one period ends and the next begins, given daily flow logs that can include gaps, missed days, or no logging at all. Directly affects Menstrual-phase duration (<code>P</code>) and cycle length (<code>C</code>) used throughout the Classification and Phase-Range specs.</p>
+
+<div class="toc">
+  <div class="toc-title">Contents</div>
+  <ol>
+    <li><a href="#s1">Overview</a></li>
+    <li><a href="#s2">The Core Problem — Spotting Gaps</a></li>
+    <li><a href="#s3">Rule 1 — Grace-Gap Threshold</a></li>
+    <li><a href="#s4">Rule 2 — Silence Is Not "None"</a></li>
+    <li><a href="#s5">Rule 3 — Assumed Duration Fallback</a></li>
+    <li><a href="#s6">Rule 4 — Home Check-In Nudge</a></li>
+    <li><a href="#s7">Follow-Up Screen — Confirm Period End</a></li>
+    <li><a href="#s8">Full Flow Summary</a></li>
+  </ol>
+</div>
+
+<h2 id="s1">1. Overview</h2>
+<p>Ritu's daily Log screen asks "Any flow today?" with options None / Spotting / Light / Medium / Heavy. Period start and end are derived from this daily input. Because flow is often not continuous — spotting gaps, days with no bleeding mid-period, or days the user simply doesn't open the app — a naive "period ends the moment a non-flow day appears" rule can silently corrupt the data feeding classification.</p>
+
+<h2 id="s2">2. The Core Problem — Spotting Gaps</h2>
+<p>A single logged gap day can be misread as the period ending, and the next bleeding day misread as a brand new period starting. This creates a fake, very short "cycle" between the two.</p>
+<table>
+  <tr><th>Day</th><th>She logs</th><th>Naive interpretation</th></tr>
+  <tr><td>Day 1</td><td>Spotting</td><td>Period started</td></tr>
+  <tr><td>Day 2</td><td>None</td><td><span class="badge badge-no">Wrong</span> — reads as period ended</td></tr>
+  <tr><td>Day 3</td><td>None</td><td>Still reads as ended</td></tr>
+  <tr><td>Day 4</td><td>Medium</td><td><span class="badge badge-no">Wrong</span> — reads as a new period starting</td></tr>
+</table>
+<div class="callout"><b>Why this matters:</b> the false 3-day gap becomes a fake "cycle length" fed into the Classification Spec's Mean Absolute Deviation calculation. Since MAD averages deviations across the last 6 cycles, one nonsensical short cycle skews the result — potentially misclassifying a user with a normal spotting pattern as more irregular than she actually is.</div>
+
+<h2 id="s3">3. Rule 1 — Grace-Gap Threshold</h2>
+<p><b>Decision:</b> a period does not close on the first "None" day. It closes only after <b>2 consecutive "None" days in a row</b>, or automatically at <b>day 10 since period start</b> — whichever comes first.</p>
+<table>
+  <tr><th>Threshold</th><th>Value</th><th>Why</th></tr>
+  <tr><td>Consecutive "None" days to close</td><td>2</td><td>1 day is indistinguishable from a normal spotting gap (too short, doesn't fix the problem). 3+ days risks merging a genuinely new period into the old one, especially for shorter-cycle users.</td></tr>
+  <tr><td>Hard cap since period start</td><td>10 days</td><td>Safety net — prevents an edge case where ongoing light/irregular spotting could stretch the "still the same period" window indefinitely.</td></tr>
+</table>
+<p><b>Re-checking the earlier example with this rule applied:</b></p>
+<table>
+  <tr><th>Day</th><th>She logs</th><th>Correct interpretation</th></tr>
+  <tr><td>Day 1</td><td>Spotting</td><td>Period started</td></tr>
+  <tr><td>Day 2</td><td>None</td><td>1 consecutive None — not enough to close yet</td></tr>
+  <tr><td>Day 3</td><td>None</td><td>2 consecutive None — would close here, but...</td></tr>
+  <tr><td>Day 4</td><td>Medium</td><td><span class="badge badge-yes">Correct</span> — bleeding resumed before the close condition finished evaluating; treated as the <i>same</i> period continuing</td></tr>
+</table>
+<div class="callout">Implementation detail: the 2-day close condition should only finalize (lock in the period-end date) once Day 3's "None" is confirmed with no new flow logged on Day 3 itself. If flow appears on what would have been the 2nd consecutive None day, the streak resets to 0 and the period stays open.</div>
+
+<h2 id="s4">4. Rule 2 — Silence Is Not "None"</h2>
+<p>The grace-gap counter in Rule 1 only increments on an explicit "None" tap. It must never increment because the user simply didn't open the app that day.</p>
+<table>
+  <tr><th>Day 2 scenario</th><th>Counts toward the 2-day close threshold?</th></tr>
+  <tr><td>She taps "None"</td><td><span class="badge badge-yes">Yes</span> — a real signal she checked and there's no flow</td></tr>
+  <tr><td>She doesn't open the app at all</td><td><span class="badge badge-no">No</span> — silence isn't evidence of anything</td></tr>
+</table>
+<div class="callout"><b>Why this distinction matters:</b> if a skipped day counted the same as "None," a user who simply forgets to log for a day or two could have her period wrongly closed out early — a worse outcome than the original spotting-gap bug, since now it penalizes inactivity rather than fixing a data problem.</div>
+
+<h2 id="s5">5. Rule 3 — Assumed Duration Fallback</h2>
+<p>If she logs Day 1 and then doesn't open the app at all (no logging of any kind, not even "None"), the hero card does not wait or freeze. It continues to advance day-by-day using calendar math, exactly as an actively-logging user would see, backed by an <b>assumed period duration</b> rather than a confirmed one.</p>
+<table>
+  <tr><th>Situation</th><th><code>P</code> used</th></tr>
+  <tr><td>She has a personal average period length from history</td><td>Her own average <code>P</code></td></tr>
+  <tr><td>No personal average yet, but she picked a duration bucket at onboarding ("4–5 days," etc.)</td><td>The bucket she selected</td></tr>
+  <tr><td>No data at all</td><td>A sensible default (e.g. 5 days)</td></tr>
+</table>
+<p><b>Example:</b> assumed <code>P</code> = 5 days, she logs Day 1 and goes silent. Hero card shows Menstrual through Day 5, then automatically switches to Follicular on Day 6 — using the assumed value, since there's nothing else to go on.</p>
+<div class="callout"><b>This is provisional, not final.</b> If she later logs something that reveals her period actually ran longer or shorter than the assumed <code>P</code>, the hero card displayed the wrong phase in the interim — an acceptable tradeoff, since silence must default to something. But the <i>true</i> duration used for her classification math must come from what she eventually confirms, never from the assumed value shown while she was inactive. See Section 6 for how this gets resolved.</div>
+
+<h2 id="s6">6. Rule 4 — Home Check-In Nudge</h2>
+<p>Rather than silently keep guessing indefinitely, the app asks once. This keeps with an existing project principle — "Honest about estimated data" — extended to period-duration estimates, not just phase estimates.</p>
+<h3>6.1 Why Home, not the Log screen</h3>
+<p>The Log screen already asks "Any flow today?" daily — adding a second, similar question there would be redundant. More importantly, the entire scenario is that she has <i>stopped opening Log</i>; placing the question there means it would never reach her. Home is the surface she is still likely to open even after several days of no logging — the same reasoning behind the existing "Speed up your patterns" nudge card, which also lives on Home for a lapsed-logging moment.</p>
+<h3>6.2 Trigger condition</h3>
+<p>Shown once, the first time she opens the app after the assumed <code>P</code> boundary has passed with no new flow log (not even "None") since Day 1.</p>
+<h3>6.3 Card content and behavior</h3>
+<table>
+  <tr><th>Element</th><th>Detail</th></tr>
+  <tr><td>Placement</td><td>Dismissible card on Home, directly beneath the hero card</td></tr>
+  <tr><td>Headline</td><td>"Still on your period?"</td></tr>
+  <tr><td>Body copy</td><td>"It's been a few days since your last log — just checking so Ritu can keep your pattern accurate."</td></tr>
+  <tr><td>Button — "Still going"</td><td>Dismisses the card. Hero card keeps counting Menstrual using the assumed <code>P</code>. No repeat ask that day.</td></tr>
+  <tr><td>Button — "It ended"</td><td>Opens the follow-up screen (Section 7) to confirm the actual end date.</td></tr>
+  <tr><td>Dismiss (X)</td><td>Same effect as "Still going" — falls back to assumed <code>P</code>, asks again only at the next natural trigger point, never repeatedly the same day.</td></tr>
+</table>
+<div class="callout">Tone stays calm, no urgency language, no red — consistent with the project's "no alarm, no diagnosis" principle. This is a light, one-time nudge, not a hard gate blocking her from using the rest of the app.</div>
+
+<h2 id="s7">7. Follow-Up Screen — Confirm Period End</h2>
+<p>Shown only after she taps "It ended" on the Home nudge.</p>
+<table>
+  <tr><th>Element</th><th>Detail</th></tr>
+  <tr><td>Headline</td><td>"When did it end?"</td></tr>
+  <tr><td>Subhead</td><td>"Approximate is fine — you can always adjust later" (same reassurance phrasing used at onboarding, Screen 4)</td></tr>
+  <tr><td>Quick options</td><td>"Yesterday," "2 days ago," "Today" — each showing the actual calendar date beneath the label, since most answers are recent and a full calendar would be overkill</td></tr>
+  <tr><td>Fallback</td><td>"Pick a different date" — opens the same calendar picker style already used in onboarding, for the less common case of a longer gap</td></tr>
+  <tr><td>Confirm button</td><td>Locks in the selected date as her true period end date</td></tr>
+  <tr><td>No "Skip" here</td><td>Unlike the Home nudge, once she's committed to "It ended," this is a short, low-friction confirm rather than something to abandon halfway</td></tr>
+</table>
+<div class="callout"><b>Effect once confirmed:</b> the confirmed date replaces the assumed <code>P</code> for that cycle. The hero card corrects retroactively if needed (e.g. any days shown as Menstrual past the real end date get reclassified into Follicular on next render), and the real, confirmed duration — not the assumed one — is what feeds the Classification Spec's cycle-length calculation going forward.</div>
+
+<h2 id="s8">8. Full Flow Summary</h2>
+<table>
+  <tr><th>Step</th><th>What happens</th></tr>
+  <tr><td>1</td><td>Period starts — logged via an explicit flow entry (any option other than None triggers Day 1)</td></tr>
+  <tr><td>2</td><td>Each subsequent day, flow is logged normally, including "None" days for a genuine gap</td></tr>
+  <tr><td>3</td><td>Period closes automatically after 2 consecutive explicit "None" days, or at day 10, whichever comes first (Rule 1)</td></tr>
+  <tr><td>4</td><td>If she stops logging entirely, the hero card keeps advancing using an assumed <code>P</code> (Rule 3) — this never happens due to silence alone, only due to actual "None" taps (Rule 2)</td></tr>
+  <tr><td>5</td><td>Once the assumed <code>P</code> boundary passes with no confirmation, Home shows the one-time "Still on your period?" nudge (Rule 4)</td></tr>
+  <tr><td>6</td><td>If she confirms it ended, the follow-up screen (Section 7) captures the real end date, correcting the data used for classification</td></tr>
+</table>
+
+</div>
+</body>
+</html>
