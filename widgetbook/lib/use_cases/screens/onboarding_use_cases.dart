@@ -37,7 +37,7 @@ Widget confirmationScreenUseCase(BuildContext context) {
   path: '[Screens]/Onboarding',
 )
 Widget lastPeriodScreenUseCase(BuildContext context) {
-  return LastPeriodScreen(onContinue: (startedOn, duration) {}, onSkip: () {});
+  return LastPeriodScreen(onContinue: (_) {}, onSkip: () {});
 }
 
 @widgetbook.UseCase(

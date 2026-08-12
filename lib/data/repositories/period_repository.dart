@@ -21,15 +21,40 @@ abstract class PeriodRepository {
   /// Insert or update a period keyed by [startedOn].
   ///
   /// Throws [ArgumentError] if [startedOn] is after today.
+  ///
+  /// New metadata fields default from [source] and [endedOn] when omitted.
   Future<PeriodLog> upsertPeriod({
     required DateTime startedOn,
     DateTime? endedOn,
     required String source,
+    String? startSource,
+    String? startConfidence,
+    String? endStatus,
+    String? endSource,
+    String? endConfidence,
+    String? roughDurationBucket,
   });
 
   Future<void> recordLastPeriod({
     required DateTime startedOn,
     required int? typicalPeriodDays,
+  });
+
+  /// Onboarding: latest period still open (no end date yet).
+  Future<PeriodLog> recordOnboardingLastOpen({
+    required DateTime startedOn,
+  });
+
+  /// Onboarding: latest period ended on an exact inclusive date.
+  Future<PeriodLog> recordOnboardingLastExactEnd({
+    required DateTime startedOn,
+    required DateTime endedOn,
+  });
+
+  /// Onboarding: latest period ended via a rough duration bucket.
+  Future<PeriodLog> recordOnboardingLastRoughEnd({
+    required DateTime startedOn,
+    required String roughDurationBucket,
   });
 
   Future<void> recordPastStarts({
@@ -66,8 +91,33 @@ abstract class PeriodRepository {
     int? typicalPeriodDays,
   });
 
+  /// Add Period: ongoing manual episode with no end date yet.
+  Future<PeriodLog> saveOngoingManualPeriod({
+    required DateTime startedOn,
+  });
+
+  /// Add Period: manual episode with an exact inclusive end date.
+  Future<PeriodLog> saveExactEndedManualPeriod({
+    required DateTime startedOn,
+    required DateTime endedOn,
+  });
+
+  /// Add Period: manual episode ended via a rough duration bucket.
+  Future<PeriodLog> saveRoughEndedManualPeriod({
+    required DateTime startedOn,
+    required String roughDurationBucket,
+  });
+
   static DateTime? estimateEnd(DateTime startedOn, int? typicalPeriodDays) {
     if (typicalPeriodDays == null || typicalPeriodDays < 1) return null;
     return dateOnly(startedOn).add(Duration(days: typicalPeriodDays - 1));
+  }
+
+  static DateTime? estimateEndFromBucket(
+    DateTime startedOn,
+    String roughDurationBucket,
+  ) {
+    final days = RoughDurationBuckets.typicalDaysFor(roughDurationBucket);
+    return estimateEnd(startedOn, days);
   }
 }

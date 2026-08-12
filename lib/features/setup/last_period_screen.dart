@@ -1,29 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../core/date_format.dart';
 import '../../theme/ritu_colors.dart';
-import 'widgets/choice_chips.dart';
-import 'widgets/ritu_calendar.dart';
+import 'widgets/period_episode_form_fields.dart';
 import 'widgets/progress_dots.dart';
+import 'widgets/ritu_calendar.dart';
 import 'widgets/setup_footer.dart';
 
-enum PeriodDuration { twoToThree, fourToFive, sixToSeven, varies }
+/// Figma 163:224 — onboarding step 1: last period start + end details.
+class LastPeriodInput {
+  const LastPeriodInput({
+    required this.startedOn,
+    required this.ongoingStatus,
+    this.endConfidence,
+    this.endedOn,
+    this.roughDurationBucket,
+  });
 
-extension PeriodDurationX on PeriodDuration {
-  String get label => switch (this) {
-        PeriodDuration.twoToThree => '2-3 days',
-        PeriodDuration.fourToFive => '4-5 days',
-        PeriodDuration.sixToSeven => '6-7 days',
-        PeriodDuration.varies => 'Varies',
-      };
-
-  /// Representative day count for estimates; null when length varies.
-  int? get typicalDays => switch (this) {
-        PeriodDuration.twoToThree => 3,
-        PeriodDuration.fourToFive => 5,
-        PeriodDuration.sixToSeven => 7,
-        PeriodDuration.varies => null,
-      };
+  final DateTime startedOn;
+  final PeriodOngoingStatus ongoingStatus;
+  final EndConfidenceChoice? endConfidence;
+  final DateTime? endedOn;
+  final String? roughDurationBucket;
 }
 
 class LastPeriodScreen extends StatefulWidget {
@@ -33,7 +32,7 @@ class LastPeriodScreen extends StatefulWidget {
     this.onSkip,
   });
 
-  final void Function(DateTime startedOn, PeriodDuration duration)? onContinue;
+  final void Function(LastPeriodInput input)? onContinue;
   final VoidCallback? onSkip;
 
   @override
@@ -43,18 +42,63 @@ class LastPeriodScreen extends StatefulWidget {
 class _LastPeriodScreenState extends State<LastPeriodScreen> {
   late DateTime _visibleMonth;
   DateTime? _selectedDate;
-  PeriodDuration? _duration;
+  PeriodOngoingStatus? _ongoingStatus;
+  EndConfidenceChoice? _endConfidence;
+  DateTime? _selectedEndDate;
+  String? _roughDurationBucket;
 
   @override
   void initState() {
     super.initState();
-    final now = DateTime.now();
+    final now = dateOnly(DateTime.now());
     _visibleMonth = DateTime(now.year, now.month);
-    _selectedDate = DateTime(now.year, now.month, now.day);
+    _selectedDate = now;
+  }
+
+  void _onStartSelected(DateTime date) {
+    final start = dateOnly(date);
+    setState(() {
+      _selectedDate = start;
+      if (_selectedEndDate != null && _selectedEndDate!.isBefore(start)) {
+        _selectedEndDate = null;
+      }
+    });
+  }
+
+  void _onOngoingStatusChanged(PeriodOngoingStatus status) {
+    setState(() {
+      _ongoingStatus = status;
+      if (status == PeriodOngoingStatus.stillGoing) {
+        _endConfidence = null;
+        _selectedEndDate = null;
+        _roughDurationBucket = null;
+      }
+    });
+  }
+
+  void _onEndConfidenceChanged(EndConfidenceChoice choice) {
+    setState(() {
+      _endConfidence = choice;
+      if (choice == EndConfidenceChoice.exact) {
+        _roughDurationBucket = null;
+      } else {
+        _selectedEndDate = null;
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    final today = dateOnly(DateTime.now());
+    final selected = _selectedDate == null ? null : dateOnly(_selectedDate!);
+    final canSave = periodEpisodeFormIsComplete(
+      startDate: selected,
+      ongoingStatus: _ongoingStatus,
+      endConfidence: _endConfidence,
+      selectedEndDate: _selectedEndDate,
+      roughDurationBucket: _roughDurationBucket,
+    );
+
     return Scaffold(
       backgroundColor: RituColors.backgroundPage,
       body: SafeArea(
@@ -95,64 +139,81 @@ class _LastPeriodScreenState extends State<LastPeriodScreen> {
                       RituCalendar(
                         month: _visibleMonth,
                         selectedDate: _selectedDate,
-                        maxSelectableDate: DateTime.now(),
+                        maxSelectableDate: today,
                         onMonthChanged: (month) {
                           setState(() => _visibleMonth = month);
                         },
-                        onDateSelected: (date) {
-                          setState(() => _selectedDate = date);
-                        },
+                        onDateSelected: _onStartSelected,
                       ),
                       const SizedBox(height: 24),
-                      Text(
-                        'And roughly how many days did it last?',
-                        style: GoogleFonts.dmSans(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          height: 24 / 18,
-                          color: RituColors.textPrimary,
-                        ),
+                      PeriodEpisodeFormFields(
+                        ongoingStatus: _ongoingStatus,
+                        onOngoingStatusChanged: _onOngoingStatusChanged,
+                        endConfidence: _endConfidence,
+                        onEndConfidenceChanged: _onEndConfidenceChanged,
+                        selectedEndDate: _selectedEndDate,
+                        onEndDatePicked: (date) {
+                          setState(() => _selectedEndDate = date);
+                        },
+                        roughDurationBucket: _roughDurationBucket,
+                        onRoughDurationBucketChanged: (bucket) {
+                          setState(() => _roughDurationBucket = bucket);
+                        },
+                        maxEndDate: today,
+                        startDate: selected,
+                        startDateValid: selected != null,
                       ),
-                      const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          for (final option in PeriodDuration.values) ...[
-                            if (option != PeriodDuration.values.first)
-                              const SizedBox(width: 8),
-                            Expanded(
-                              child: RituChoiceChip(
-                                label: option.label,
-                                selected: _duration == option,
-                                width: double.infinity,
-                                onTap: () {
-                                  setState(() => _duration = option);
-                                },
-                              ),
+                      const SizedBox(height: 24),
+                      SetupFooter(
+                        primaryLabel: 'This look right',
+                        primaryEnabled: canSave,
+                        onPrimary: () {
+                          final start = selected;
+                          final status = _ongoingStatus;
+                          if (start == null || status == null || !canSave) {
+                            return;
+                          }
+                          widget.onContinue?.call(
+                            LastPeriodInput(
+                              startedOn: start,
+                              ongoingStatus: status,
+                              endConfidence: _endConfidence,
+                              endedOn: _selectedEndDate,
+                              roughDurationBucket: _roughDurationBucket,
                             ),
-                          ],
-                        ],
+                          );
+                        },
+                        secondaryLabel: 'Skip – I’ll log from today',
+                        onSecondary: widget.onSkip ?? () {},
                       ),
+                      const SizedBox(height: 8),
                     ],
                   ),
                 ),
               ),
-              SetupFooter(
-                primaryLabel: 'This look right',
-                primaryEnabled: _selectedDate != null && _duration != null,
-                onPrimary: () {
-                  final date = _selectedDate;
-                  final duration = _duration;
-                  if (date == null || duration == null) return;
-                  widget.onContinue?.call(date, duration);
-                },
-                secondaryLabel: 'Skip – I’ll log from today',
-                onSecondary: widget.onSkip ?? () {},
-              ),
-              const SizedBox(height: 8),
             ],
           ),
         ),
       ),
     );
   }
+}
+
+/// Legacy duration chips kept for onboarding past-dates / profile defaults.
+enum PeriodDuration { twoToThree, fourToFive, sixToSeven, varies }
+
+extension PeriodDurationX on PeriodDuration {
+  String get label => switch (this) {
+        PeriodDuration.twoToThree => '2-3 days',
+        PeriodDuration.fourToFive => '4-5 days',
+        PeriodDuration.sixToSeven => '6-7 days',
+        PeriodDuration.varies => 'Varies',
+      };
+
+  int? get typicalDays => switch (this) {
+        PeriodDuration.twoToThree => 3,
+        PeriodDuration.fourToFive => 5,
+        PeriodDuration.sixToSeven => 7,
+        PeriodDuration.varies => null,
+      };
 }

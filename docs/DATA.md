@@ -23,7 +23,7 @@ Ritu stores all user data **on-device only** (SQLite via [Drift](https://drift.s
 
 Database file name: **`ritu.sqlite`** (opened as `driftDatabase(name: 'ritu')`).
 
-Current **schema version:** `6`.
+Current **schema version:** `7`.
 
 ### Regenerating code
 
@@ -53,6 +53,7 @@ lib/data/
     tables/
       profiles.dart
       period_logs.dart
+      period_end_prompts.dart
       custom_symptoms.dart
       daily_logs.dart
       journal_entries.dart
@@ -142,17 +143,56 @@ One row per **period episode** (not one row per bleed day).
 |--------|------|--------|
 | `id` | `INTEGER` PK auto | |
 | `started_on` | `DATETIME` (date-only) | Unique |
-| `ended_on` | `DATETIME` nullable | Inclusive last bleed day; null if unknown |
-| `source` | `TEXT` | `onboarding_last`, `onboarding_past`, `calendar`, `settings`, `manual` |
-| | | UI treats `manual` / `settings` / `onboarding_past` as **Manual**; others as **Logged** |
+| `ended_on` | `DATETIME` nullable | Inclusive last bleed day; null when end unknown/open |
+| `source` | `TEXT` | **Legacy** provenance: `onboarding_last`, `onboarding_past`, `calendar`, `settings`, `manual` — kept for compatibility |
+| `start_source` | `TEXT` | `daily_log`, `onboarding_last`, `onboarding_past`, `period_history`, `settings` |
+| `start_confidence` | `TEXT` | `logged` (live) or `manual` (recalled/backfilled) |
+| `end_status` | `TEXT` | `open`, `exact`, `rough`, `estimated`, `auto_capped`, `unknown` |
+| `end_source` | `TEXT` nullable | `daily_log_none_gap`, `add_period_exact`, `add_period_rough`, `home_confirm`, `onboarding_estimate`, `settings`, `day_10_cap` |
+| `end_confidence` | `TEXT` nullable | `confirmed`, `approximate`, `estimated` |
+| `rough_duration_bucket` | `TEXT` nullable | `2_3_days`, `4_5_days`, `6_7_days`, `8_plus_days` — used with `end_status = rough` |
 | `created_at` | `DATETIME` | |
 | `updated_at` | `DATETIME` | |
+
+**How ends are represented (not stored as classification/phase):**
+
+| Kind | `end_status` | Typical `end_source` | `ended_on` |
+|------|----------------|----------------------|------------|
+| Still bleeding | `open` | null | null |
+| Exact calendar end | `exact` | `daily_log_none_gap` or `add_period_exact` | inclusive last bleed day |
+| Rough Add Period length | `rough` | `add_period_rough` | derived from `rough_duration_bucket` |
+| Profile/onboarding estimate | `estimated` | `onboarding_estimate` or `settings` | `started_on + (typical − 1)` |
+| Auto day-10 cap | `auto_capped` | `day_10_cap` | capped inclusive end |
+| Unknown | `unknown` | null | null or legacy row with no end metadata |
+
+**UI Manual vs Logged:** `start_confidence == manual` → **Manual**; `logged` → **Logged**. The legacy `source` column is still written but new logic should prefer `start_source` / `start_confidence` / `end_*`.
 
 **Derived in `PeriodRepository` (not stored):**
 
 - Bleed days for the calendar = inclusive `started_on…ended_on` (or start-only if end is null)
 - Days since last period = today − latest `started_on`
 - When only a start + typical length is known, `ended_on = started_on + (typical_period_days - 1)`
+
+**Add Period repository methods** (manual backfill):
+
+- `saveOngoingManualPeriod` → `end_status = open`
+- `saveExactEndedManualPeriod` → `end_status = exact`, `end_source = add_period_exact`
+- `saveRoughEndedManualPeriod` → `end_status = rough`, bucket + approximate `ended_on`
+
+### `period_end_prompts`
+
+Tracks Home **“Still on your period?”** nudges so the app does not re-show the prompt for the same episode without cause.
+
+| Column | Type | Notes |
+|--------|------|--------|
+| `id` | `INTEGER` PK auto | |
+| `period_log_id` | `INTEGER` | FK to `period_logs.id` |
+| `shown_on` | `DATETIME` | When the prompt was shown |
+| `response` | `TEXT` nullable | `still_going`, `ended`, `dismissed` |
+| `responded_on` | `DATETIME` nullable | When the user responded |
+| `created_at` | `DATETIME` | |
+
+Managed via `PeriodEndPromptRepository` (`recordShown`, `recordResponse`, `getLatestForPeriod`).
 
 ### `custom_symptoms`
 
@@ -227,14 +267,15 @@ fixture sharing. Codec: `lib/data/backup/ritu_backup.dart`. Service:
   "version": 1,
   "exportedAt": "…ISO…",
   "profile": { "displayName", "createdAt", "onboardingCompletedAt", "typicalPeriodDays" },
-  "periodLogs": [ { "startedOn", "endedOn", "source", "createdAt", "updatedAt" } ],
+  "periodLogs": [ { "startedOn", "endedOn", "source", "startSource", "startConfidence", "endStatus", "endSource", "endConfidence", "roughDurationBucket", "createdAt", "updatedAt" } ],
+  "periodEndPrompts": [ { "periodLogId", "periodStartedOn", "shownOn", "response", "respondedOn", "createdAt" } ],
   "dailyLogs": [ { "loggedOn", "flowIntensity", "crampIntensity", "moods", "energyLevel", "sleepQuality", "wellbeing", "symptoms", "createdAt", "updatedAt" } ],
   "journalEntries": [ { "loggedOn", "body", "createdAt", "updatedAt" } ],
   "customSymptoms": [ { "name", "createdAt" } ]
 }
 ```
 
-- **Export Includes → Logs** = `periodLogs` + `dailyLogs`
+- **Export Includes → Logs** = `periodLogs` + `periodEndPrompts` + `dailyLogs`
 - **Journal entries** = `journalEntries`
 - **Settings** = `profile` + `customSymptoms`
 - Unchecked sections are omitted from the file

@@ -444,6 +444,75 @@ class $PeriodLogsTable extends PeriodLogs
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _startSourceMeta = const VerificationMeta(
+    'startSource',
+  );
+  @override
+  late final GeneratedColumn<String> startSource = GeneratedColumn<String>(
+    'start_source',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(PeriodStartSources.periodHistory),
+  );
+  static const VerificationMeta _startConfidenceMeta = const VerificationMeta(
+    'startConfidence',
+  );
+  @override
+  late final GeneratedColumn<String> startConfidence = GeneratedColumn<String>(
+    'start_confidence',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(PeriodStartConfidence.manual),
+  );
+  static const VerificationMeta _endStatusMeta = const VerificationMeta(
+    'endStatus',
+  );
+  @override
+  late final GeneratedColumn<String> endStatus = GeneratedColumn<String>(
+    'end_status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(PeriodEndStatus.unknown),
+  );
+  static const VerificationMeta _endSourceMeta = const VerificationMeta(
+    'endSource',
+  );
+  @override
+  late final GeneratedColumn<String> endSource = GeneratedColumn<String>(
+    'end_source',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _endConfidenceMeta = const VerificationMeta(
+    'endConfidence',
+  );
+  @override
+  late final GeneratedColumn<String> endConfidence = GeneratedColumn<String>(
+    'end_confidence',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _roughDurationBucketMeta =
+      const VerificationMeta('roughDurationBucket');
+  @override
+  late final GeneratedColumn<String> roughDurationBucket =
+      GeneratedColumn<String>(
+        'rough_duration_bucket',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -472,6 +541,12 @@ class $PeriodLogsTable extends PeriodLogs
     startedOn,
     endedOn,
     source,
+    startSource,
+    startConfidence,
+    endStatus,
+    endSource,
+    endConfidence,
+    roughDurationBucket,
     createdAt,
     updatedAt,
   ];
@@ -511,6 +586,54 @@ class $PeriodLogsTable extends PeriodLogs
       );
     } else if (isInserting) {
       context.missing(_sourceMeta);
+    }
+    if (data.containsKey('start_source')) {
+      context.handle(
+        _startSourceMeta,
+        startSource.isAcceptableOrUnknown(
+          data['start_source']!,
+          _startSourceMeta,
+        ),
+      );
+    }
+    if (data.containsKey('start_confidence')) {
+      context.handle(
+        _startConfidenceMeta,
+        startConfidence.isAcceptableOrUnknown(
+          data['start_confidence']!,
+          _startConfidenceMeta,
+        ),
+      );
+    }
+    if (data.containsKey('end_status')) {
+      context.handle(
+        _endStatusMeta,
+        endStatus.isAcceptableOrUnknown(data['end_status']!, _endStatusMeta),
+      );
+    }
+    if (data.containsKey('end_source')) {
+      context.handle(
+        _endSourceMeta,
+        endSource.isAcceptableOrUnknown(data['end_source']!, _endSourceMeta),
+      );
+    }
+    if (data.containsKey('end_confidence')) {
+      context.handle(
+        _endConfidenceMeta,
+        endConfidence.isAcceptableOrUnknown(
+          data['end_confidence']!,
+          _endConfidenceMeta,
+        ),
+      );
+    }
+    if (data.containsKey('rough_duration_bucket')) {
+      context.handle(
+        _roughDurationBucketMeta,
+        roughDurationBucket.isAcceptableOrUnknown(
+          data['rough_duration_bucket']!,
+          _roughDurationBucketMeta,
+        ),
+      );
     }
     if (data.containsKey('created_at')) {
       context.handle(
@@ -557,6 +680,30 @@ class $PeriodLogsTable extends PeriodLogs
         DriftSqlType.string,
         data['${effectivePrefix}source'],
       )!,
+      startSource: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}start_source'],
+      )!,
+      startConfidence: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}start_confidence'],
+      )!,
+      endStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}end_status'],
+      )!,
+      endSource: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}end_source'],
+      ),
+      endConfidence: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}end_confidence'],
+      ),
+      roughDurationBucket: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}rough_duration_bucket'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -583,8 +730,15 @@ class PeriodLogRow extends DataClass implements Insertable<PeriodLogRow> {
   /// Inclusive last bleed day. Null = unknown / still open.
   final DateTime? endedOn;
 
-  /// Where this row came from: onboarding_last, onboarding_past, calendar, settings.
+  /// Legacy provenance: onboarding_last, onboarding_past, calendar, settings,
+  /// manual.
   final String source;
+  final String startSource;
+  final String startConfidence;
+  final String endStatus;
+  final String? endSource;
+  final String? endConfidence;
+  final String? roughDurationBucket;
   final DateTime createdAt;
   final DateTime updatedAt;
   const PeriodLogRow({
@@ -592,6 +746,12 @@ class PeriodLogRow extends DataClass implements Insertable<PeriodLogRow> {
     required this.startedOn,
     this.endedOn,
     required this.source,
+    required this.startSource,
+    required this.startConfidence,
+    required this.endStatus,
+    this.endSource,
+    this.endConfidence,
+    this.roughDurationBucket,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -604,6 +764,18 @@ class PeriodLogRow extends DataClass implements Insertable<PeriodLogRow> {
       map['ended_on'] = Variable<DateTime>(endedOn);
     }
     map['source'] = Variable<String>(source);
+    map['start_source'] = Variable<String>(startSource);
+    map['start_confidence'] = Variable<String>(startConfidence);
+    map['end_status'] = Variable<String>(endStatus);
+    if (!nullToAbsent || endSource != null) {
+      map['end_source'] = Variable<String>(endSource);
+    }
+    if (!nullToAbsent || endConfidence != null) {
+      map['end_confidence'] = Variable<String>(endConfidence);
+    }
+    if (!nullToAbsent || roughDurationBucket != null) {
+      map['rough_duration_bucket'] = Variable<String>(roughDurationBucket);
+    }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
@@ -617,6 +789,18 @@ class PeriodLogRow extends DataClass implements Insertable<PeriodLogRow> {
           ? const Value.absent()
           : Value(endedOn),
       source: Value(source),
+      startSource: Value(startSource),
+      startConfidence: Value(startConfidence),
+      endStatus: Value(endStatus),
+      endSource: endSource == null && nullToAbsent
+          ? const Value.absent()
+          : Value(endSource),
+      endConfidence: endConfidence == null && nullToAbsent
+          ? const Value.absent()
+          : Value(endConfidence),
+      roughDurationBucket: roughDurationBucket == null && nullToAbsent
+          ? const Value.absent()
+          : Value(roughDurationBucket),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -632,6 +816,14 @@ class PeriodLogRow extends DataClass implements Insertable<PeriodLogRow> {
       startedOn: serializer.fromJson<DateTime>(json['startedOn']),
       endedOn: serializer.fromJson<DateTime?>(json['endedOn']),
       source: serializer.fromJson<String>(json['source']),
+      startSource: serializer.fromJson<String>(json['startSource']),
+      startConfidence: serializer.fromJson<String>(json['startConfidence']),
+      endStatus: serializer.fromJson<String>(json['endStatus']),
+      endSource: serializer.fromJson<String?>(json['endSource']),
+      endConfidence: serializer.fromJson<String?>(json['endConfidence']),
+      roughDurationBucket: serializer.fromJson<String?>(
+        json['roughDurationBucket'],
+      ),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
@@ -644,6 +836,12 @@ class PeriodLogRow extends DataClass implements Insertable<PeriodLogRow> {
       'startedOn': serializer.toJson<DateTime>(startedOn),
       'endedOn': serializer.toJson<DateTime?>(endedOn),
       'source': serializer.toJson<String>(source),
+      'startSource': serializer.toJson<String>(startSource),
+      'startConfidence': serializer.toJson<String>(startConfidence),
+      'endStatus': serializer.toJson<String>(endStatus),
+      'endSource': serializer.toJson<String?>(endSource),
+      'endConfidence': serializer.toJson<String?>(endConfidence),
+      'roughDurationBucket': serializer.toJson<String?>(roughDurationBucket),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
@@ -654,6 +852,12 @@ class PeriodLogRow extends DataClass implements Insertable<PeriodLogRow> {
     DateTime? startedOn,
     Value<DateTime?> endedOn = const Value.absent(),
     String? source,
+    String? startSource,
+    String? startConfidence,
+    String? endStatus,
+    Value<String?> endSource = const Value.absent(),
+    Value<String?> endConfidence = const Value.absent(),
+    Value<String?> roughDurationBucket = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
   }) => PeriodLogRow(
@@ -661,6 +865,16 @@ class PeriodLogRow extends DataClass implements Insertable<PeriodLogRow> {
     startedOn: startedOn ?? this.startedOn,
     endedOn: endedOn.present ? endedOn.value : this.endedOn,
     source: source ?? this.source,
+    startSource: startSource ?? this.startSource,
+    startConfidence: startConfidence ?? this.startConfidence,
+    endStatus: endStatus ?? this.endStatus,
+    endSource: endSource.present ? endSource.value : this.endSource,
+    endConfidence: endConfidence.present
+        ? endConfidence.value
+        : this.endConfidence,
+    roughDurationBucket: roughDurationBucket.present
+        ? roughDurationBucket.value
+        : this.roughDurationBucket,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );
@@ -670,6 +884,20 @@ class PeriodLogRow extends DataClass implements Insertable<PeriodLogRow> {
       startedOn: data.startedOn.present ? data.startedOn.value : this.startedOn,
       endedOn: data.endedOn.present ? data.endedOn.value : this.endedOn,
       source: data.source.present ? data.source.value : this.source,
+      startSource: data.startSource.present
+          ? data.startSource.value
+          : this.startSource,
+      startConfidence: data.startConfidence.present
+          ? data.startConfidence.value
+          : this.startConfidence,
+      endStatus: data.endStatus.present ? data.endStatus.value : this.endStatus,
+      endSource: data.endSource.present ? data.endSource.value : this.endSource,
+      endConfidence: data.endConfidence.present
+          ? data.endConfidence.value
+          : this.endConfidence,
+      roughDurationBucket: data.roughDurationBucket.present
+          ? data.roughDurationBucket.value
+          : this.roughDurationBucket,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -682,6 +910,12 @@ class PeriodLogRow extends DataClass implements Insertable<PeriodLogRow> {
           ..write('startedOn: $startedOn, ')
           ..write('endedOn: $endedOn, ')
           ..write('source: $source, ')
+          ..write('startSource: $startSource, ')
+          ..write('startConfidence: $startConfidence, ')
+          ..write('endStatus: $endStatus, ')
+          ..write('endSource: $endSource, ')
+          ..write('endConfidence: $endConfidence, ')
+          ..write('roughDurationBucket: $roughDurationBucket, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -689,8 +923,20 @@ class PeriodLogRow extends DataClass implements Insertable<PeriodLogRow> {
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, startedOn, endedOn, source, createdAt, updatedAt);
+  int get hashCode => Object.hash(
+    id,
+    startedOn,
+    endedOn,
+    source,
+    startSource,
+    startConfidence,
+    endStatus,
+    endSource,
+    endConfidence,
+    roughDurationBucket,
+    createdAt,
+    updatedAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -699,6 +945,12 @@ class PeriodLogRow extends DataClass implements Insertable<PeriodLogRow> {
           other.startedOn == this.startedOn &&
           other.endedOn == this.endedOn &&
           other.source == this.source &&
+          other.startSource == this.startSource &&
+          other.startConfidence == this.startConfidence &&
+          other.endStatus == this.endStatus &&
+          other.endSource == this.endSource &&
+          other.endConfidence == this.endConfidence &&
+          other.roughDurationBucket == this.roughDurationBucket &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -708,6 +960,12 @@ class PeriodLogsCompanion extends UpdateCompanion<PeriodLogRow> {
   final Value<DateTime> startedOn;
   final Value<DateTime?> endedOn;
   final Value<String> source;
+  final Value<String> startSource;
+  final Value<String> startConfidence;
+  final Value<String> endStatus;
+  final Value<String?> endSource;
+  final Value<String?> endConfidence;
+  final Value<String?> roughDurationBucket;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   const PeriodLogsCompanion({
@@ -715,6 +973,12 @@ class PeriodLogsCompanion extends UpdateCompanion<PeriodLogRow> {
     this.startedOn = const Value.absent(),
     this.endedOn = const Value.absent(),
     this.source = const Value.absent(),
+    this.startSource = const Value.absent(),
+    this.startConfidence = const Value.absent(),
+    this.endStatus = const Value.absent(),
+    this.endSource = const Value.absent(),
+    this.endConfidence = const Value.absent(),
+    this.roughDurationBucket = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
   });
@@ -723,6 +987,12 @@ class PeriodLogsCompanion extends UpdateCompanion<PeriodLogRow> {
     required DateTime startedOn,
     this.endedOn = const Value.absent(),
     required String source,
+    this.startSource = const Value.absent(),
+    this.startConfidence = const Value.absent(),
+    this.endStatus = const Value.absent(),
+    this.endSource = const Value.absent(),
+    this.endConfidence = const Value.absent(),
+    this.roughDurationBucket = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
   }) : startedOn = Value(startedOn),
@@ -734,6 +1004,12 @@ class PeriodLogsCompanion extends UpdateCompanion<PeriodLogRow> {
     Expression<DateTime>? startedOn,
     Expression<DateTime>? endedOn,
     Expression<String>? source,
+    Expression<String>? startSource,
+    Expression<String>? startConfidence,
+    Expression<String>? endStatus,
+    Expression<String>? endSource,
+    Expression<String>? endConfidence,
+    Expression<String>? roughDurationBucket,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
   }) {
@@ -742,6 +1018,13 @@ class PeriodLogsCompanion extends UpdateCompanion<PeriodLogRow> {
       if (startedOn != null) 'started_on': startedOn,
       if (endedOn != null) 'ended_on': endedOn,
       if (source != null) 'source': source,
+      if (startSource != null) 'start_source': startSource,
+      if (startConfidence != null) 'start_confidence': startConfidence,
+      if (endStatus != null) 'end_status': endStatus,
+      if (endSource != null) 'end_source': endSource,
+      if (endConfidence != null) 'end_confidence': endConfidence,
+      if (roughDurationBucket != null)
+        'rough_duration_bucket': roughDurationBucket,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
     });
@@ -752,6 +1035,12 @@ class PeriodLogsCompanion extends UpdateCompanion<PeriodLogRow> {
     Value<DateTime>? startedOn,
     Value<DateTime?>? endedOn,
     Value<String>? source,
+    Value<String>? startSource,
+    Value<String>? startConfidence,
+    Value<String>? endStatus,
+    Value<String?>? endSource,
+    Value<String?>? endConfidence,
+    Value<String?>? roughDurationBucket,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
   }) {
@@ -760,6 +1049,12 @@ class PeriodLogsCompanion extends UpdateCompanion<PeriodLogRow> {
       startedOn: startedOn ?? this.startedOn,
       endedOn: endedOn ?? this.endedOn,
       source: source ?? this.source,
+      startSource: startSource ?? this.startSource,
+      startConfidence: startConfidence ?? this.startConfidence,
+      endStatus: endStatus ?? this.endStatus,
+      endSource: endSource ?? this.endSource,
+      endConfidence: endConfidence ?? this.endConfidence,
+      roughDurationBucket: roughDurationBucket ?? this.roughDurationBucket,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -780,6 +1075,26 @@ class PeriodLogsCompanion extends UpdateCompanion<PeriodLogRow> {
     if (source.present) {
       map['source'] = Variable<String>(source.value);
     }
+    if (startSource.present) {
+      map['start_source'] = Variable<String>(startSource.value);
+    }
+    if (startConfidence.present) {
+      map['start_confidence'] = Variable<String>(startConfidence.value);
+    }
+    if (endStatus.present) {
+      map['end_status'] = Variable<String>(endStatus.value);
+    }
+    if (endSource.present) {
+      map['end_source'] = Variable<String>(endSource.value);
+    }
+    if (endConfidence.present) {
+      map['end_confidence'] = Variable<String>(endConfidence.value);
+    }
+    if (roughDurationBucket.present) {
+      map['rough_duration_bucket'] = Variable<String>(
+        roughDurationBucket.value,
+      );
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -796,8 +1111,429 @@ class PeriodLogsCompanion extends UpdateCompanion<PeriodLogRow> {
           ..write('startedOn: $startedOn, ')
           ..write('endedOn: $endedOn, ')
           ..write('source: $source, ')
+          ..write('startSource: $startSource, ')
+          ..write('startConfidence: $startConfidence, ')
+          ..write('endStatus: $endStatus, ')
+          ..write('endSource: $endSource, ')
+          ..write('endConfidence: $endConfidence, ')
+          ..write('roughDurationBucket: $roughDurationBucket, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $PeriodEndPromptsTable extends PeriodEndPrompts
+    with TableInfo<$PeriodEndPromptsTable, PeriodEndPromptRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PeriodEndPromptsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _periodLogIdMeta = const VerificationMeta(
+    'periodLogId',
+  );
+  @override
+  late final GeneratedColumn<int> periodLogId = GeneratedColumn<int>(
+    'period_log_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _shownOnMeta = const VerificationMeta(
+    'shownOn',
+  );
+  @override
+  late final GeneratedColumn<DateTime> shownOn = GeneratedColumn<DateTime>(
+    'shown_on',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _responseMeta = const VerificationMeta(
+    'response',
+  );
+  @override
+  late final GeneratedColumn<String> response = GeneratedColumn<String>(
+    'response',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _respondedOnMeta = const VerificationMeta(
+    'respondedOn',
+  );
+  @override
+  late final GeneratedColumn<DateTime> respondedOn = GeneratedColumn<DateTime>(
+    'responded_on',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    periodLogId,
+    shownOn,
+    response,
+    respondedOn,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'period_end_prompts';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<PeriodEndPromptRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('period_log_id')) {
+      context.handle(
+        _periodLogIdMeta,
+        periodLogId.isAcceptableOrUnknown(
+          data['period_log_id']!,
+          _periodLogIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_periodLogIdMeta);
+    }
+    if (data.containsKey('shown_on')) {
+      context.handle(
+        _shownOnMeta,
+        shownOn.isAcceptableOrUnknown(data['shown_on']!, _shownOnMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_shownOnMeta);
+    }
+    if (data.containsKey('response')) {
+      context.handle(
+        _responseMeta,
+        response.isAcceptableOrUnknown(data['response']!, _responseMeta),
+      );
+    }
+    if (data.containsKey('responded_on')) {
+      context.handle(
+        _respondedOnMeta,
+        respondedOn.isAcceptableOrUnknown(
+          data['responded_on']!,
+          _respondedOnMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  PeriodEndPromptRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PeriodEndPromptRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      periodLogId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}period_log_id'],
+      )!,
+      shownOn: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}shown_on'],
+      )!,
+      response: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}response'],
+      ),
+      respondedOn: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}responded_on'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $PeriodEndPromptsTable createAlias(String alias) {
+    return $PeriodEndPromptsTable(attachedDatabase, alias);
+  }
+}
+
+class PeriodEndPromptRow extends DataClass
+    implements Insertable<PeriodEndPromptRow> {
+  final int id;
+  final int periodLogId;
+  final DateTime shownOn;
+
+  /// `still_going`, `ended`, or `dismissed`.
+  final String? response;
+  final DateTime? respondedOn;
+  final DateTime createdAt;
+  const PeriodEndPromptRow({
+    required this.id,
+    required this.periodLogId,
+    required this.shownOn,
+    this.response,
+    this.respondedOn,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['period_log_id'] = Variable<int>(periodLogId);
+    map['shown_on'] = Variable<DateTime>(shownOn);
+    if (!nullToAbsent || response != null) {
+      map['response'] = Variable<String>(response);
+    }
+    if (!nullToAbsent || respondedOn != null) {
+      map['responded_on'] = Variable<DateTime>(respondedOn);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  PeriodEndPromptsCompanion toCompanion(bool nullToAbsent) {
+    return PeriodEndPromptsCompanion(
+      id: Value(id),
+      periodLogId: Value(periodLogId),
+      shownOn: Value(shownOn),
+      response: response == null && nullToAbsent
+          ? const Value.absent()
+          : Value(response),
+      respondedOn: respondedOn == null && nullToAbsent
+          ? const Value.absent()
+          : Value(respondedOn),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory PeriodEndPromptRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PeriodEndPromptRow(
+      id: serializer.fromJson<int>(json['id']),
+      periodLogId: serializer.fromJson<int>(json['periodLogId']),
+      shownOn: serializer.fromJson<DateTime>(json['shownOn']),
+      response: serializer.fromJson<String?>(json['response']),
+      respondedOn: serializer.fromJson<DateTime?>(json['respondedOn']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'periodLogId': serializer.toJson<int>(periodLogId),
+      'shownOn': serializer.toJson<DateTime>(shownOn),
+      'response': serializer.toJson<String?>(response),
+      'respondedOn': serializer.toJson<DateTime?>(respondedOn),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  PeriodEndPromptRow copyWith({
+    int? id,
+    int? periodLogId,
+    DateTime? shownOn,
+    Value<String?> response = const Value.absent(),
+    Value<DateTime?> respondedOn = const Value.absent(),
+    DateTime? createdAt,
+  }) => PeriodEndPromptRow(
+    id: id ?? this.id,
+    periodLogId: periodLogId ?? this.periodLogId,
+    shownOn: shownOn ?? this.shownOn,
+    response: response.present ? response.value : this.response,
+    respondedOn: respondedOn.present ? respondedOn.value : this.respondedOn,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  PeriodEndPromptRow copyWithCompanion(PeriodEndPromptsCompanion data) {
+    return PeriodEndPromptRow(
+      id: data.id.present ? data.id.value : this.id,
+      periodLogId: data.periodLogId.present
+          ? data.periodLogId.value
+          : this.periodLogId,
+      shownOn: data.shownOn.present ? data.shownOn.value : this.shownOn,
+      response: data.response.present ? data.response.value : this.response,
+      respondedOn: data.respondedOn.present
+          ? data.respondedOn.value
+          : this.respondedOn,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PeriodEndPromptRow(')
+          ..write('id: $id, ')
+          ..write('periodLogId: $periodLogId, ')
+          ..write('shownOn: $shownOn, ')
+          ..write('response: $response, ')
+          ..write('respondedOn: $respondedOn, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, periodLogId, shownOn, response, respondedOn, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PeriodEndPromptRow &&
+          other.id == this.id &&
+          other.periodLogId == this.periodLogId &&
+          other.shownOn == this.shownOn &&
+          other.response == this.response &&
+          other.respondedOn == this.respondedOn &&
+          other.createdAt == this.createdAt);
+}
+
+class PeriodEndPromptsCompanion extends UpdateCompanion<PeriodEndPromptRow> {
+  final Value<int> id;
+  final Value<int> periodLogId;
+  final Value<DateTime> shownOn;
+  final Value<String?> response;
+  final Value<DateTime?> respondedOn;
+  final Value<DateTime> createdAt;
+  const PeriodEndPromptsCompanion({
+    this.id = const Value.absent(),
+    this.periodLogId = const Value.absent(),
+    this.shownOn = const Value.absent(),
+    this.response = const Value.absent(),
+    this.respondedOn = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  });
+  PeriodEndPromptsCompanion.insert({
+    this.id = const Value.absent(),
+    required int periodLogId,
+    required DateTime shownOn,
+    this.response = const Value.absent(),
+    this.respondedOn = const Value.absent(),
+    required DateTime createdAt,
+  }) : periodLogId = Value(periodLogId),
+       shownOn = Value(shownOn),
+       createdAt = Value(createdAt);
+  static Insertable<PeriodEndPromptRow> custom({
+    Expression<int>? id,
+    Expression<int>? periodLogId,
+    Expression<DateTime>? shownOn,
+    Expression<String>? response,
+    Expression<DateTime>? respondedOn,
+    Expression<DateTime>? createdAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (periodLogId != null) 'period_log_id': periodLogId,
+      if (shownOn != null) 'shown_on': shownOn,
+      if (response != null) 'response': response,
+      if (respondedOn != null) 'responded_on': respondedOn,
+      if (createdAt != null) 'created_at': createdAt,
+    });
+  }
+
+  PeriodEndPromptsCompanion copyWith({
+    Value<int>? id,
+    Value<int>? periodLogId,
+    Value<DateTime>? shownOn,
+    Value<String?>? response,
+    Value<DateTime?>? respondedOn,
+    Value<DateTime>? createdAt,
+  }) {
+    return PeriodEndPromptsCompanion(
+      id: id ?? this.id,
+      periodLogId: periodLogId ?? this.periodLogId,
+      shownOn: shownOn ?? this.shownOn,
+      response: response ?? this.response,
+      respondedOn: respondedOn ?? this.respondedOn,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (periodLogId.present) {
+      map['period_log_id'] = Variable<int>(periodLogId.value);
+    }
+    if (shownOn.present) {
+      map['shown_on'] = Variable<DateTime>(shownOn.value);
+    }
+    if (response.present) {
+      map['response'] = Variable<String>(response.value);
+    }
+    if (respondedOn.present) {
+      map['responded_on'] = Variable<DateTime>(respondedOn.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PeriodEndPromptsCompanion(')
+          ..write('id: $id, ')
+          ..write('periodLogId: $periodLogId, ')
+          ..write('shownOn: $shownOn, ')
+          ..write('response: $response, ')
+          ..write('respondedOn: $respondedOn, ')
+          ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
   }
@@ -2113,6 +2849,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $ProfilesTable profiles = $ProfilesTable(this);
   late final $PeriodLogsTable periodLogs = $PeriodLogsTable(this);
+  late final $PeriodEndPromptsTable periodEndPrompts = $PeriodEndPromptsTable(
+    this,
+  );
   late final $CustomSymptomsTable customSymptoms = $CustomSymptomsTable(this);
   late final $DailyLogsTable dailyLogs = $DailyLogsTable(this);
   late final $JournalEntriesTable journalEntries = $JournalEntriesTable(this);
@@ -2123,6 +2862,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   List<DatabaseSchemaEntity> get allSchemaEntities => [
     profiles,
     periodLogs,
+    periodEndPrompts,
     customSymptoms,
     dailyLogs,
     journalEntries,
@@ -2332,6 +3072,12 @@ typedef $$PeriodLogsTableCreateCompanionBuilder =
       required DateTime startedOn,
       Value<DateTime?> endedOn,
       required String source,
+      Value<String> startSource,
+      Value<String> startConfidence,
+      Value<String> endStatus,
+      Value<String?> endSource,
+      Value<String?> endConfidence,
+      Value<String?> roughDurationBucket,
       required DateTime createdAt,
       required DateTime updatedAt,
     });
@@ -2341,6 +3087,12 @@ typedef $$PeriodLogsTableUpdateCompanionBuilder =
       Value<DateTime> startedOn,
       Value<DateTime?> endedOn,
       Value<String> source,
+      Value<String> startSource,
+      Value<String> startConfidence,
+      Value<String> endStatus,
+      Value<String?> endSource,
+      Value<String?> endConfidence,
+      Value<String?> roughDurationBucket,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
     });
@@ -2371,6 +3123,36 @@ class $$PeriodLogsTableFilterComposer
 
   ColumnFilters<String> get source => $composableBuilder(
     column: $table.source,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get startSource => $composableBuilder(
+    column: $table.startSource,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get startConfidence => $composableBuilder(
+    column: $table.startConfidence,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get endStatus => $composableBuilder(
+    column: $table.endStatus,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get endSource => $composableBuilder(
+    column: $table.endSource,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get endConfidence => $composableBuilder(
+    column: $table.endConfidence,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get roughDurationBucket => $composableBuilder(
+    column: $table.roughDurationBucket,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -2414,6 +3196,36 @@ class $$PeriodLogsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get startSource => $composableBuilder(
+    column: $table.startSource,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get startConfidence => $composableBuilder(
+    column: $table.startConfidence,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get endStatus => $composableBuilder(
+    column: $table.endStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get endSource => $composableBuilder(
+    column: $table.endSource,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get endConfidence => $composableBuilder(
+    column: $table.endConfidence,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get roughDurationBucket => $composableBuilder(
+    column: $table.roughDurationBucket,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -2445,6 +3257,32 @@ class $$PeriodLogsTableAnnotationComposer
 
   GeneratedColumn<String> get source =>
       $composableBuilder(column: $table.source, builder: (column) => column);
+
+  GeneratedColumn<String> get startSource => $composableBuilder(
+    column: $table.startSource,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get startConfidence => $composableBuilder(
+    column: $table.startConfidence,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get endStatus =>
+      $composableBuilder(column: $table.endStatus, builder: (column) => column);
+
+  GeneratedColumn<String> get endSource =>
+      $composableBuilder(column: $table.endSource, builder: (column) => column);
+
+  GeneratedColumn<String> get endConfidence => $composableBuilder(
+    column: $table.endConfidence,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get roughDurationBucket => $composableBuilder(
+    column: $table.roughDurationBucket,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -2488,6 +3326,12 @@ class $$PeriodLogsTableTableManager
                 Value<DateTime> startedOn = const Value.absent(),
                 Value<DateTime?> endedOn = const Value.absent(),
                 Value<String> source = const Value.absent(),
+                Value<String> startSource = const Value.absent(),
+                Value<String> startConfidence = const Value.absent(),
+                Value<String> endStatus = const Value.absent(),
+                Value<String?> endSource = const Value.absent(),
+                Value<String?> endConfidence = const Value.absent(),
+                Value<String?> roughDurationBucket = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
               }) => PeriodLogsCompanion(
@@ -2495,6 +3339,12 @@ class $$PeriodLogsTableTableManager
                 startedOn: startedOn,
                 endedOn: endedOn,
                 source: source,
+                startSource: startSource,
+                startConfidence: startConfidence,
+                endStatus: endStatus,
+                endSource: endSource,
+                endConfidence: endConfidence,
+                roughDurationBucket: roughDurationBucket,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
               ),
@@ -2504,6 +3354,12 @@ class $$PeriodLogsTableTableManager
                 required DateTime startedOn,
                 Value<DateTime?> endedOn = const Value.absent(),
                 required String source,
+                Value<String> startSource = const Value.absent(),
+                Value<String> startConfidence = const Value.absent(),
+                Value<String> endStatus = const Value.absent(),
+                Value<String?> endSource = const Value.absent(),
+                Value<String?> endConfidence = const Value.absent(),
+                Value<String?> roughDurationBucket = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
               }) => PeriodLogsCompanion.insert(
@@ -2511,6 +3367,12 @@ class $$PeriodLogsTableTableManager
                 startedOn: startedOn,
                 endedOn: endedOn,
                 source: source,
+                startSource: startSource,
+                startConfidence: startConfidence,
+                endStatus: endStatus,
+                endSource: endSource,
+                endConfidence: endConfidence,
+                roughDurationBucket: roughDurationBucket,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
               ),
@@ -2537,6 +3399,233 @@ typedef $$PeriodLogsTableProcessedTableManager =
         BaseReferences<_$AppDatabase, $PeriodLogsTable, PeriodLogRow>,
       ),
       PeriodLogRow,
+      PrefetchHooks Function()
+    >;
+typedef $$PeriodEndPromptsTableCreateCompanionBuilder =
+    PeriodEndPromptsCompanion Function({
+      Value<int> id,
+      required int periodLogId,
+      required DateTime shownOn,
+      Value<String?> response,
+      Value<DateTime?> respondedOn,
+      required DateTime createdAt,
+    });
+typedef $$PeriodEndPromptsTableUpdateCompanionBuilder =
+    PeriodEndPromptsCompanion Function({
+      Value<int> id,
+      Value<int> periodLogId,
+      Value<DateTime> shownOn,
+      Value<String?> response,
+      Value<DateTime?> respondedOn,
+      Value<DateTime> createdAt,
+    });
+
+class $$PeriodEndPromptsTableFilterComposer
+    extends Composer<_$AppDatabase, $PeriodEndPromptsTable> {
+  $$PeriodEndPromptsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get periodLogId => $composableBuilder(
+    column: $table.periodLogId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get shownOn => $composableBuilder(
+    column: $table.shownOn,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get response => $composableBuilder(
+    column: $table.response,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get respondedOn => $composableBuilder(
+    column: $table.respondedOn,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$PeriodEndPromptsTableOrderingComposer
+    extends Composer<_$AppDatabase, $PeriodEndPromptsTable> {
+  $$PeriodEndPromptsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get periodLogId => $composableBuilder(
+    column: $table.periodLogId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get shownOn => $composableBuilder(
+    column: $table.shownOn,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get response => $composableBuilder(
+    column: $table.response,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get respondedOn => $composableBuilder(
+    column: $table.respondedOn,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$PeriodEndPromptsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PeriodEndPromptsTable> {
+  $$PeriodEndPromptsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get periodLogId => $composableBuilder(
+    column: $table.periodLogId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get shownOn =>
+      $composableBuilder(column: $table.shownOn, builder: (column) => column);
+
+  GeneratedColumn<String> get response =>
+      $composableBuilder(column: $table.response, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get respondedOn => $composableBuilder(
+    column: $table.respondedOn,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$PeriodEndPromptsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $PeriodEndPromptsTable,
+          PeriodEndPromptRow,
+          $$PeriodEndPromptsTableFilterComposer,
+          $$PeriodEndPromptsTableOrderingComposer,
+          $$PeriodEndPromptsTableAnnotationComposer,
+          $$PeriodEndPromptsTableCreateCompanionBuilder,
+          $$PeriodEndPromptsTableUpdateCompanionBuilder,
+          (
+            PeriodEndPromptRow,
+            BaseReferences<
+              _$AppDatabase,
+              $PeriodEndPromptsTable,
+              PeriodEndPromptRow
+            >,
+          ),
+          PeriodEndPromptRow,
+          PrefetchHooks Function()
+        > {
+  $$PeriodEndPromptsTableTableManager(
+    _$AppDatabase db,
+    $PeriodEndPromptsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PeriodEndPromptsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PeriodEndPromptsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PeriodEndPromptsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> periodLogId = const Value.absent(),
+                Value<DateTime> shownOn = const Value.absent(),
+                Value<String?> response = const Value.absent(),
+                Value<DateTime?> respondedOn = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => PeriodEndPromptsCompanion(
+                id: id,
+                periodLogId: periodLogId,
+                shownOn: shownOn,
+                response: response,
+                respondedOn: respondedOn,
+                createdAt: createdAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int periodLogId,
+                required DateTime shownOn,
+                Value<String?> response = const Value.absent(),
+                Value<DateTime?> respondedOn = const Value.absent(),
+                required DateTime createdAt,
+              }) => PeriodEndPromptsCompanion.insert(
+                id: id,
+                periodLogId: periodLogId,
+                shownOn: shownOn,
+                response: response,
+                respondedOn: respondedOn,
+                createdAt: createdAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$PeriodEndPromptsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $PeriodEndPromptsTable,
+      PeriodEndPromptRow,
+      $$PeriodEndPromptsTableFilterComposer,
+      $$PeriodEndPromptsTableOrderingComposer,
+      $$PeriodEndPromptsTableAnnotationComposer,
+      $$PeriodEndPromptsTableCreateCompanionBuilder,
+      $$PeriodEndPromptsTableUpdateCompanionBuilder,
+      (
+        PeriodEndPromptRow,
+        BaseReferences<
+          _$AppDatabase,
+          $PeriodEndPromptsTable,
+          PeriodEndPromptRow
+        >,
+      ),
+      PeriodEndPromptRow,
       PrefetchHooks Function()
     >;
 typedef $$CustomSymptomsTableCreateCompanionBuilder =
@@ -3225,6 +4314,8 @@ class $AppDatabaseManager {
       $$ProfilesTableTableManager(_db, _db.profiles);
   $$PeriodLogsTableTableManager get periodLogs =>
       $$PeriodLogsTableTableManager(_db, _db.periodLogs);
+  $$PeriodEndPromptsTableTableManager get periodEndPrompts =>
+      $$PeriodEndPromptsTableTableManager(_db, _db.periodEndPrompts);
   $$CustomSymptomsTableTableManager get customSymptoms =>
       $$CustomSymptomsTableTableManager(_db, _db.customSymptoms);
   $$DailyLogsTableTableManager get dailyLogs =>

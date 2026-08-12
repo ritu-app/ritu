@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ritu Cycle Behavior Validation Guide</title>
+<style>
+  :root {
+    --ink: #24212a;
+    --muted: #6d6574;
+    --paper: #fffdf9;
+    --panel: #ffffff;
+    --line: #e7ded4;
+    --soft: #f7f0ea;
+    --rose: #b85d6a;
+    --rose-dark: #7c3542;
+    --sage: #658b73;
+    --sage-dark: #355d47;
+    --gold: #c18b32;
+    --plum: #72517d;
+    --clay: #c67153;
+    --blue: #557a9b;
+    --ok: #2f7d55;
+    --warn: #9a6727;
+    --bad: #a74242;
+    --shadow: 0 18px 45px rgba(65, 45, 33, 0.11);
+  }
+
+  * { box-sizing: border-box; }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    margin: 0;
+    color: var(--ink);
+    background:
+      radial-gradient(circle at top left, rgba(184, 93, 106, 0.16), transparent 34rem),
+      linear-gradient(180deg, #fff8f2 0%, #fffdf9 34rem);
+    font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    line-height: 1.58;
+  }
+
+  .shell {
+    width: min(1180px, calc(100% - 32px));
+    margin: 0 auto;
+    min-width: 0;
+  }
+
+  .hero {
+    padding: 52px 0 28px;
+  }
+
+  .eyebrow {
+    color: var(--rose-dark);
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    margin: 0 0 12px;
+    text-transform: uppercase;
+  }
+
+  h1 {
+    max-width: 900px;
+    margin: 0;
+    font-size: clamp(2.3rem, 6vw, 5.25rem);
+    line-height: 0.98;
+    letter-spacing: 0;
+  }
+
+  .lead {
+    max-width: 850px;
+    margin: 22px 0 0;
+    color: var(--muted);
+    font-size: clamp(1.05rem, 2vw, 1.28rem);
+  }
+
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: 24px;
+    align-items: stretch;
+    margin-top: 34px;
+  }
+
+  .summary-panel,
+  .toc,
+  section,
+  .scenario,
+  .rule-card,
+  .timeline-card {
+    background: rgba(255, 255, 255, 0.88);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+  }
+
+  .summary-panel {
+    padding: 22px;
+  }
+
+  .summary-panel h2,
+  .toc h2,
+  section h2 {
+    margin: 0 0 14px;
+    font-size: 1.28rem;
+    line-height: 1.2;
+  }
+
+  .summary-list {
+    display: grid;
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .summary-list li {
+    display: grid;
+    grid-template-columns: 26px 1fr;
+    gap: 10px;
+    align-items: start;
+  }
+
+  .dot {
+    width: 18px;
+    height: 18px;
+    margin-top: 4px;
+    border-radius: 50%;
+    background: var(--sage);
+    box-shadow: inset 0 0 0 5px rgba(255, 255, 255, 0.72);
+  }
+
+  .toc {
+    padding: 22px;
+  }
+
+  .toc ol {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+    padding-left: 20px;
+  }
+
+  a {
+    color: var(--rose-dark);
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  a:hover { text-decoration: underline; }
+
+  main {
+    display: grid;
+    gap: 26px;
+    padding: 24px 0 80px;
+  }
+
+  section {
+    padding: clamp(22px, 4vw, 36px);
+    min-width: 0;
+  }
+
+  h2 {
+    font-size: clamp(1.7rem, 3vw, 2.4rem);
+    letter-spacing: 0;
+  }
+
+  h3 {
+    margin: 30px 0 10px;
+    font-size: 1.18rem;
+  }
+
+  p {
+    margin: 10px 0;
+  }
+
+  .muted { color: var(--muted); }
+
+  .rule-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    margin-top: 18px;
+  }
+
+  .rule-card {
+    padding: 18px;
+    box-shadow: none;
+  }
+
+  .rule-card h3 {
+    margin: 0 0 8px;
+    font-size: 1.02rem;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+
+  .badge.ok { color: #f7fff9; background: var(--ok); }
+  .badge.warn { color: #fffaf0; background: var(--warn); }
+  .badge.bad { color: #fff8f7; background: var(--bad); }
+  .badge.neutral { color: var(--ink); background: var(--soft); border: 1px solid var(--line); }
+  .badge.rose { color: #fff; background: var(--rose); }
+  .badge.sage { color: #fff; background: var(--sage); }
+  .badge.plum { color: #fff; background: var(--plum); }
+  .badge.blue { color: #fff; background: var(--blue); }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    margin: 16px 0 6px;
+    overflow: hidden;
+    border-radius: 8px;
+    font-size: 0.94rem;
+  }
+
+  th,
+  td {
+    padding: 12px 14px;
+    border: 1px solid var(--line);
+    text-align: left;
+    vertical-align: top;
+    overflow-wrap: anywhere;
+  }
+
+  th {
+    color: var(--rose-dark);
+    background: #fbf3ed;
+    font-size: 0.82rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  td {
+    background: rgba(255, 255, 255, 0.76);
+  }
+
+  code {
+    padding: 2px 6px;
+    border-radius: 5px;
+    background: #f5ece6;
+    color: #543f49;
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.9em;
+  }
+
+  .formula {
+    display: grid;
+    gap: 8px;
+    padding: 18px;
+    margin: 16px 0;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fff9f3;
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.95rem;
+  }
+
+  .callout {
+    margin: 18px 0;
+    padding: 15px 18px;
+    border-left: 4px solid var(--sage);
+    border-radius: 7px;
+    background: #f4faf5;
+  }
+
+  .callout.warn {
+    border-left-color: var(--gold);
+    background: #fff8e9;
+  }
+
+  .timeline-card {
+    padding: 18px;
+    margin: 20px 0 8px;
+    overflow-x: auto;
+    box-shadow: none;
+  }
+
+  .gantt {
+    min-width: 820px;
+  }
+
+  .gantt-title {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    align-items: baseline;
+    margin-bottom: 12px;
+  }
+
+  .gantt-title h3 {
+    margin: 0;
+  }
+
+  .scale,
+  .gantt-row {
+    display: grid;
+    grid-template-columns: 160px repeat(var(--cols), minmax(34px, 1fr));
+    gap: 6px;
+    align-items: center;
+  }
+
+  .scale {
+    margin-bottom: 8px;
+    color: var(--muted);
+    font-size: 0.76rem;
+    font-weight: 800;
+    text-align: center;
+  }
+
+  .scale span:first-child {
+    text-align: left;
+  }
+
+  .gantt-row {
+    min-height: 40px;
+    margin: 8px 0;
+  }
+
+  .row-label {
+    color: var(--muted);
+    font-size: 0.86rem;
+    font-weight: 800;
+  }
+
+  .bar {
+    min-height: 34px;
+    padding: 7px 10px;
+    border-radius: 6px;
+    color: #fff;
+    font-size: 0.82rem;
+    font-weight: 800;
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .bar.light {
+    color: var(--ink);
+    background: #f4eee8;
+    border: 1px solid var(--line);
+  }
+
+  .bar.rose { background: var(--rose); }
+  .bar.sage { background: var(--sage); }
+  .bar.gold { background: var(--gold); }
+  .bar.plum { background: var(--plum); }
+  .bar.clay { background: var(--clay); }
+  .bar.blue { background: var(--blue); }
+  .bar.bad { background: var(--bad); }
+
+  .cell-note {
+    min-height: 34px;
+    padding: 7px 6px;
+    border: 1px dashed var(--line);
+    border-radius: 6px;
+    color: var(--muted);
+    background: rgba(255, 255, 255, 0.62);
+    font-size: 0.76rem;
+    text-align: center;
+  }
+
+  .scenario-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    margin-top: 18px;
+  }
+
+  .scenario {
+    padding: 18px;
+    box-shadow: none;
+  }
+
+  .scenario h3 {
+    margin: 0 0 8px;
+    font-size: 1rem;
+  }
+
+  .checklist {
+    display: grid;
+    gap: 10px;
+    margin: 18px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .checklist li {
+    display: grid;
+    grid-template-columns: 30px 1fr;
+    gap: 10px;
+    align-items: start;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.74);
+  }
+
+  .check {
+    display: inline-grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    border: 2px solid var(--sage);
+    border-radius: 6px;
+    color: var(--sage);
+    font-size: 0.82rem;
+    font-weight: 900;
+  }
+
+  .source-list {
+    margin: 8px 0 0;
+    padding-left: 18px;
+    color: var(--muted);
+    font-size: 0.92rem;
+  }
+
+  @media (max-width: 860px) {
+    .hero-grid,
+    .rule-grid,
+    .scenario-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .hero {
+      padding-top: 34px;
+    }
+
+    section,
+    .summary-panel,
+    .toc {
+      border-radius: 7px;
+    }
+  }
+
+  @media print {
+    body {
+      background: #fff;
+    }
+
+    .summary-panel,
+    .toc,
+    section,
+    .scenario,
+    .rule-card,
+    .timeline-card {
+      box-shadow: none;
+    }
+
+    a {
+      color: inherit;
+    }
+  }
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="shell">
+    <p class="eyebrow">Ritu validation guide</p>
+    <h1>Cycle behavior, in one plain-language spec</h1>
+    <p class="lead">This page combines the period-boundary, hero-card confidence, cycle-classification, and phase-range specs into one document that product, design, QA, and engineering can use to validate the app behavior.</p>
+
+    <div class="hero-grid">
+      <div class="summary-panel">
+        <h2>The app should feel honest, not overconfident</h2>
+        <ul class="summary-list">
+          <li><span class="dot"></span><span>Use confirmed logs when they exist. Use estimates only when the app has to, and make that uncertainty visible.</span></li>
+          <li><span class="dot"></span><span>Do not punish silence. A missed day is not the same as explicitly choosing <code>None</code>.</span></li>
+          <li><span class="dot"></span><span>Keep the home hero Neutral until the app has enough data and has observed one complete cycle live.</span></li>
+          <li><span class="dot"></span><span>Classify cycles by recent personal consistency, not by whether they match a textbook 28-day cycle.</span></li>
+        </ul>
+      </div>
+
+      <nav class="toc" aria-label="Contents">
+        <h2>Contents</h2>
+        <ol>
+          <li><a href="#mental-model">Mental Model</a></li>
+          <li><a href="#period-boundaries">Period Boundaries</a></li>
+          <li><a href="#hero-card">Hero Card Confidence</a></li>
+          <li><a href="#classification">Cycle Classification</a></li>
+          <li><a href="#phase-ranges">Phase Ranges</a></li>
+          <li><a href="#validation">Validation Checklist</a></li>
+        </ol>
+      </nav>
+    </div>
+  </div>
+</header>
+
+<main class="shell">
+  <section id="mental-model">
+    <h2>1. Mental Model</h2>
+    <p>Ritu is tracking two related things: period episodes and cycle starts. A period episode begins when flow is logged. A cycle length is measured from one period start to the next period start.</p>
+    <p>The app may know a date from live logging or from memory. Both can be used for classification math, but only live-logged dates let the hero card look fully confident.</p>
+
+    <div class="rule-grid">
+      <article class="rule-card">
+        <h3><span class="badge rose">Period</span></h3>
+        <p>One bleeding episode. It has a start date and, when known, an end date. Bleed days are inclusive from start to end.</p>
+      </article>
+      <article class="rule-card">
+        <h3><span class="badge sage">Cycle</span></h3>
+        <p>The day range from one period start to the next. Four period starts create three completed cycles.</p>
+      </article>
+      <article class="rule-card">
+        <h3><span class="badge plum">Logged date</span></h3>
+        <p>Entered live through daily logging when the event happens. This is high-confidence data.</p>
+      </article>
+      <article class="rule-card">
+        <h3><span class="badge neutral">Manual date</span></h3>
+        <p>Entered from memory through onboarding, Settings, or a recovery flow. It counts, but the display should be more cautious.</p>
+      </article>
+    </div>
+  </section>
+
+  <section id="period-boundaries">
+    <h2>2. Period Boundaries</h2>
+    <p>The app must avoid splitting one real period into two fake periods just because the user had a short spotting gap. It also must avoid treating app inactivity as proof that bleeding stopped.</p>
+
+    <table>
+      <tr>
+        <th>Rule</th>
+        <th>Expected behavior</th>
+        <th>Validation signal</th>
+      </tr>
+      <tr>
+        <td>Flow starts a period</td>
+        <td>Any explicit flow value other than <code>None</code> starts or continues a period episode.</td>
+        <td>The current cycle day resets to Day 1 when a new period start is logged.</td>
+      </tr>
+      <tr>
+        <td>Two explicit None days close it</td>
+        <td>A period does not close on the first <code>None</code>. It closes only after 2 consecutive explicit <code>None</code> days.</td>
+        <td>A one-day gap followed by flow remains the same period.</td>
+      </tr>
+      <tr>
+        <td>Silence is not None</td>
+        <td>A day with no app activity does not increment the <code>None</code> counter.</td>
+        <td>Skipped days alone never close a period.</td>
+      </tr>
+      <tr>
+        <td>Day 10 safety cap</td>
+        <td>If the period is still open by day 10 from its start, the app closes it automatically.</td>
+        <td>Irregular spotting cannot keep one period open forever.</td>
+      </tr>
+      <tr>
+        <td>Assumed duration fallback</td>
+        <td>If the user logs Day 1 and then goes silent, the hero continues using an estimated period length.</td>
+        <td>The hero does not freeze, but later confirmation can correct the true end date.</td>
+      </tr>
+    </table>
+
+    <div class="timeline-card">
+      <div class="gantt" style="--cols: 10;">
+        <div class="gantt-title">
+          <h3>Gantt: spotting gap should stay one period</h3>
+          <span class="muted">Days 1-10 after period start</span>
+        </div>
+        <div class="scale">
+          <span>Track</span><span>D1</span><span>D2</span><span>D3</span><span>D4</span><span>D5</span><span>D6</span><span>D7</span><span>D8</span><span>D9</span><span>D10</span>
+        </div>
+        <div class="gantt-row">
+          <span class="row-label">User logs</span>
+          <span class="bar rose" style="grid-column: 2;">Spotting</span>
+          <span class="bar light" style="grid-column: 3;">None 1</span>
+          <span class="bar light" style="grid-column: 4;">None 2</span>
+          <span class="bar rose" style="grid-column: 5;">Medium</span>
+        </div>
+        <div class="gantt-row">
+          <span class="row-label">Correct episode</span>
+          <span class="bar rose" style="grid-column: 2 / span 4;">Same period episode continues</span>
+        </div>
+        <div class="gantt-row">
+          <span class="row-label">Incorrect behavior</span>
+          <span class="bar bad" style="grid-column: 2;">Period A</span>
+          <span class="cell-note" style="grid-column: 3 / span 2;">false end</span>
+          <span class="bar bad" style="grid-column: 5;">Period B</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="timeline-card">
+      <div class="gantt" style="--cols: 10;">
+        <div class="gantt-title">
+          <h3>Gantt: silence uses an estimate, then asks once</h3>
+          <span class="muted">Example assumes period length P = 5</span>
+        </div>
+        <div class="scale">
+          <span>Track</span><span>D1</span><span>D2</span><span>D3</span><span>D4</span><span>D5</span><span>D6</span><span>D7</span><span>D8</span><span>D9</span><span>D10</span>
+        </div>
+        <div class="gantt-row">
+          <span class="row-label">User logs</span>
+          <span class="bar rose" style="grid-column: 2;">Flow</span>
+          <span class="cell-note" style="grid-column: 3 / span 8;">no logs - this is silence, not None</span>
+        </div>
+        <div class="gantt-row">
+          <span class="row-label">Hero estimate</span>
+          <span class="bar rose" style="grid-column: 2 / span 5;">Menstrual by assumed P</span>
+          <span class="bar sage" style="grid-column: 7 / span 5;">Moves to next phase estimate</span>
+        </div>
+        <div class="gantt-row">
+          <span class="row-label">Home nudge</span>
+          <span class="cell-note" style="grid-column: 2 / span 5;">no ask yet</span>
+          <span class="bar gold" style="grid-column: 7;">Still on your period?</span>
+        </div>
+      </div>
+    </div>
+
+    <h3>Home nudge behavior</h3>
+    <p>After the assumed period boundary has passed and the user has not logged new flow or explicit <code>None</code>, Home shows a dismissible card: <strong>Still on your period?</strong></p>
+    <table>
+      <tr><th>User action</th><th>Result</th></tr>
+      <tr><td>Still going</td><td>Dismiss the card for the day. Continue with estimated behavior.</td></tr>
+      <tr><td>Dismiss</td><td>Same as Still going. Do not repeatedly ask the same day.</td></tr>
+      <tr><td>It ended</td><td>Open a short confirm screen: Today, Yesterday, 2 days ago, or Pick a different date. The selected date becomes the true period end.</td></tr>
+    </table>
+  </section>
+
+  <section id="hero-card">
+    <h2>3. Hero Card Confidence</h2>
+    <p>The hero card starts cautious and becomes more specific only when two conditions are both true.</p>
+
+    <div class="callout">
+      <strong>Unlock rule:</strong> The hero stays Neutral until the app has at least 3 completed cycles and at least one completed cycle whose start and next-start were both logged live.
+    </div>
+
+    <table>
+      <tr>
+        <th>State</th>
+        <th>When it appears</th>
+        <th>What it should say or imply</th>
+      </tr>
+      <tr>
+        <td><span class="badge neutral">Neutral</span></td>
+        <td>Before classification unlock, or when no reliable phase estimate should be shown.</td>
+        <td>Day count can show when a start date exists, but no phase confidence should be implied.</td>
+      </tr>
+      <tr>
+        <td><span class="badge ok">Confident</span></td>
+        <td>Classification is Regular and the clean logged-cycle gate is open.</td>
+        <td>Exact current day and exact phase name.</td>
+      </tr>
+      <tr>
+        <td><span class="badge warn">Hedged</span></td>
+        <td>Classification is Variable, or a later manual date makes the active window less trustworthy.</td>
+        <td>Use estimate language such as <code>~Day 14</code> and <code>probably Follicular</code>.</td>
+      </tr>
+      <tr>
+        <td><span class="badge bad">Unpredictable</span></td>
+        <td>Classification is Unpredictable and the same gate has opened.</td>
+        <td>Show Menstrual on logged bleed days. Other days use an honest neutral card with no phase estimate.</td>
+      </tr>
+    </table>
+
+    <div class="timeline-card">
+      <div class="gantt" style="--cols: 5;">
+        <div class="gantt-title">
+          <h3>Gantt: manual history still waits for one clean live cycle</h3>
+          <span class="muted">Example starts with 4 manual period dates</span>
+        </div>
+        <div class="scale">
+          <span>Track</span><span>Onboarding</span><span>Next period</span><span>Following period</span><span>Gate result</span><span>Card</span>
+        </div>
+        <div class="gantt-row">
+          <span class="row-label">Dates</span>
+          <span class="bar light" style="grid-column: 2;">4 manual starts</span>
+          <span class="bar plum" style="grid-column: 3;">1st logged start</span>
+          <span class="bar plum" style="grid-column: 4;">2nd logged start</span>
+          <span class="bar sage" style="grid-column: 5;">clean cycle exists</span>
+          <span class="bar sage" style="grid-column: 6;">Resolved card</span>
+        </div>
+        <div class="gantt-row">
+          <span class="row-label">Hero</span>
+          <span class="bar light" style="grid-column: 2 / span 2;">Neutral, even if math is eligible</span>
+          <span class="bar light" style="grid-column: 4;">Neutral</span>
+          <span class="bar sage" style="grid-column: 5 / span 2;">Regular, Variable, or Unpredictable treatment</span>
+        </div>
+      </div>
+    </div>
+
+    <table>
+      <tr><th>Manual starts entered before live use</th><th>Live period starts needed before Neutral ends</th><th>Why</th></tr>
+      <tr><td>0</td><td>4</td><td>Four starts create three cycles and all are clean.</td></tr>
+      <tr><td>1</td><td>3</td><td>The first cycle has one manual edge, but later logged-to-logged cycles become clean.</td></tr>
+      <tr><td>2</td><td>2</td><td>The second live start creates the first logged-to-logged cycle.</td></tr>
+      <tr><td>3</td><td>2</td><td>One live start reaches classification math, but the second live start is needed for a clean cycle.</td></tr>
+      <tr><td>4 or more</td><td>2</td><td>Manual history may already classify, but the app still waits to observe one full live cycle.</td></tr>
+    </table>
+
+    <h3>Inactive users</h3>
+    <table>
+      <tr><th>Situation</th><th>Hero behavior</th></tr>
+      <tr><td>No period date exists</td><td>Show a stable welcome or empty state: Log your first period to get started.</td></tr>
+      <tr><td>A start date exists, but user stops logging daily check-ins</td><td>Big cycle-day number keeps advancing by calendar math. The logged-history counter freezes at the actual amount logged.</td></tr>
+      <tr><td>Classified Regular user passes average cycle length with no next period</td><td>Drop phase estimate and show neutral copy: This cycle is running longer than usual.</td></tr>
+      <tr><td>Classified Variable user passes the longest recorded cycle in range</td><td>Use the same neutral longer-than-usual fallback. Do not stretch a hedged estimate forever.</td></tr>
+      <tr><td>Unpredictable user has a long gap</td><td>No special overdue state is needed. The honest no-estimate card already handles this.</td></tr>
+    </table>
+  </section>
+
+  <section id="classification">
+    <h2>4. Cycle Classification</h2>
+    <p>Classification measures how consistent the user's recent cycle lengths are compared with her own recent average. It does not judge whether she has a 28-day cycle.</p>
+
+    <div class="formula">
+      <span>cycle length = next period start - previous period start</span>
+      <span>mean = average of the selected cycle lengths</span>
+      <span>deviation = absolute value of cycle length - mean</span>
+      <span>MAD = average of all deviations</span>
+    </div>
+
+    <table>
+      <tr><th>Data rule</th><th>Expected behavior</th></tr>
+      <tr><td>Minimum sample</td><td>Do not classify until 3 completed cycles exist, which requires 4 period start dates.</td></tr>
+      <tr><td>Growing window</td><td>Use all completed cycles when there are 3, 4, or 5.</td></tr>
+      <tr><td>Rolling window</td><td>Once 6 or more cycles exist, use only the 6 most recent completed cycles.</td></tr>
+      <tr><td>Manual and logged starts</td><td>Both count for the math. Display confidence is handled separately by the hero-card rules.</td></tr>
+    </table>
+
+    <table>
+      <tr><th>MAD</th><th>Classification</th><th>Hero meaning after the gate opens</th></tr>
+      <tr><td>0-4 days</td><td><span class="badge ok">Regular</span></td><td>Show exact phase estimates.</td></tr>
+      <tr><td>5-9 days</td><td><span class="badge warn">Variable</span></td><td>Show hedged phase estimates.</td></tr>
+      <tr><td>10+ days</td><td><span class="badge bad">Unpredictable</span></td><td>Do not estimate non-menstrual phases.</td></tr>
+    </table>
+
+    <div class="scenario-grid">
+      <article class="scenario">
+        <h3>Regular example</h3>
+        <p>Lengths: 28, 27, 29, 28, 27, 28.</p>
+        <p><strong>MAD 0.6</strong> means Regular.</p>
+      </article>
+      <article class="scenario">
+        <h3>Variable example</h3>
+        <p>Lengths: 21, 35, 23, 33, 25, 31.</p>
+        <p><strong>MAD 5.0</strong> means Variable.</p>
+      </article>
+      <article class="scenario">
+        <h3>Unpredictable example</h3>
+        <p>Lengths: 21, 46, 24, 43, 22, 40.</p>
+        <p><strong>MAD 10.3</strong> means Unpredictable.</p>
+      </article>
+    </div>
+  </section>
+
+  <section id="phase-ranges">
+    <h2>5. Phase Ranges</h2>
+    <p>Once the hero is allowed to show phase behavior, Ritu computes phases from two values: <code>P</code>, the period duration, and <code>C</code>, the cycle length.</p>
+
+    <div class="formula">
+      <span>Menstrual = day 1 to day P</span>
+      <span>Follicular = day P+1 to day C-17</span>
+      <span>Ovulatory = day C-16 to day C-14</span>
+      <span>Luteal = day C-13 to day C</span>
+    </div>
+
+    <table>
+      <tr><th>Classification</th><th>Value used for C</th><th>Display</th></tr>
+      <tr><td>Regular</td><td>Personal average cycle length.</td><td>Exact day and phase.</td></tr>
+      <tr><td>Variable</td><td>Midpoint between shortest and longest cycle in the active window, rounded half up.</td><td>Same formula, but displayed as an estimate.</td></tr>
+      <tr><td>Unpredictable</td><td>No value used.</td><td>No phase math outside observed menstrual days.</td></tr>
+    </table>
+
+    <div class="timeline-card">
+      <div class="gantt" style="--cols: 28;">
+        <div class="gantt-title">
+          <h3>Gantt: standard phase timeline</h3>
+          <span class="muted">Example P = 5, C = 28</span>
+        </div>
+        <div class="scale">
+          <span>Phase</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span><span>11</span><span>12</span><span>13</span><span>14</span><span>15</span><span>16</span><span>17</span><span>18</span><span>19</span><span>20</span><span>21</span><span>22</span><span>23</span><span>24</span><span>25</span><span>26</span><span>27</span><span>28</span>
+        </div>
+        <div class="gantt-row">
+          <span class="row-label">Ranges</span>
+          <span class="bar rose" style="grid-column: 2 / span 5;">Menstrual</span>
+          <span class="bar sage" style="grid-column: 7 / span 6;">Follicular</span>
+          <span class="bar gold" style="grid-column: 13 / span 3;">Ovulatory</span>
+          <span class="bar plum" style="grid-column: 16 / span 14;">Luteal</span>
+        </div>
+      </div>
+    </div>
+
+    <h3>Short-cycle fallback</h3>
+    <p>Sometimes the cycle is too short to fit every phase cleanly. The app should preserve Luteal first, compress Ovulatory next, and drop Follicular when there is no room.</p>
+    <table>
+      <tr><th>Tier</th><th>Condition</th><th>Behavior</th></tr>
+      <tr><td>A - Normal</td><td><code>C - P >= 17</code></td><td>Use the standard four-phase formula.</td></tr>
+      <tr><td>B - Compressed</td><td><code>15 <= C - P < 17</code></td><td>Remove Follicular for this cycle. Ovulatory becomes 1-2 days. Luteal remains 14 days.</td></tr>
+      <tr><td>C - Irregular</td><td><code>C - P < 15</code> or <code>C <= P</code></td><td>Show no phase strip for this cycle. Use neutral copy that says the cycle is unusually short.</td></tr>
+    </table>
+
+    <div class="timeline-card">
+      <div class="gantt" style="--cols: 21;">
+        <div class="gantt-title">
+          <h3>Gantt: compressed short-cycle timeline</h3>
+          <span class="muted">Example P = 5, C = 21</span>
+        </div>
+        <div class="scale">
+          <span>Phase</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span><span>11</span><span>12</span><span>13</span><span>14</span><span>15</span><span>16</span><span>17</span><span>18</span><span>19</span><span>20</span><span>21</span>
+        </div>
+        <div class="gantt-row">
+          <span class="row-label">Tier B output</span>
+          <span class="bar rose" style="grid-column: 2 / span 5;">Menstrual</span>
+          <span class="bar gold" style="grid-column: 7 / span 2;">Ovulatory</span>
+          <span class="bar plum" style="grid-column: 9 / span 14;">Luteal</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="validation">
+    <h2>6. Validation Checklist</h2>
+    <p>Use this list to compare the app behavior against the consolidated spec. Each item should be testable in unit tests, widget tests, or fixture-driven manual QA.</p>
+
+    <ul class="checklist">
+      <li><span class="check">1</span><span>Logging flow on a day creates or continues a period episode and marks the period start as Logged when it starts a new episode.</span></li>
+      <li><span class="check">2</span><span>One explicit <code>None</code> day after flow does not close the period if flow resumes before closure is finalized.</span></li>
+      <li><span class="check">3</span><span>Two consecutive explicit <code>None</code> days close the period, while skipped days do not count as <code>None</code>.</span></li>
+      <li><span class="check">4</span><span>An open period cannot extend beyond day 10 without being closed by the safety cap.</span></li>
+      <li><span class="check">5</span><span>When the user goes silent after Day 1, the hero advances from assumed period duration and shows the Home nudge after the assumed boundary passes.</span></li>
+      <li><span class="check">6</span><span>The Home nudge lets the user confirm the actual period end date and uses that confirmed date for future classification math.</span></li>
+      <li><span class="check">7</span><span>The hero stays Neutral until both 3 completed cycles exist and at least one logged-to-logged cycle exists.</span></li>
+      <li><span class="check">8</span><span>Manual dates count toward classification math but reduce display confidence until a clean live cycle exists.</span></li>
+      <li><span class="check">9</span><span>Classification uses MAD over 3-5 available cycles, then the most recent 6 cycles once the user has 6 or more.</span></li>
+      <li><span class="check">10</span><span>Regular, Variable, and Unpredictable thresholds are 0-4, 5-9, and 10+ MAD days respectively.</span></li>
+      <li><span class="check">11</span><span>Regular phase ranges use the user's personal average cycle length, not a hardcoded 28-day cycle.</span></li>
+      <li><span class="check">12</span><span>Variable phase ranges use the midpoint of shortest and longest recent cycles, rounded half up, and display hedged language.</span></li>
+      <li><span class="check">13</span><span>Unpredictable users see Menstrual on logged bleed days and an honest no-estimate card on other days.</span></li>
+      <li><span class="check">14</span><span>Short-cycle Tier B removes Follicular rather than rendering a tiny or overlapping segment.</span></li>
+      <li><span class="check">15</span><span>Short-cycle Tier C and longer-than-usual classified cycles drop phase estimates rather than implying false precision.</span></li>
+    </ul>
+
+    <h3>Source specs combined</h3>
+    <ul class="source-list">
+      <li><code>docs/ritu-period-boundary-detection-spec.html</code></li>
+      <li><code>docs/ritu-hero-card-data-source-spec.html</code></li>
+      <li><code>docs/cycle-phase-range-spec.html</code></li>
+      <li><code>docs/cycle-classification-spec.html</code></li>
+      <li><code>docs/DATA.md</code> for current on-device data model context</li>
+    </ul>
+  </section>
+</main>
+</body>
+</html>

@@ -6,14 +6,12 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../core/date_format.dart';
 import '../../data/repositories/period_repository.dart';
 import '../../providers/period_providers.dart';
-import '../../providers/profile_providers.dart';
 import '../../providers/repository_providers.dart';
 import '../../theme/ritu_colors.dart';
-import '../setup/last_period_screen.dart';
-import '../setup/widgets/choice_chips.dart';
+import '../setup/widgets/period_episode_form_fields.dart';
 import '../setup/widgets/ritu_calendar.dart';
 
-/// Figma 921:3299 / 922:4152 — Period History → Add / edit a period.
+/// Figma 1132:5047 — Period History → Add / edit a period.
 class AddPeriodScreen extends ConsumerStatefulWidget {
   const AddPeriodScreen({super.key, this.editing});
 
@@ -26,8 +24,11 @@ class AddPeriodScreen extends ConsumerStatefulWidget {
 
 class _AddPeriodScreenState extends ConsumerState<AddPeriodScreen> {
   late DateTime _visibleMonth;
-  DateTime? _selectedDate;
-  PeriodDuration? _duration;
+  DateTime? _selectedStart;
+  PeriodOngoingStatus? _ongoingStatus;
+  EndConfidenceChoice? _endConfidence;
+  DateTime? _selectedEndDate;
+  String? _roughDurationBucket;
   var _saving = false;
 
   bool get _isEditing => widget.editing != null;
@@ -38,14 +39,12 @@ class _AddPeriodScreenState extends ConsumerState<AddPeriodScreen> {
     final editing = widget.editing;
     if (editing != null) {
       final start = dateOnly(editing.startedOn);
-      _selectedDate = start;
+      _selectedStart = start;
       _visibleMonth = DateTime(start.year, start.month);
-      _duration = _durationFromLog(editing);
+      _hydrateFromLog(editing);
       return;
     }
 
-    // Land on a month that still has selectable days (before the latest
-    // period). Current month is often fully disabled for backfill.
     final latest = ref.read(latestPeriodProvider).valueOrNull;
     final maxSelectable = latest == null
         ? dateOnly(DateTime.now())
@@ -53,77 +52,67 @@ class _AddPeriodScreenState extends ConsumerState<AddPeriodScreen> {
     _visibleMonth = DateTime(maxSelectable.year, maxSelectable.month);
   }
 
-  PeriodDuration? _durationFromLog(PeriodLog log) {
-    final end = log.endedOn;
-    if (end == null) return PeriodDuration.varies;
-    final days =
-        dateOnly(end).difference(dateOnly(log.startedOn)).inDays + 1;
-    if (days <= 3) return PeriodDuration.twoToThree;
-    if (days <= 5) return PeriodDuration.fourToFive;
-    if (days <= 7) return PeriodDuration.sixToSeven;
-    return PeriodDuration.varies;
+  void _hydrateFromLog(PeriodLog log) {
+    if (log.isOpen) {
+      _ongoingStatus = PeriodOngoingStatus.stillGoing;
+      return;
+    }
+
+    _ongoingStatus = PeriodOngoingStatus.ended;
+    if (log.hasConfirmedEnd) {
+      _endConfidence = EndConfidenceChoice.exact;
+      _selectedEndDate = log.endedOn == null ? null : dateOnly(log.endedOn!);
+      return;
+    }
+
+    _endConfidence = EndConfidenceChoice.rough;
+    _roughDurationBucket = log.roughDurationBucket ??
+        (log.endedOn == null
+            ? null
+            : RoughDurationBuckets.fromInclusiveDayCount(
+                dateOnly(log.endedOn!)
+                        .difference(dateOnly(log.startedOn))
+                        .inDays +
+                    1,
+              ));
   }
 
-  String _durationLabel(PeriodDuration option) => switch (option) {
-        PeriodDuration.twoToThree => '2-3 days',
-        PeriodDuration.fourToFive => '4-5 days',
-        PeriodDuration.sixToSeven => '6-7 days',
-        PeriodDuration.varies => 'Not sure',
-      };
-
-  /// Days after the selected start covered by the chosen length (start itself
-  /// stays as the selected day on the calendar).
-  Set<DateTime> get _durationSpanDates {
-    final start = _selectedDate;
-    final typical = _duration?.typicalDays;
-    if (start == null || typical == null || typical < 2) return const {};
-
-    final end = PeriodRepository.estimateEnd(dateOnly(start), typical);
-    if (end == null) return const {};
-
-    final days = <DateTime>{};
-    var cursor = dateOnly(start).add(const Duration(days: 1));
-    while (!cursor.isAfter(end)) {
-      days.add(cursor);
-      cursor = cursor.add(const Duration(days: 1));
-    }
-    return days;
+  void _onStartSelected(DateTime date) {
+    final start = dateOnly(date);
+    setState(() {
+      _selectedStart = start;
+      if (_selectedEndDate != null && _selectedEndDate!.isBefore(start)) {
+        _selectedEndDate = null;
+      }
+    });
   }
 
   Future<void> _save() async {
-    final selected = _selectedDate;
-    if (selected == null || _saving) return;
+    final start = _selectedStart;
+    final status = _ongoingStatus;
+    if (start == null || status == null || _saving) return;
 
     setState(() => _saving = true);
     try {
-      final typical =
-          _duration?.typicalDays ??
-          ref.read(profileProvider).valueOrNull?.typicalPeriodDays;
       final repo = ref.read(periodRepositoryProvider);
       final editing = widget.editing;
+      final startOnly = dateOnly(start);
 
       if (editing != null) {
         final oldStart = dateOnly(editing.startedOn);
-        final newStart = dateOnly(selected);
-        if (oldStart != newStart) {
+        if (oldStart != startOnly) {
           await repo.deleteByStartedOn(oldStart);
         }
-        await repo.upsertPeriod(
-          startedOn: newStart,
-          endedOn: PeriodRepository.estimateEnd(newStart, typical),
-          source: editing.source,
-        );
+        await _persistEpisode(repo, startOnly);
         if (!mounted) return;
-        Navigator.of(context).pop(newStart);
+        Navigator.of(context).pop(startOnly);
         return;
       }
 
-      final created = await repo.addPastStart(
-        startedOn: selected,
-        typicalPeriodDays: typical,
-      );
-      if (!mounted) return;
-      if (created == null) {
+      final latest = await repo.getLatest();
+      if (latest != null &&
+          !startOnly.isBefore(dateOnly(latest.startedOn))) {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
@@ -133,9 +122,34 @@ class _AddPeriodScreenState extends ConsumerState<AddPeriodScreen> {
         );
         return;
       }
-      Navigator.of(context).pop(created.startedOn);
+
+      await _persistEpisode(repo, startOnly);
+      if (!mounted) return;
+      Navigator.of(context).pop(startOnly);
     } finally {
       if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  Future<void> _persistEpisode(PeriodRepository repo, DateTime start) async {
+    switch (_ongoingStatus!) {
+      case PeriodOngoingStatus.stillGoing:
+        await repo.saveOngoingManualPeriod(startedOn: start);
+      case PeriodOngoingStatus.ended:
+        switch (_endConfidence) {
+          case EndConfidenceChoice.exact:
+            await repo.saveExactEndedManualPeriod(
+              startedOn: start,
+              endedOn: _selectedEndDate!,
+            );
+          case EndConfidenceChoice.rough:
+            await repo.saveRoughEndedManualPeriod(
+              startedOn: start,
+              roughDurationBucket: _roughDurationBucket!,
+            );
+          case null:
+            break;
+        }
     }
   }
 
@@ -190,7 +204,6 @@ class _AddPeriodScreenState extends ConsumerState<AddPeriodScreen> {
     final editingStart =
         editing == null ? null : dateOnly(editing.startedOn);
 
-    // Periods sorted newest-first (same as allPeriodsProvider).
     final editingIndex = editingStart == null
         ? -1
         : periods.indexWhere(
@@ -200,13 +213,11 @@ class _AddPeriodScreenState extends ConsumerState<AddPeriodScreen> {
     final DateTime? minSelectable;
     final DateTime maxSelectable;
     if (editingIndex >= 0) {
-      // Must stay after the next-older start (list is newest-first).
       final older = editingIndex + 1 < periods.length
           ? dateOnly(periods[editingIndex + 1].startedOn)
           : null;
       minSelectable = older?.add(const Duration(days: 1));
 
-      // And before the next-newer start (or today when editing the latest).
       if (editingIndex == 0) {
         maxSelectable = dateOnly(DateTime.now());
       } else {
@@ -226,21 +237,29 @@ class _AddPeriodScreenState extends ConsumerState<AddPeriodScreen> {
         if (editingStart == null || dateOnly(log.startedOn) != editingStart)
           dateOnly(log.startedOn),
     };
-    // Drop the episode being edited, then overlay the chip-selected length so
-    // the calendar updates as the user tries different duration options.
+
     final periodDates = {
       for (final log in periods)
         if (editingStart == null || dateOnly(log.startedOn) != editingStart)
           ...log.bleedDays,
-      ..._durationSpanDates,
     };
 
-    final selected = _selectedDate == null ? null : dateOnly(_selectedDate!);
+    final selectedStart =
+        _selectedStart == null ? null : dateOnly(_selectedStart!);
+    final startValid = selectedStart != null &&
+        !blockedStarts.contains(selectedStart) &&
+        !selectedStart.isAfter(maxSelectable) &&
+        (minSelectable == null || !selectedStart.isBefore(minSelectable));
+
     final canSave = !_saving &&
-        selected != null &&
-        !blockedStarts.contains(selected) &&
-        !selected.isAfter(maxSelectable) &&
-        (minSelectable == null || !selected.isBefore(minSelectable));
+        periodEpisodeFormIsComplete(
+          startDate: selectedStart,
+          ongoingStatus: _ongoingStatus,
+          endConfidence: _endConfidence,
+          selectedEndDate: _selectedEndDate,
+          roughDurationBucket: _roughDurationBucket,
+        ) &&
+        startValid;
 
     return Scaffold(
       backgroundColor: RituColors.backgroundPage,
@@ -294,7 +313,7 @@ class _AddPeriodScreenState extends ConsumerState<AddPeriodScreen> {
                   const SizedBox(height: 16),
                   RituCalendar(
                     month: _visibleMonth,
-                    selectedDate: _selectedDate,
+                    selectedDate: _selectedStart,
                     periodDates: periodDates,
                     minSelectableDate: minSelectable,
                     maxSelectableDate: maxSelectable,
@@ -304,31 +323,44 @@ class _AddPeriodScreenState extends ConsumerState<AddPeriodScreen> {
                     },
                     onDateSelected: (date) {
                       if (blockedStarts.contains(dateOnly(date))) return;
-                      setState(() => _selectedDate = date);
+                      _onStartSelected(date);
                     },
                   ),
                   const SizedBox(height: 24),
-                  Text(
-                    'And roughly how many days did it last?',
-                    style: GoogleFonts.dmSans(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      height: 24 / 18,
-                      color: RituColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      for (final option in PeriodDuration.values)
-                        RituChoiceChip(
-                          label: _durationLabel(option),
-                          selected: _duration == option,
-                          onTap: () => setState(() => _duration = option),
-                        ),
-                    ],
+                  PeriodEpisodeFormFields(
+                    ongoingStatus: _ongoingStatus,
+                    onOngoingStatusChanged: (status) {
+                      setState(() {
+                        _ongoingStatus = status;
+                        if (status == PeriodOngoingStatus.stillGoing) {
+                          _endConfidence = null;
+                          _selectedEndDate = null;
+                          _roughDurationBucket = null;
+                        }
+                      });
+                    },
+                    endConfidence: _endConfidence,
+                    onEndConfidenceChanged: (choice) {
+                      setState(() {
+                        _endConfidence = choice;
+                        if (choice == EndConfidenceChoice.exact) {
+                          _roughDurationBucket = null;
+                        } else {
+                          _selectedEndDate = null;
+                        }
+                      });
+                    },
+                    selectedEndDate: _selectedEndDate,
+                    onEndDatePicked: (date) {
+                      setState(() => _selectedEndDate = date);
+                    },
+                    roughDurationBucket: _roughDurationBucket,
+                    onRoughDurationBucketChanged: (bucket) {
+                      setState(() => _roughDurationBucket = bucket);
+                    },
+                    maxEndDate: maxSelectable,
+                    startDate: selectedStart,
+                    startDateValid: startValid,
                   ),
                   const SizedBox(height: 24),
                   SizedBox(

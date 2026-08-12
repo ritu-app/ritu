@@ -3,6 +3,7 @@ import 'dart:convert';
 import '../models/custom_symptom.dart';
 import '../models/daily_log_entry.dart';
 import '../models/journal_entry.dart';
+import '../models/period_end_prompt.dart';
 import '../models/period_log.dart';
 import '../models/profile.dart';
 
@@ -13,6 +14,7 @@ class RituBackup {
     required this.exportedAt,
     this.profile,
     this.periodLogs = const [],
+    this.periodEndPrompts = const [],
     this.dailyLogs = const [],
     this.journalEntries = const [],
     this.customSymptoms = const [],
@@ -25,6 +27,7 @@ class RituBackup {
   final DateTime exportedAt;
   final Profile? profile;
   final List<PeriodLog> periodLogs;
+  final List<PeriodEndPrompt> periodEndPrompts;
   final List<DailyLogEntry> dailyLogs;
   final List<JournalEntry> journalEntries;
   final List<CustomSymptom> customSymptoms;
@@ -37,6 +40,8 @@ class RituBackup {
       if (profile != null) 'profile': _profileToJson(profile!),
       if (periodLogs.isNotEmpty)
         'periodLogs': periodLogs.map(_periodToJson).toList(),
+      if (periodEndPrompts.isNotEmpty)
+        'periodEndPrompts': periodEndPrompts.map(_periodEndPromptToJson).toList(),
       if (dailyLogs.isNotEmpty)
         'dailyLogs': dailyLogs.map(_dailyLogToJson).toList(),
       if (journalEntries.isNotEmpty)
@@ -85,6 +90,11 @@ class RituBackup {
           ? null
           : _profileFromJson(_asMap(json['profile'], 'profile')),
       periodLogs: _mapList(json['periodLogs'], 'periodLogs', _periodFromJson),
+      periodEndPrompts: _mapList(
+        json['periodEndPrompts'],
+        'periodEndPrompts',
+        _periodEndPromptFromJson,
+      ),
       dailyLogs: _mapList(json['dailyLogs'], 'dailyLogs', _dailyLogFromJson),
       journalEntries: _mapList(
         json['journalEntries'],
@@ -121,18 +131,57 @@ Map<String, Object?> _periodToJson(PeriodLog log) => {
       'startedOn': log.startedOn.toIso8601String(),
       'endedOn': log.endedOn?.toIso8601String(),
       'source': log.source,
+      'startSource': log.startSource,
+      'startConfidence': log.startConfidence,
+      'endStatus': log.endStatus,
+      if (log.endSource != null) 'endSource': log.endSource,
+      if (log.endConfidence != null) 'endConfidence': log.endConfidence,
+      if (log.roughDurationBucket != null)
+        'roughDurationBucket': log.roughDurationBucket,
       'createdAt': log.createdAt.toIso8601String(),
       'updatedAt': log.updatedAt.toIso8601String(),
     };
 
 PeriodLog _periodFromJson(Map<String, dynamic> json) {
+  final startedOn = _requireDate(json, 'startedOn');
+  final endedOn = _optionalDate(json, 'endedOn');
+  final source = _requireString(json, 'source');
   return PeriodLog(
     id: 0,
-    startedOn: _requireDate(json, 'startedOn'),
-    endedOn: _optionalDate(json, 'endedOn'),
-    source: _requireString(json, 'source'),
+    startedOn: startedOn,
+    endedOn: endedOn,
+    source: source,
+    startSource: json['startSource'] as String?,
+    startConfidence: json['startConfidence'] as String?,
+    endStatus: json['endStatus'] as String?,
+    endSource: json['endSource'] as String?,
+    endConfidence: json['endConfidence'] as String?,
+    roughDurationBucket: json['roughDurationBucket'] as String?,
     createdAt: _requireDate(json, 'createdAt'),
     updatedAt: _requireDate(json, 'updatedAt'),
+  );
+}
+
+Map<String, Object?> _periodEndPromptToJson(PeriodEndPrompt prompt) => {
+      'periodLogId': prompt.periodLogId,
+      if (prompt.periodStartedOn != null)
+        'periodStartedOn': prompt.periodStartedOn!.toIso8601String(),
+      'shownOn': prompt.shownOn.toIso8601String(),
+      if (prompt.response != null) 'response': prompt.response,
+      if (prompt.respondedOn != null)
+        'respondedOn': prompt.respondedOn!.toIso8601String(),
+      'createdAt': prompt.createdAt.toIso8601String(),
+    };
+
+PeriodEndPrompt _periodEndPromptFromJson(Map<String, dynamic> json) {
+  return PeriodEndPrompt(
+    id: 0,
+    periodLogId: json['periodLogId'] as int? ?? 0,
+    periodStartedOn: _optionalDate(json, 'periodStartedOn'),
+    shownOn: _requireDate(json, 'shownOn'),
+    response: json['response'] as String?,
+    respondedOn: _optionalDate(json, 'respondedOn'),
+    createdAt: _requireDate(json, 'createdAt'),
   );
 }
 

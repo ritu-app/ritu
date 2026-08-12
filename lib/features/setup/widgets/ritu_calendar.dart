@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -13,6 +15,7 @@ class RituCalendar extends StatelessWidget {
     required this.month,
     required this.onMonthChanged,
     this.selectedDate,
+    this.anchorDate,
     this.markedDates = const {},
     this.entryDates = const {},
     this.periodDates = const {},
@@ -27,6 +30,9 @@ class RituCalendar extends StatelessWidget {
   final DateTime month;
   final ValueChanged<DateTime> onMonthChanged;
   final DateTime? selectedDate;
+
+  /// Secondary highlighted day (e.g. period start while picking an end date).
+  final DateTime? anchorDate;
   final Set<DateTime> markedDates;
 
   /// Days with a journal (or similar) entry — sage dot under the day number.
@@ -241,6 +247,10 @@ class RituCalendar extends StatelessWidget {
     final selectable = _isSelectable(date);
     final isSelected =
         selectable && selectedDate != null && _isSameDay(selectedDate!, date);
+    final isAnchor = selectable &&
+        anchorDate != null &&
+        _isSameDay(anchorDate!, date) &&
+        !isSelected;
     final isMarked = selectable && _isMarked(date);
     final isEntry = selectable && _isEntry(date);
     final isPeriod = _isPeriod(date);
@@ -337,6 +347,27 @@ class RituCalendar extends StatelessWidget {
                       ),
                     ),
                   )
+                : isAnchor
+                    ? Center(
+                        child: CustomPaint(
+                          painter: _DashedCirclePainter(),
+                          child: SizedBox(
+                            width: 30,
+                            height: 30,
+                            child: Center(
+                              child: Text(
+                                '$dayNumber',
+                                style: GoogleFonts.dmSans(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  height: 1,
+                                  color: RituColors.textPrimary,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      )
                 : Stack(
                     alignment: Alignment.center,
                     children: [
@@ -377,6 +408,34 @@ class RituCalendar extends StatelessWidget {
       ),
     );
   }
+}
+
+class _DashedCirclePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = RituColors.sage600
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 2 - 1.5;
+    const segments = 16;
+    for (var i = 0; i < segments; i++) {
+      if (i.isOdd) continue;
+      final startAngle = (i / segments) * 2 * math.pi;
+      final sweepAngle = (2 / segments) * math.pi * 0.55;
+      canvas.drawArc(
+        Rect.fromCircle(center: center, radius: radius),
+        startAngle,
+        sweepAngle,
+        false,
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class _NavIcon extends StatelessWidget {

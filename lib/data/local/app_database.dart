@@ -3,16 +3,25 @@ import 'package:drift_flutter/drift_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../../core/date_format.dart';
+import '../models/period_log.dart';
 import 'memory_executor.dart';
 import 'tables/custom_symptoms.dart';
 import 'tables/daily_logs.dart';
 import 'tables/journal_entries.dart';
+import 'tables/period_end_prompts.dart';
 import 'tables/period_logs.dart';
 import 'tables/profiles.dart';
 
 part 'app_database.g.dart';
 
-@DriftDatabase(tables: [Profiles, PeriodLogs, CustomSymptoms, DailyLogs, JournalEntries])
+@DriftDatabase(tables: [
+  Profiles,
+  PeriodLogs,
+  PeriodEndPrompts,
+  CustomSymptoms,
+  DailyLogs,
+  JournalEntries,
+])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
@@ -21,7 +30,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.memory() : super(createMemoryExecutor());
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -66,6 +75,37 @@ class AppDatabase extends _$AppDatabase {
               );
             }
             await m.alterTable(TableMigration(dailyLogs));
+          }
+          if (from < 7) {
+            await m.addColumn(periodLogs, periodLogs.startSource);
+            await m.addColumn(periodLogs, periodLogs.startConfidence);
+            await m.addColumn(periodLogs, periodLogs.endStatus);
+            await m.addColumn(periodLogs, periodLogs.endSource);
+            await m.addColumn(periodLogs, periodLogs.endConfidence);
+            await m.addColumn(periodLogs, periodLogs.roughDurationBucket);
+            await m.createTable(periodEndPrompts);
+
+            final rows = await select(periodLogs).get();
+            for (final row in rows) {
+              final endedOn =
+                  row.endedOn == null ? null : dateOnly(row.endedOn!);
+              final meta = PeriodLogMetadata.fromLegacySource(
+                row.source,
+                startedOn: dateOnly(row.startedOn),
+                endedOn: endedOn,
+              );
+              await (update(periodLogs)..where((t) => t.id.equals(row.id)))
+                  .write(
+                PeriodLogsCompanion(
+                  startSource: Value(meta.startSource),
+                  startConfidence: Value(meta.startConfidence),
+                  endStatus: Value(meta.endStatus),
+                  endSource: Value(meta.endSource),
+                  endConfidence: Value(meta.endConfidence),
+                  roughDurationBucket: Value(meta.roughDurationBucket),
+                ),
+              );
+            }
           }
         },
       );

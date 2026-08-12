@@ -7,6 +7,7 @@ import '../features/home/home_screen.dart';
 import '../features/onboarding/confirmation_screen.dart';
 import '../features/onboarding/name_screen.dart';
 import '../features/setup/last_period_screen.dart';
+import '../features/setup/widgets/period_episode_form_fields.dart';
 import '../features/setup/notification_screen.dart';
 import '../features/setup/past_dates_screen.dart';
 import '../features/splash/splash_screen.dart';
@@ -113,15 +114,38 @@ class _OnboardingFlow extends ConsumerWidget {
 
   Widget _lastPeriod(BuildContext context, WidgetRef ref, String name) {
     return LastPeriodScreen(
-      onContinue: (startedOn, duration) async {
+      onContinue: (input) async {
         final profiles = ref.read(profileRepositoryProvider);
         final periods = ref.read(periodRepositoryProvider);
-        final days = duration.typicalDays;
-        await profiles.setTypicalPeriodDays(days);
-        await periods.recordLastPeriod(
-          startedOn: startedOn,
-          typicalPeriodDays: days,
+        final typical = typicalPeriodDaysFromEpisodeForm(
+          ongoingStatus: input.ongoingStatus,
+          endConfidence: input.endConfidence,
+          startDate: input.startedOn,
+          selectedEndDate: input.endedOn,
+          roughDurationBucket: input.roughDurationBucket,
         );
+        await profiles.setTypicalPeriodDays(typical);
+
+        switch (input.ongoingStatus) {
+          case PeriodOngoingStatus.stillGoing:
+            await periods.recordOnboardingLastOpen(startedOn: input.startedOn);
+          case PeriodOngoingStatus.ended:
+            switch (input.endConfidence) {
+              case EndConfidenceChoice.exact:
+                await periods.recordOnboardingLastExactEnd(
+                  startedOn: input.startedOn,
+                  endedOn: input.endedOn!,
+                );
+              case EndConfidenceChoice.rough:
+                await periods.recordOnboardingLastRoughEnd(
+                  startedOn: input.startedOn,
+                  roughDurationBucket: input.roughDurationBucket!,
+                );
+              case null:
+                break;
+            }
+        }
+
         if (!context.mounted) return;
         _push(context, _pastDates(context, ref, name));
       },

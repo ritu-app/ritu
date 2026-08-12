@@ -3,6 +3,7 @@ import 'package:drift/drift.dart';
 import '../../../core/date_format.dart';
 import '../../local/app_database.dart';
 import '../period_repository.dart';
+import '../period_repository_support.dart';
 
 class DriftPeriodRepository implements PeriodRepository {
   DriftPeriodRepository(this._db);
@@ -15,8 +16,51 @@ class DriftPeriodRepository implements PeriodRepository {
       startedOn: dateOnly(row.startedOn),
       endedOn: row.endedOn == null ? null : dateOnly(row.endedOn!),
       source: row.source,
+      startSource: row.startSource,
+      startConfidence: row.startConfidence,
+      endStatus: row.endStatus,
+      endSource: row.endSource,
+      endConfidence: row.endConfidence,
+      roughDurationBucket: row.roughDurationBucket,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
+    );
+  }
+
+  PeriodLogsCompanion _companionForUpsert({
+    required DateTime startedOn,
+    DateTime? endedOn,
+    required String source,
+    required DateTime now,
+    String? startSource,
+    String? startConfidence,
+    String? endStatus,
+    String? endSource,
+    String? endConfidence,
+    String? roughDurationBucket,
+  }) {
+    final meta = PeriodRepositorySupport.metadataForUpsert(
+      legacySource: source,
+      startedOn: startedOn,
+      endedOn: endedOn,
+      startSource: startSource,
+      startConfidence: startConfidence,
+      endStatus: endStatus,
+      endSource: endSource,
+      endConfidence: endConfidence,
+      roughDurationBucket: roughDurationBucket,
+    );
+    return PeriodLogsCompanion(
+      startedOn: Value(startedOn),
+      endedOn: Value(endedOn),
+      source: Value(source),
+      startSource: Value(meta.startSource),
+      startConfidence: Value(meta.startConfidence),
+      endStatus: Value(meta.endStatus),
+      endSource: Value(meta.endSource),
+      endConfidence: Value(meta.endConfidence),
+      roughDurationBucket: Value(meta.roughDurationBucket),
+      updatedAt: Value(now),
     );
   }
 
@@ -74,6 +118,12 @@ class DriftPeriodRepository implements PeriodRepository {
     required DateTime startedOn,
     DateTime? endedOn,
     required String source,
+    String? startSource,
+    String? startConfidence,
+    String? endStatus,
+    String? endSource,
+    String? endConfidence,
+    String? roughDurationBucket,
   }) async {
     final start = dateOnly(startedOn);
     final today = dateOnly(DateTime.now());
@@ -86,6 +136,17 @@ class DriftPeriodRepository implements PeriodRepository {
     }
     final end = endedOn == null ? null : dateOnly(endedOn);
     final now = DateTime.now();
+    final meta = PeriodRepositorySupport.metadataForUpsert(
+      legacySource: source,
+      startedOn: start,
+      endedOn: end,
+      startSource: startSource,
+      startConfidence: startConfidence,
+      endStatus: endStatus,
+      endSource: endSource,
+      endConfidence: endConfidence,
+      roughDurationBucket: roughDurationBucket,
+    );
 
     final existing = await (_db.select(_db.periodLogs)
           ..where((t) => t.startedOn.equals(start)))
@@ -97,6 +158,12 @@ class DriftPeriodRepository implements PeriodRepository {
               startedOn: start,
               endedOn: Value(end),
               source: source,
+              startSource: Value(meta.startSource),
+              startConfidence: Value(meta.startConfidence),
+              endStatus: Value(meta.endStatus),
+              endSource: Value(meta.endSource),
+              endConfidence: Value(meta.endConfidence),
+              roughDurationBucket: Value(meta.roughDurationBucket),
               createdAt: now,
               updatedAt: now,
             ),
@@ -105,10 +172,17 @@ class DriftPeriodRepository implements PeriodRepository {
       await (_db.update(_db.periodLogs)
             ..where((t) => t.id.equals(existing.id)))
           .write(
-        PeriodLogsCompanion(
-          endedOn: Value(end),
-          source: Value(source),
-          updatedAt: Value(now),
+        _companionForUpsert(
+          startedOn: start,
+          endedOn: end,
+          source: source,
+          now: now,
+          startSource: startSource,
+          startConfidence: startConfidence,
+          endStatus: endStatus,
+          endSource: endSource,
+          endConfidence: endConfidence,
+          roughDurationBucket: roughDurationBucket,
         ),
       );
     }
@@ -124,10 +198,94 @@ class DriftPeriodRepository implements PeriodRepository {
     required DateTime startedOn,
     required int? typicalPeriodDays,
   }) async {
+    final end = PeriodRepository.estimateEnd(startedOn, typicalPeriodDays);
+    final meta = PeriodRepositorySupport.metadataForEstimatedOnboarding(
+      startSource: PeriodStartSources.onboardingLast,
+      startConfidence: PeriodStartConfidence.logged,
+      endSource: PeriodEndSources.onboardingEstimate,
+      endedOn: end,
+    );
     await upsertPeriod(
       startedOn: startedOn,
-      endedOn: PeriodRepository.estimateEnd(startedOn, typicalPeriodDays),
+      endedOn: end,
       source: PeriodSources.onboardingLast,
+      startSource: meta.startSource,
+      startConfidence: meta.startConfidence,
+      endStatus: meta.endStatus,
+      endSource: meta.endSource,
+      endConfidence: meta.endConfidence,
+    );
+  }
+
+  @override
+  Future<PeriodLog> recordOnboardingLastOpen({
+    required DateTime startedOn,
+  }) {
+    final meta = PeriodLogMetadata.forOpenPeriod(
+      startSource: PeriodStartSources.onboardingLast,
+      startConfidence: PeriodStartConfidence.logged,
+    );
+    return upsertPeriod(
+      startedOn: startedOn,
+      source: PeriodSources.onboardingLast,
+      startSource: meta.startSource,
+      startConfidence: meta.startConfidence,
+      endStatus: meta.endStatus,
+      endSource: meta.endSource,
+      endConfidence: meta.endConfidence,
+      roughDurationBucket: meta.roughDurationBucket,
+    );
+  }
+
+  @override
+  Future<PeriodLog> recordOnboardingLastExactEnd({
+    required DateTime startedOn,
+    required DateTime endedOn,
+  }) {
+    final meta = PeriodLogMetadata.forExactEnd(
+      startSource: PeriodStartSources.onboardingLast,
+      startConfidence: PeriodStartConfidence.logged,
+      endSource: PeriodEndSources.onboardingEstimate,
+    );
+    return upsertPeriod(
+      startedOn: startedOn,
+      endedOn: endedOn,
+      source: PeriodSources.onboardingLast,
+      startSource: meta.startSource,
+      startConfidence: meta.startConfidence,
+      endStatus: meta.endStatus,
+      endSource: meta.endSource,
+      endConfidence: meta.endConfidence,
+    );
+  }
+
+  @override
+  Future<PeriodLog> recordOnboardingLastRoughEnd({
+    required DateTime startedOn,
+    required String roughDurationBucket,
+  }) {
+    final end = PeriodRepository.estimateEndFromBucket(
+      startedOn,
+      roughDurationBucket,
+    );
+    final meta = PeriodLogMetadata.forRoughEnd(
+      startSource: PeriodStartSources.onboardingLast,
+      startConfidence: PeriodStartConfidence.logged,
+      endSource: PeriodEndSources.onboardingEstimate,
+      roughDurationBucket: roughDurationBucket,
+      startedOn: startedOn,
+      endedOn: end ?? dateOnly(startedOn),
+    );
+    return upsertPeriod(
+      startedOn: startedOn,
+      endedOn: end,
+      source: PeriodSources.onboardingLast,
+      startSource: meta.startSource,
+      startConfidence: meta.startConfidence,
+      endStatus: meta.endStatus,
+      endSource: meta.endSource,
+      endConfidence: meta.endConfidence,
+      roughDurationBucket: meta.roughDurationBucket,
     );
   }
 
@@ -139,10 +297,22 @@ class DriftPeriodRepository implements PeriodRepository {
     if (startedOnDates.isEmpty) return;
     await _db.transaction(() async {
       for (final start in startedOnDates) {
+        final end = PeriodRepository.estimateEnd(start, typicalPeriodDays);
+        final meta = PeriodRepositorySupport.metadataForEstimatedOnboarding(
+          startSource: PeriodStartSources.onboardingPast,
+          startConfidence: PeriodStartConfidence.manual,
+          endSource: PeriodEndSources.onboardingEstimate,
+          endedOn: end,
+        );
         await upsertPeriod(
           startedOn: start,
-          endedOn: PeriodRepository.estimateEnd(start, typicalPeriodDays),
+          endedOn: end,
           source: PeriodSources.onboardingPast,
+          startSource: meta.startSource,
+          startConfidence: meta.startConfidence,
+          endStatus: meta.endStatus,
+          endSource: meta.endSource,
+          endConfidence: meta.endConfidence,
         );
       }
     });
@@ -165,10 +335,33 @@ class DriftPeriodRepository implements PeriodRepository {
     if (latest != null && !start.isBefore(dateOnly(latest.startedOn))) {
       return null;
     }
+    final end = PeriodRepository.estimateEnd(start, typicalPeriodDays);
+    final bucket = PeriodRepositorySupport.roughBucketForTypicalDays(
+      typicalPeriodDays,
+    );
+    final meta = end == null
+        ? PeriodLogMetadata(
+            startSource: PeriodStartSources.periodHistory,
+            startConfidence: PeriodStartConfidence.manual,
+            endStatus: PeriodEndStatus.unknown,
+          )
+        : PeriodLogMetadata.forRoughEnd(
+            startSource: PeriodStartSources.periodHistory,
+            roughDurationBucket:
+                bucket ?? RoughDurationBuckets.fourToFiveDays,
+            startedOn: start,
+            endedOn: end,
+          );
     return upsertPeriod(
       startedOn: start,
-      endedOn: PeriodRepository.estimateEnd(start, typicalPeriodDays),
+      endedOn: end,
       source: PeriodSources.manual,
+      startSource: meta.startSource,
+      startConfidence: meta.startConfidence,
+      endStatus: meta.endStatus,
+      endSource: meta.endSource,
+      endConfidence: meta.endConfidence,
+      roughDurationBucket: meta.roughDurationBucket,
     );
   }
 
@@ -207,13 +400,53 @@ class DriftPeriodRepository implements PeriodRepository {
       }
 
       for (final start in desired) {
+        final end = PeriodRepository.estimateEnd(start, typicalPeriodDays);
+        final meta = PeriodRepositorySupport.metadataForEstimatedOnboarding(
+          startSource: PeriodStartSources.settings,
+          startConfidence: PeriodStartConfidence.manual,
+          endSource: PeriodEndSources.settings,
+          endedOn: end,
+        );
         await upsertPeriod(
           startedOn: start,
-          endedOn: PeriodRepository.estimateEnd(start, typicalPeriodDays),
+          endedOn: end,
           source: PeriodSources.settings,
+          startSource: meta.startSource,
+          startConfidence: meta.startConfidence,
+          endStatus: meta.endStatus,
+          endSource: meta.endSource,
+          endConfidence: meta.endConfidence,
         );
       }
     });
+  }
+
+  Future<PeriodLog> _updateLatestWithMetadata({
+    required PeriodLog latest,
+    required DateTime start,
+    DateTime? end,
+    required PeriodLogMetadata meta,
+  }) async {
+    final now = DateTime.now();
+    await (_db.update(_db.periodLogs)..where((t) => t.id.equals(latest.id)))
+        .write(
+      PeriodLogsCompanion(
+        startedOn: Value(start),
+        endedOn: Value(end),
+        source: const Value(PeriodSources.settings),
+        startSource: Value(meta.startSource),
+        startConfidence: Value(meta.startConfidence),
+        endStatus: Value(meta.endStatus),
+        endSource: Value(meta.endSource),
+        endConfidence: Value(meta.endConfidence),
+        roughDurationBucket: Value(meta.roughDurationBucket),
+        updatedAt: Value(now),
+      ),
+    );
+    final row = await (_db.select(_db.periodLogs)
+          ..where((t) => t.id.equals(latest.id)))
+        .getSingle();
+    return _mapPeriodLog(row);
   }
 
   @override
@@ -243,23 +476,33 @@ class DriftPeriodRepository implements PeriodRepository {
       end = PeriodRepository.estimateEnd(start, length);
     }
 
+    final meta = PeriodRepositorySupport.metadataForEstimatedOnboarding(
+      startSource: PeriodStartSources.settings,
+      startConfidence: PeriodStartConfidence.manual,
+      endSource: PeriodEndSources.settings,
+      endedOn: end,
+    );
+
     if (latest == null) {
       return upsertPeriod(
         startedOn: start,
         endedOn: end,
         source: PeriodSources.settings,
+        startSource: meta.startSource,
+        startConfidence: meta.startConfidence,
+        endStatus: meta.endStatus,
+        endSource: meta.endSource,
+        endConfidence: meta.endConfidence,
       );
     }
 
     if (dateOnly(latest.startedOn) == start) {
       if (end != latest.endedOn) {
-        await (_db.update(_db.periodLogs)..where((t) => t.id.equals(latest.id)))
-            .write(
-          PeriodLogsCompanion(
-            endedOn: Value(end),
-            source: const Value(PeriodSources.settings),
-            updatedAt: Value(now),
-          ),
+        return _updateLatestWithMetadata(
+          latest: latest,
+          start: start,
+          end: end,
+          meta: meta,
         );
       }
       final row = await (_db.select(_db.periodLogs)
@@ -283,6 +526,12 @@ class DriftPeriodRepository implements PeriodRepository {
           PeriodLogsCompanion(
             endedOn: Value(end),
             source: const Value(PeriodSources.settings),
+            startSource: Value(meta.startSource),
+            startConfidence: Value(meta.startConfidence),
+            endStatus: Value(meta.endStatus),
+            endSource: Value(meta.endSource),
+            endConfidence: Value(meta.endConfidence),
+            roughDurationBucket: Value(meta.roughDurationBucket),
             updatedAt: Value(now),
           ),
         );
@@ -292,19 +541,82 @@ class DriftPeriodRepository implements PeriodRepository {
         return _mapPeriodLog(row);
       }
 
-      await (_db.update(_db.periodLogs)..where((t) => t.id.equals(latest.id)))
-          .write(
-        PeriodLogsCompanion(
-          startedOn: Value(start),
-          endedOn: Value(end),
-          source: const Value(PeriodSources.settings),
-          updatedAt: Value(now),
-        ),
+      return _updateLatestWithMetadata(
+        latest: latest,
+        start: start,
+        end: end,
+        meta: meta,
       );
-      final row = await (_db.select(_db.periodLogs)
-            ..where((t) => t.id.equals(latest.id)))
-          .getSingle();
-      return _mapPeriodLog(row);
     });
+  }
+
+  @override
+  Future<PeriodLog> saveOngoingManualPeriod({
+    required DateTime startedOn,
+  }) {
+    final meta = PeriodLogMetadata.forOpenPeriod(
+      startSource: PeriodStartSources.periodHistory,
+      startConfidence: PeriodStartConfidence.manual,
+    );
+    return upsertPeriod(
+      startedOn: startedOn,
+      source: PeriodSources.manual,
+      startSource: meta.startSource,
+      startConfidence: meta.startConfidence,
+      endStatus: meta.endStatus,
+      endSource: meta.endSource,
+      endConfidence: meta.endConfidence,
+      roughDurationBucket: meta.roughDurationBucket,
+    );
+  }
+
+  @override
+  Future<PeriodLog> saveExactEndedManualPeriod({
+    required DateTime startedOn,
+    required DateTime endedOn,
+  }) {
+    final meta = PeriodLogMetadata.forExactEnd(
+      startSource: PeriodStartSources.periodHistory,
+      startConfidence: PeriodStartConfidence.manual,
+      endSource: PeriodEndSources.addPeriodExact,
+    );
+    return upsertPeriod(
+      startedOn: startedOn,
+      endedOn: endedOn,
+      source: PeriodSources.manual,
+      startSource: meta.startSource,
+      startConfidence: meta.startConfidence,
+      endStatus: meta.endStatus,
+      endSource: meta.endSource,
+      endConfidence: meta.endConfidence,
+    );
+  }
+
+  @override
+  Future<PeriodLog> saveRoughEndedManualPeriod({
+    required DateTime startedOn,
+    required String roughDurationBucket,
+  }) {
+    final end = PeriodRepository.estimateEndFromBucket(
+      startedOn,
+      roughDurationBucket,
+    );
+    final meta = PeriodLogMetadata.forRoughEnd(
+      startSource: PeriodStartSources.periodHistory,
+      roughDurationBucket: roughDurationBucket,
+      startedOn: startedOn,
+      endedOn: end ?? dateOnly(startedOn),
+    );
+    return upsertPeriod(
+      startedOn: startedOn,
+      endedOn: end,
+      source: PeriodSources.manual,
+      startSource: meta.startSource,
+      startConfidence: meta.startConfidence,
+      endStatus: meta.endStatus,
+      endSource: meta.endSource,
+      endConfidence: meta.endConfidence,
+      roughDurationBucket: meta.roughDurationBucket,
+    );
   }
 }

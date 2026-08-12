@@ -144,10 +144,15 @@ void main() {
     await tester.tap(find.text('Continue'));
     await tester.pumpAndSettle();
 
-    await tester.ensureVisible(find.text('4-5 days'));
+    await tester.scrollUntilVisible(find.text("It's ended"), 120);
+    await tester.tap(find.text("It's ended"));
     await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('Not sure - roughly'), 120);
+    await tester.tap(find.text('Not sure - roughly'));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('4-5 days'), 120);
     await tester.tap(find.text('4-5 days'));
-    await tester.pump();
+    await tester.pumpAndSettle();
     await tester.tap(find.text('This look right'));
     await tester.pumpAndSettle();
 
@@ -155,6 +160,8 @@ void main() {
     final latest = await periods.getLatest();
     expect(latest, isNotNull);
     expect(latest!.source, PeriodSources.onboardingLast);
+    expect(latest.endStatus, PeriodEndStatus.rough);
+    expect(latest.roughDurationBucket, RoughDurationBuckets.fourToFiveDays);
 
     final profiles = DriftProfileRepository(database);
     expect((await profiles.getProfile())?.typicalPeriodDays, 5);
@@ -568,10 +575,22 @@ void main() {
     final day = find.text('${pastStart.day}');
     await tester.ensureVisible(day);
     await tester.tap(day);
-    await tester.pump();
-    await tester.ensureVisible(find.text('4-5 days'));
-    await tester.tap(find.text('4-5 days'));
-    await tester.pump();
+    await tester.pumpAndSettle();
+
+    final endedChip = find.text("It's ended");
+    await tester.scrollUntilVisible(endedChip, 120);
+    await tester.tap(endedChip);
+    await tester.pumpAndSettle();
+
+    final roughChip = find.text('Not sure - roughly');
+    await tester.scrollUntilVisible(roughChip, 120);
+    await tester.tap(roughChip);
+    await tester.pumpAndSettle();
+
+    final durationChip = find.text('4-5 days');
+    await tester.scrollUntilVisible(durationChip, 120);
+    await tester.tap(durationChip);
+    await tester.pumpAndSettle();
 
     expect(await periods.getPastStartedOn(), isEmpty);
 

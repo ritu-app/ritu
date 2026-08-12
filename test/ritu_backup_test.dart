@@ -8,6 +8,7 @@ import 'package:ritu/data/models/period_log.dart';
 import 'package:ritu/data/models/profile.dart';
 import 'package:ritu/data/repositories/drift/drift_daily_log_repository.dart';
 import 'package:ritu/data/repositories/drift/drift_journal_entry_repository.dart';
+import 'package:ritu/data/repositories/drift/drift_period_end_prompt_repository.dart';
 import 'package:ritu/data/repositories/drift/drift_period_repository.dart';
 import 'package:ritu/data/repositories/drift/drift_profile_repository.dart';
 import 'package:ritu/data/repositories/drift/drift_symptom_repository.dart';
@@ -49,6 +50,29 @@ void main() {
       expect(decoded.journalEntries, isEmpty);
     });
 
+    test('decodes legacy period logs without new metadata fields', () {
+      final decoded = RituBackup.decode('''
+{
+  "format": "ritu.backup",
+  "version": 1,
+  "exportedAt": "2026-08-08T12:00:00.000Z",
+  "periodLogs": [
+    {
+      "startedOn": "2026-07-01T00:00:00.000",
+      "endedOn": "2026-07-05T00:00:00.000",
+      "source": "manual",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    }
+  ]
+}
+''');
+      final log = decoded.periodLogs.single;
+      expect(log.startSource, PeriodStartSources.periodHistory);
+      expect(log.endStatus, PeriodEndStatus.rough);
+      expect(log.hasApproximateEnd, isTrue);
+    });
+
     test('rejects invalid format', () {
       expect(
         () => RituBackup.decode('{"format":"other","version":1}'),
@@ -76,6 +100,7 @@ void main() {
     late RituBackupService service;
     late DriftProfileRepository profiles;
     late DriftPeriodRepository periods;
+    late DriftPeriodEndPromptRepository periodEndPrompts;
     late DriftDailyLogRepository dailyLogs;
     late DriftJournalEntryRepository journalEntries;
     late DriftSymptomRepository symptoms;
@@ -84,12 +109,14 @@ void main() {
       database = AppDatabase.memory();
       profiles = DriftProfileRepository(database);
       periods = DriftPeriodRepository(database);
+      periodEndPrompts = DriftPeriodEndPromptRepository(database);
       dailyLogs = DriftDailyLogRepository(database);
       journalEntries = DriftJournalEntryRepository(database);
       symptoms = DriftSymptomRepository(database);
       service = RituBackupService(
         profiles: profiles,
         periods: periods,
+        periodEndPrompts: periodEndPrompts,
         dailyLogs: dailyLogs,
         journalEntries: journalEntries,
         symptoms: symptoms,
