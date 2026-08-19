@@ -16,9 +16,10 @@ Two independent Flutter projects live in this repo:
   `.github/workflows/widgetbook-vercel.yml`). See `widgetbook/README.md`
   before touching it.
 
-Read `README.md` (run/build/codegen commands) and `docs/DATA.md` (full data
-model + schema + provider table) before making non-trivial changes — both are
-kept up to date and are more authoritative than this file for those topics.
+Read `README.md` (run/build/codegen commands), `DESIGN.md` (visual identity +
+design tokens — read before any UI work), and `docs/DATA.md` (full data model +
+schema + provider table) before making non-trivial changes — all are kept up to
+date and are more authoritative than this file for those topics.
 
 ## Stack
 
