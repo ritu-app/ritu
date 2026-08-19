@@ -371,7 +371,7 @@ class _AllEntriesHeader extends StatelessWidget {
   }
 }
 
-/// Figma 865:3277 — cream panel, 12px pad/gap, radius 7.
+/// Figma 865:3277 — cream panel, 12px pad/gap, radius-md (12px).
 class _AllEntriesOverflowMenu extends StatelessWidget {
   const _AllEntriesOverflowMenu({
     required this.borderColor,
@@ -398,7 +398,7 @@ class _AllEntriesOverflowMenu extends StatelessWidget {
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: RituColors.fillSubtle,
-              borderRadius: BorderRadius.circular(7),
+              borderRadius: BorderRadius.circular(12),
               border: Border.all(color: borderColor),
             ),
             child: Column(

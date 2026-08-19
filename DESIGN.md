@@ -393,13 +393,8 @@ When adding a new shared component, add a Widgetbook use-case and regenerate
 - Use cycle phase colors as primary brand or button fills.
 - Put gradients on buttons, chips, or other interactive fills.
 - Use drop shadows — hierarchy is tonal (background → white surface → border).
-- Use radius values outside the scale (e.g. 7px) on new work.
+- Use radius values outside the scale on new work.
 - Build screen-only button/chip styles when a shared component exists.
 - Implement dark mode styling while `AppAppearance.dark` is still a stub.
-
-**Known code drift (fix when touching these files):**
-
-- `ritu_theme.dart` input `borderRadius` is 8px — spec says **12px** (`radius-md`).
-- Some journal UI uses 7px radius — not in the scale; migrate to 8px or 12px.
 
 Validate this file locally: `npx @google/design.md lint DESIGN.md`

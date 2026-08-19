@@ -105,13 +105,13 @@ class _NameScreenState extends State<NameScreen> {
                     vertical: 12,
                   ),
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(12),
                     borderSide: const BorderSide(
                       color: RituColors.borderSubtle,
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(12),
                     borderSide: const BorderSide(
                       color: RituColors.sage500,
                     ),

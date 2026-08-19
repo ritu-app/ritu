@@ -53,7 +53,7 @@ class JournalEntryMenuButton extends StatelessWidget {
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: RituColors.fillSubtle,
-                        borderRadius: BorderRadius.circular(7),
+                        borderRadius: BorderRadius.circular(12),
                         border: Border.all(color: _borderDefault),
                       ),
                       child: Column(

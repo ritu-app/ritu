@@ -150,7 +150,7 @@ class _JournalEntryModalState extends State<_JournalEntryModal> {
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: RituColors.fillElevated,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: RituColors.borderSubtle),
                 ),
                 child: _isEdit

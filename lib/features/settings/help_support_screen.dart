@@ -193,7 +193,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                           ),
                           decoration: BoxDecoration(
                             color: RituColors.fillElevated,
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(12),
                             border: Border.all(color: RituColors.borderSubtle),
                           ),
                           child: Theme(
