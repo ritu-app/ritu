@@ -6,6 +6,11 @@ import '../../core/home_greeting.dart';
 import '../../theme/ritu_colors.dart';
 
 /// Home header: dynamic greeting, streak flame, settings.
+///
+/// Figma `899:6234` (screen `899:6214`) — 358×49 content width, `space-between`
+/// row. Greeting column: 4px gap, line 1 `text/md` medium, line 2 `display/xs`
+/// or `display/md` when showing name. Trailing actions: 24px flame + streak
+/// (0px gap), 8px gap, 24px settings (`text-primary`).
 class HomeGreetingHeader extends StatelessWidget {
   const HomeGreetingHeader({
     super.key,
@@ -19,6 +24,10 @@ class HomeGreetingHeader extends StatelessWidget {
   final String name;
   final VoidCallback onSettingsTap;
   final int streak;
+
+  static const _lineGap = 4.0;
+  static const _actionsGap = 8.0;
+  static const _iconSize = 24.0;
 
   @override
   Widget build(BuildContext context) {
@@ -37,6 +46,10 @@ class HomeGreetingHeader extends StatelessWidget {
             color: RituColors.textPrimary,
           );
 
+    final streakActive = streak > 0;
+    final streakColor =
+        streakActive ? RituColors.iconAttention : RituColors.textDisabled;
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -53,6 +66,7 @@ class HomeGreetingHeader extends StatelessWidget {
                   color: RituColors.textSecondary,
                 ),
               ),
+              const SizedBox(height: _lineGap),
               Text(
                 line2,
                 style: line2Style,
@@ -61,35 +75,40 @@ class HomeGreetingHeader extends StatelessWidget {
           ),
         ),
         Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Icon(
-              LucideIcons.flame,
-              size: 20,
-              color: streak > 0
-                  ? RituColors.iconAttention
-                  : RituColors.textDisabled,
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Icon(
+                  LucideIcons.flame,
+                  size: _iconSize,
+                  color: streakColor,
+                ),
+                Text(
+                  '$streak',
+                  style: GoogleFonts.dmSans(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    height: 20 / 13,
+                    color: streakColor,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: 4),
-            Text(
-              '$streak',
-              style: GoogleFonts.dmSans(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: streak > 0
-                    ? RituColors.iconAttention
-                    : RituColors.textDisabled,
-              ),
-            ),
-            const SizedBox(width: 12),
+            const SizedBox(width: _actionsGap),
             GestureDetector(
               onTap: onSettingsTap,
               behavior: HitTestBehavior.opaque,
-              child: const Padding(
-                padding: EdgeInsets.all(4),
+              child: const SizedBox(
+                width: _iconSize,
+                height: _iconSize,
                 child: Icon(
                   LucideIcons.settings,
-                  size: 22,
-                  color: RituColors.textDisabled,
+                  size: _iconSize,
+                  color: RituColors.textPrimary,
                 ),
               ),
             ),

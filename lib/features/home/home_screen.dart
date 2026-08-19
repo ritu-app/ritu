@@ -293,7 +293,7 @@ class _HomeTab extends StatelessWidget {
           )
         else
           const SizedBox(
-            height: 54,
+            height: 49,
             child: Center(
               child: SizedBox(
                 width: 20,
@@ -305,7 +305,7 @@ class _HomeTab extends StatelessWidget {
               ),
             ),
           ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 20),
         _StatusCard(
           cycleDay: cycleDay,
           lastPeriodLabel: lastPeriodLabel,
