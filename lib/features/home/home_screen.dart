@@ -344,24 +344,14 @@ class _HomeTab extends StatelessWidget {
           _SpeedUpBanner(onDismiss: onDismissBanner),
         ],
         const SizedBox(height: 20),
-        Row(
-          children: [
-            Text(
-              'Cycle calendar',
-              style: GoogleFonts.dmSans(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                height: 24 / 15,
-                color: RituColors.textPrimary,
-              ),
-            ),
-            const Spacer(),
-            const Icon(
-              LucideIcons.pencil,
-              size: 18,
-              color: RituColors.textDisabled,
-            ),
-          ],
+        Text(
+          'Cycle calendar',
+          style: GoogleFonts.dmSans(
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+            height: 24 / 15,
+            color: RituColors.textPrimary,
+          ),
         ),
         const SizedBox(height: 12),
         RituCalendar(
