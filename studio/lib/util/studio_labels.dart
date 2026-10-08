@@ -24,6 +24,12 @@ String formatStudioShortDate(DateTime date) {
   return '${months[date.month - 1]} ${date.day}, ${date.year}';
 }
 
+/// e.g. Aug 30
+String formatStudioMonthDay(DateTime date) {
+  final formatted = formatStudioShortDate(date);
+  return formatted.substring(0, formatted.lastIndexOf(','));
+}
+
 /// e.g. 30/8/2026
 String formatStudioNumericDate(DateTime date) {
   return '${date.day}/${date.month}/${date.year}';

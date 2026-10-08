@@ -15,6 +15,26 @@ enum StudioScenario {
 
   final String label;
 
+  /// Label without the parenthetical or trailing clause.
+  String get shortLabel {
+    final paren = label.indexOf(' (');
+    final dash = label.indexOf(' –');
+    var end = label.length;
+    if (paren >= 0 && paren < end) end = paren;
+    if (dash >= 0 && dash < end) end = dash;
+    return label.substring(0, end);
+  }
+
+  /// Furthest cycle day the playground slider can reach.
+  int get maxCycleDay => switch (this) {
+    StudioScenario.regularCycle ||
+    StudioScenario.threeCycles ||
+    StudioScenario.periodInProgress => 30,
+    StudioScenario.variableCycle => 35,
+    StudioScenario.unpredictableCycle => 40,
+    StudioScenario.newToRitu => 28,
+  };
+
   CycleHistoryDraft historyDraft() {
     return switch (this) {
       StudioScenario.regularCycle => CycleHistoryDraft.fromPreset(

@@ -47,5 +47,12 @@ void main() {
     expect(find.text('Logged today'), findsOneWidget);
     expect(find.text('Regenerate'), findsOneWidget);
     expect(find.text('Occasional'), findsOneWidget);
+
+    await tester.ensureVisible(find.text('Export scenario'));
+    await tester.tap(find.text('Export scenario'));
+    await tester.pump();
+    expect(find.text('Scenario includes'), findsOneWidget);
+    expect(find.text('6 completed cycles'), findsOneWidget);
+    expect(find.text('Export'), findsOneWidget);
   });
 }

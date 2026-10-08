@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:ritu/core/cycle/cycle_classification.dart';
+import 'package:ritu/providers/cycle_snapshot_provider.dart';
 import 'package:ritu/theme/ritu_colors.dart';
 
 import '../presets/studio_scenario.dart';
 import '../scope/studio_scope.dart';
 import '../theme/studio_styles.dart';
 import '../util/download_text_file.dart';
+import 'studio_widgets.dart';
 
 class StudioScenarioList extends StatelessWidget {
   const StudioScenarioList({
@@ -80,31 +84,94 @@ class _ScenarioOption extends StatelessWidget {
   }
 }
 
-class ExportScenarioActions extends StatelessWidget {
-  const ExportScenarioActions({super.key, required this.onExport});
+class ExportScenarioActions extends ConsumerWidget {
+  const ExportScenarioActions({
+    super.key,
+    required this.onExport,
+    required this.completedCycles,
+    required this.loggedDays,
+    required this.scenarioLabel,
+    required this.dailyLogLabel,
+    required this.journalLabel,
+    required this.loggedToday,
+  });
 
   final VoidCallback onExport;
+  final int completedCycles;
+  final int loggedDays;
+  final String scenarioLabel;
+  final String dailyLogLabel;
+  final String journalLabel;
+  final bool loggedToday;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final insights = ref
+        .watch(cycleSnapshotProvider)
+        .maybeWhen(
+          data: (snapshot) => snapshot.insightsMode == InsightsMode.full
+              ? 'Enabled'
+              : 'Partial',
+          orElse: () => '—',
+        );
+    final lines = [
+      _countLabel(completedCycles, 'completed cycle', 'completed cycles'),
+      _countLabel(loggedDays, 'logged day', 'logged days'),
+      scenarioLabel,
+      'Daily logs: $dailyLogLabel',
+      'Journal entries: $journalLabel',
+      "Today's check-in: ${loggedToday ? 'Logged' : 'Not logged'}",
+      'Insights: $insights',
+    ];
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          'Download a ritu.backup JSON and import it on a phone via '
-          'Settings → Export Data → Import from file. Keep simulated today '
-          'on or before wall-clock today so period starts import cleanly.',
-          style: StudioText.noteBody,
+        const Divider(height: 1, thickness: 1, color: RituColors.borderSubtle),
+        const SizedBox(height: 16),
+        Text('Scenario includes', style: StudioText.option),
+        for (final line in lines) _IncludeLine(line),
+        const SizedBox(height: 16),
+        const Divider(height: 1, thickness: 1, color: RituColors.borderSubtle),
+        const SizedBox(height: 16),
+        StudioPillButton(
+          icon: LucideIcons.download,
+          label: 'Export',
+          expand: true,
+          onPressed: onExport,
         ),
-        const SizedBox(height: 12),
-        MouseRegion(
-          cursor: SystemMouseCursors.click,
-          child: GestureDetector(
-            onTap: onExport,
-            child: Text('Download JSON', style: StudioText.reset),
-          ),
+        const SizedBox(height: 4),
+        Text(
+          'Go to Ritu app → Settings → Export/Import Data → Import data from file',
+          textAlign: TextAlign.center,
+          style: StudioText.hint,
         ),
       ],
+    );
+  }
+}
+
+String _countLabel(int count, String singular, String plural) {
+  return '$count ${count == 1 ? singular : plural}';
+}
+
+class _IncludeLine extends StatelessWidget {
+  const _IncludeLine(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('•', style: StudioText.caption),
+          const SizedBox(width: 8),
+          Expanded(child: Text(text, style: StudioText.caption)),
+        ],
+      ),
     );
   }
 }

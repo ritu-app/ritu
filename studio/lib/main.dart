@@ -65,19 +65,10 @@ class _CycleStudioShellState extends State<CycleStudioShell> {
 
   void _note(String message) {
     setState(() {
+      if (_changes.isNotEmpty && _changes.first == message) return;
       _changes.insert(0, message);
-      if (_changes.length > 8) {
-        _changes.removeRange(8, _changes.length);
-      }
-    });
-  }
-
-  void _replaceNote(String prefix, String message) {
-    setState(() {
-      _changes.removeWhere((change) => change.startsWith(prefix));
-      _changes.insert(0, message);
-      if (_changes.length > 8) {
-        _changes.removeRange(8, _changes.length);
+      if (_changes.length > 5) {
+        _changes.removeRange(5, _changes.length);
       }
     });
   }
@@ -102,28 +93,38 @@ class _CycleStudioShellState extends State<CycleStudioShell> {
     final next = dateOnly(picked);
     final delta = next.difference(previous).inDays;
     controller.setSimulatedToday(next);
-    setState(() {
-      if (delta != 0) {
+    final maxDay = _scenario.maxCycleDay;
+    final naturalDay = _historyDraft.currentCycleDay + delta;
+    if (delta != 0 && naturalDay > maxDay) {
+      final updated = _historyDraft.withCurrentCycleDay(
+        cycleDay: maxDay,
+        simulatedToday: next,
+      );
+      setState(() => _historyDraft = updated);
+      controller.applyHistory(updated);
+    } else if (delta != 0) {
+      setState(() {
         _historyDraft = _historyDraft.copyWith(
-          currentCycleDay: (_historyDraft.currentCycleDay + delta).clamp(1, 99),
+          currentCycleDay: naturalDay.clamp(1, maxDay),
         );
-      }
-    });
-    _replaceNote('Date ', 'Date set to ${formatStudioShortDate(next)}');
+      });
+    }
+    if (previous != next) {
+      _note(
+        'Changed simulated ${formatStudioMonthDay(previous)} to ${formatStudioMonthDay(next)}',
+      );
+    }
   }
 
   void _onWindow(GreetingTimeWindow window) {
     context.studioController.setGreetingTimeWindow(window);
-    _replaceNote(
-      'Time of day ',
-      'Time of day set to ${greetingWindowShortLabel(window)}',
-    );
+    _note('Changed time of day to ${greetingWindowShortLabel(window)}');
   }
 
   void _onCycleDay(int day) {
     final controller = context.studioController;
     final updated = _historyDraft.withCurrentCycleDay(
-      cycleDay: day,
+      cycleDay: day.clamp(1, _scenario.maxCycleDay),
       simulatedToday: controller.simulatedToday,
     );
     setState(() => _historyDraft = updated);
@@ -131,7 +132,7 @@ class _CycleStudioShellState extends State<CycleStudioShell> {
   }
 
   void _onCycleDayCommit(int day) {
-    _replaceNote('Cycle day ', 'Cycle day set to $day');
+    _note('Changed cycle day to $day');
   }
 
   Future<void> _onScenario(StudioScenario scenario) async {
@@ -142,19 +143,26 @@ class _CycleStudioShellState extends State<CycleStudioShell> {
     });
     await context.studioController.applyHistory(draft);
     if (!mounted) return;
-    _replaceNote('Scenario ', 'Scenario set to ${scenario.label}');
+    _note('Switched to ${scenario.shortLabel}');
   }
 
   void _onHistory(CycleHistoryDraft draft) {
+    final message = switch (draft.rows.length.compareTo(
+      _historyDraft.rows.length,
+    )) {
+      > 0 => 'Added a cycle',
+      < 0 => 'Removed a cycle',
+      _ => 'Updated a cycle',
+    };
     setState(() => _historyDraft = draft);
     context.studioController.applyHistory(draft);
-    _replaceNote('Cycle history ', 'Cycle history updated');
+    _note(message);
   }
 
   Future<void> _onExport() async {
     await exportStudioBackup(context);
     if (!mounted) return;
-    _note('Exported scenario JSON');
+    _note('Exported the scenario');
   }
 
   Future<void> _reset() async {
@@ -225,25 +233,22 @@ class _CycleStudioShellState extends State<CycleStudioShell> {
       onLogDensity: (density) {
         setState(() => _logDensity = density);
         _syncLoggedData();
-        _replaceNote('Daily log ', 'Daily log set to ${density.label}');
+        _note('Changed daily log to ${density.label}');
       },
       onJournalDensity: (density) {
         setState(() => _journalDensity = density);
         _syncLoggedData();
-        _replaceNote('Journal ', 'Journal set to ${density.label}');
+        _note('Changed journal to ${density.label}');
       },
       onLoggedToday: (logged) {
         setState(() => _loggedToday = logged);
         _syncLoggedData();
-        _replaceNote(
-          'Logged today ',
-          logged ? 'Logged today turned on' : 'Logged today turned off',
-        );
+        _note(logged ? "Logged today's check-in" : "Cleared today's check-in");
       },
       onRegenerate: () {
         setState(() => _logGeneration += 1);
         _syncLoggedData();
-        _replaceNote('Logged data ', 'Logged data regenerated');
+        _note('Regenerated logged data');
       },
       onExport: _onExport,
       onReset: _reset,

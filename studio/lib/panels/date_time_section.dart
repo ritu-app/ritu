@@ -15,6 +15,7 @@ class DateTimeSection extends StatelessWidget {
     required this.date,
     required this.window,
     required this.cycleDay,
+    required this.maxCycleDay,
     required this.onDate,
     required this.onWindow,
     required this.onCycleDay,
@@ -24,18 +25,18 @@ class DateTimeSection extends StatelessWidget {
   final DateTime date;
   final GreetingTimeWindow window;
   final int cycleDay;
+  final int maxCycleDay;
   final ValueChanged<DateTime> onDate;
   final ValueChanged<GreetingTimeWindow> onWindow;
   final ValueChanged<int> onCycleDay;
   final ValueChanged<int> onCycleDayCommit;
 
   static const _minDay = 1;
-  static const _sliderCap = 60;
 
   @override
   Widget build(BuildContext context) {
-    final day = cycleDay.clamp(_minDay, 99);
-    final maxDay = math.max(_sliderCap, day);
+    final maxDay = math.max(_minDay, maxCycleDay);
+    final day = cycleDay.clamp(_minDay, maxDay);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -99,7 +100,7 @@ class _CycleDayLabel extends StatelessWidget {
         const SizedBox(width: 4),
         const Tooltip(
           message:
-              'Day 1 is the latest period start. Drag to move through this cycle.',
+              'Move through this cycle day by day, including days that haven\'t happened yet, to see how the hero card changes.',
           child: Icon(
             LucideIcons.info,
             size: 14,

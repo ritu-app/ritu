@@ -9,44 +9,47 @@ class StudioPillButton extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.onPressed,
+    this.expand = false,
   });
 
   final IconData icon;
   final String label;
   final VoidCallback onPressed;
+  final bool expand;
 
   @override
   Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.center,
-      child: MouseRegion(
-        cursor: SystemMouseCursors.click,
-        child: GestureDetector(
-          onTap: onPressed,
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: RituColors.white,
-              borderRadius: BorderRadius.circular(999),
-              border: Border.all(color: RituColors.sage500),
-            ),
-            child: SizedBox(
-              height: 38,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(icon, size: 20, color: RituColors.sage600),
-                    const SizedBox(width: 4),
-                    Text(label, style: StudioText.reset),
-                  ],
-                ),
+    final button = MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: onPressed,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: RituColors.white,
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(color: RituColors.sage500),
+          ),
+          child: SizedBox(
+            height: 38,
+            width: expand ? double.infinity : null,
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: expand ? 12 : 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: expand ? MainAxisSize.max : MainAxisSize.min,
+                children: [
+                  Icon(icon, size: 20, color: RituColors.sage600),
+                  const SizedBox(width: 4),
+                  Text(label, style: StudioText.reset),
+                ],
               ),
             ),
           ),
         ),
       ),
     );
+    if (expand) return button;
+    return Align(alignment: Alignment.center, child: button);
   }
 }
 

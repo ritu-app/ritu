@@ -82,6 +82,7 @@ class ConsoleColumn extends StatelessWidget {
             date: date,
             window: window,
             cycleDay: historyDraft.currentCycleDay,
+            maxCycleDay: scenario.maxCycleDay,
             onDate: onDate,
             onWindow: onWindow,
             onCycleDay: onCycleDay,
@@ -130,10 +131,22 @@ class ConsoleColumn extends StatelessWidget {
         const SizedBox(height: 12),
         StudioDisclosure(
           title: 'Export scenario',
-          summary: 'Try this scenario into Ritu',
+          summary: 'Download JSON for the Ritu app',
+          expandedSubtitle:
+              'Download this scenario as JSON and import it into Ritu to experience it in the app.',
           expanded: expanded == ConsoleSection.export,
           onToggle: () => onToggle(ConsoleSection.export),
-          body: ExportScenarioActions(onExport: onExport),
+          body: ExportScenarioActions(
+            onExport: onExport,
+            completedCycles: historyDraft.rows.isEmpty
+                ? 0
+                : historyDraft.rows.length - 1,
+            loggedDays: logDensity.days + (loggedToday ? 1 : 0),
+            scenarioLabel: scenario.label,
+            dailyLogLabel: logDensity.label,
+            journalLabel: journalDensity.label,
+            loggedToday: loggedToday,
+          ),
         ),
         const SizedBox(height: 8),
         ResetScenarioButton(onPressed: onReset),
