@@ -1,5 +1,6 @@
 import 'package:ritu/data/repositories/daily_log_repository.dart';
 import 'package:ritu/data/repositories/journal_entry_repository.dart';
+import 'package:ritu/data/repositories/period_end_prompt_repository.dart';
 import 'package:ritu/data/repositories/period_repository.dart';
 import 'package:ritu/data/repositories/profile_repository.dart';
 import 'package:ritu/data/repositories/symptom_repository.dart';
@@ -9,6 +10,7 @@ class RituRepos {
   RituRepos(
     this.profiles,
     this.periods,
+    this.periodEndPrompts,
     this.symptoms,
     this.dailyLogs,
     this.journalEntries,
@@ -16,6 +18,7 @@ class RituRepos {
 
   final ProfileRepository profiles;
   final PeriodRepository periods;
+  final PeriodEndPromptRepository periodEndPrompts;
   final SymptomRepository symptoms;
   final DailyLogRepository dailyLogs;
   final JournalEntryRepository journalEntries;

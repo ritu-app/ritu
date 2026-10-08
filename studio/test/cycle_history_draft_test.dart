@@ -2,6 +2,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ritu_studio/models/cycle_history_draft.dart';
 import 'package:ritu_studio/presets/cycle_presets.dart';
 
+List<(int, int, int)> _calendarDays(List<DateTime> dates) {
+  return [
+    for (final date in dates) (date.year, date.month, date.day),
+  ];
+}
+
 void main() {
   final today = DateTime(2026, 10, 28);
 
@@ -105,10 +111,7 @@ void main() {
     test('rejects cycle day that would collide with previous start', () {
       final draft = CycleHistoryDraft(
         currentCycleDay: 10,
-        rows: [
-          CycleHistoryRow(),
-          CycleHistoryRow(cycleLength: 5),
-        ],
+        rows: [CycleHistoryRow(), CycleHistoryRow(cycleLength: 5)],
       );
       final before = draft.computedStarts(today);
 
@@ -122,5 +125,36 @@ void main() {
       expect(updated.computedStarts(today), before);
       expect(updated.currentCycleDay, draft.currentCycleDay);
     });
+  });
+
+  test('removeRow keeps the other period starts', () {
+    final draft = CycleHistoryDraft(
+      currentCycleDay: 10,
+      currentPeriodOpen: true,
+      rows: [
+        CycleHistoryRow(),
+        CycleHistoryRow(cycleLength: 28, periodDuration: 4),
+        CycleHistoryRow(cycleLength: 30, periodDuration: 5),
+      ],
+    );
+    final before = draft.computedStarts(today);
+
+    final withoutMiddle = draft.removeRow(1, today);
+    final after = withoutMiddle.computedStarts(today);
+
+    expect(_calendarDays(after), _calendarDays([before[0], before[2]]));
+    expect(withoutMiddle.currentPeriodOpen, isTrue);
+    expect(withoutMiddle.rows.last.periodDuration, 5);
+
+    final withoutNewest = draft.removeRow(2, today);
+    expect(
+      _calendarDays(withoutNewest.computedStarts(today)),
+      _calendarDays([before[0], before[1]]),
+    );
+    expect(withoutNewest.currentPeriodOpen, isFalse);
+    expect(
+      withoutNewest.currentCycleDay,
+      today.difference(before[1]).inDays + 1,
+    );
   });
 }

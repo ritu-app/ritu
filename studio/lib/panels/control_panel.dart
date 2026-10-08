@@ -1,247 +1,156 @@
 import 'package:flutter/material.dart';
-import 'package:ritu/core/date_format.dart';
-import 'package:ritu/core/home_greeting.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:ritu/theme/ritu_colors.dart';
 
-import '../models/cycle_history_draft.dart';
-import '../presets/cycle_presets.dart';
-import '../presets/journal_controls.dart';
+import '../presets/studio_scenario.dart';
 import '../scope/studio_scope.dart';
+import '../theme/studio_styles.dart';
 import '../util/download_text_file.dart';
-import 'cycle_history_editor.dart';
 
-class ControlPanel extends StatelessWidget {
-  const ControlPanel({
+class StudioScenarioList extends StatelessWidget {
+  const StudioScenarioList({
     super.key,
-    required this.historyDraft,
-    required this.onHistoryDraftChanged,
-    required this.loggedDaysCount,
-    required this.loggedToday,
-    required this.onLoggedDaysChanged,
-    required this.onLoggedTodayChanged,
-    required this.journalTodayBody,
-    required this.pastJournalCount,
-    required this.onJournalTodayBodyChanged,
-    required this.onPastJournalCountChanged,
+    required this.selected,
+    required this.onSelected,
   });
 
-  final CycleHistoryDraft historyDraft;
-  final ValueChanged<CycleHistoryDraft> onHistoryDraftChanged;
-  final int loggedDaysCount;
-  final bool loggedToday;
-  final ValueChanged<int> onLoggedDaysChanged;
-  final ValueChanged<bool> onLoggedTodayChanged;
-  final String journalTodayBody;
-  final int pastJournalCount;
-  final ValueChanged<String> onJournalTodayBodyChanged;
-  final ValueChanged<int> onPastJournalCountChanged;
+  final StudioScenario selected;
+  final ValueChanged<StudioScenario> onSelected;
 
   @override
   Widget build(BuildContext context) {
-    final controller = context.studioController;
-    final theme = Theme.of(context);
-
-    return ListView(
-      padding: const EdgeInsets.all(20),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text('Cycle Studio', style: theme.textTheme.headlineSmall),
-        const SizedBox(height: 4),
-        Text(
-          'Live cycle data playground',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
+        for (final scenario in StudioScenario.values) ...[
+          if (scenario != StudioScenario.values.first)
+            const SizedBox(height: 8),
+          _ScenarioOption(
+            label: scenario.label,
+            selected: scenario == selected,
+            onTap: () => onSelected(scenario),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _ScenarioOption extends StatelessWidget {
+  const _ScenarioOption({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: label,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: onTap,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: RituColors.white,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: selected ? studioMeadow500 : RituColors.fillMuted,
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              child: Text(
+                label,
+                style: selected ? StudioText.fieldValue : StudioText.option,
+              ),
+            ),
           ),
         ),
-        const SizedBox(height: 24),
-        Text('Simulated today', style: theme.textTheme.titleSmall),
-        const SizedBox(height: 8),
-        OutlinedButton.icon(
-          onPressed: () => _pickDate(context, controller),
-          icon: const Icon(Icons.calendar_today_outlined, size: 18),
-          label: Text(formatDisplayDate(controller.simulatedToday)),
-        ),
-        const SizedBox(height: 24),
-        Text('Time of day', style: theme.textTheme.titleSmall),
-        const SizedBox(height: 8),
-        DropdownMenu<GreetingTimeWindow>(
-          key: ValueKey(controller.simulatedClock),
-          initialSelection: greetingTimeWindowFor(controller.simulatedClock),
-          expandedInsets: EdgeInsets.zero,
-          dropdownMenuEntries: const [
-            DropdownMenuEntry(
-              value: GreetingTimeWindow.morning,
-              label: 'Morning (5:00–10:59)',
-            ),
-            DropdownMenuEntry(
-              value: GreetingTimeWindow.afternoon,
-              label: 'Afternoon (11:00–15:59)',
-            ),
-            DropdownMenuEntry(
-              value: GreetingTimeWindow.evening,
-              label: 'Evening (16:00–19:59)',
-            ),
-            DropdownMenuEntry(
-              value: GreetingTimeWindow.night,
-              label: 'Night (20:00–4:59)',
-            ),
-          ],
-          onSelected: (window) {
-            if (window == null) return;
-            controller.setGreetingTimeWindow(window);
-          },
-        ),
-        const SizedBox(height: 24),
-        _PresetSelector(
-          onHistoryDraftChanged: onHistoryDraftChanged,
-        ),
-        const SizedBox(height: 24),
-        CycleHistoryEditor(
-          draft: historyDraft,
-          simulatedToday: controller.simulatedToday,
-          onDraftChanged: onHistoryDraftChanged,
-          onApply: () => controller.applyHistory(historyDraft),
-          onLiveApply: controller.applyHistory,
-        ),
-        const SizedBox(height: 24),
-        DailyLogControls(
-          loggedDaysCount: loggedDaysCount,
-          loggedToday: loggedToday,
-          onLoggedDaysChanged: onLoggedDaysChanged,
-          onLoggedTodayChanged: onLoggedTodayChanged,
-        ),
-        const SizedBox(height: 24),
-        JournalControls(
-          todayBody: journalTodayBody,
-          pastEntryCount: pastJournalCount,
-          onTodayBodyChanged: onJournalTodayBodyChanged,
-          onPastEntryCountChanged: onPastJournalCountChanged,
-        ),
-        const SizedBox(height: 24),
-        Text('Device backup', style: theme.textTheme.titleSmall),
-        const SizedBox(height: 8),
+      ),
+    );
+  }
+}
+
+class ExportScenarioActions extends StatelessWidget {
+  const ExportScenarioActions({super.key, required this.onExport});
+
+  final VoidCallback onExport;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
         Text(
-          'Download a ritu.backup JSON to import on a phone via '
-          'Settings → Export Data → Import from file. '
-          'Keep simulated today on or before wall-clock today so period '
-          'starts import cleanly.',
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
+          'Download a ritu.backup JSON and import it on a phone via '
+          'Settings → Export Data → Import from file. Keep simulated today '
+          'on or before wall-clock today so period starts import cleanly.',
+          style: StudioText.noteBody,
         ),
         const SizedBox(height: 12),
-        FilledButton.icon(
-          onPressed: () => _exportBackup(context, controller),
-          icon: const Icon(Icons.download_outlined, size: 18),
-          label: const Text('Export JSON for device'),
-        ),
-      ],
-    );
-  }
-
-  Future<void> _exportBackup(
-    BuildContext context,
-    StudioController controller,
-  ) async {
-    final messenger = ScaffoldMessenger.of(context);
-    try {
-      final json = await controller.exportBackupJson();
-      final stamp = DateTime.now().toIso8601String().split('T').first;
-      downloadTextFile(
-        filename: 'ritu-studio-$stamp.json',
-        contents: json,
-      );
-      messenger.showSnackBar(
-        const SnackBar(content: Text('Backup downloaded')),
-      );
-    } catch (error) {
-      messenger.showSnackBar(
-        SnackBar(content: Text('Export failed: $error')),
-      );
-    }
-  }
-
-  Future<void> _pickDate(
-    BuildContext context,
-    StudioController controller,
-  ) async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: controller.simulatedToday,
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-    );
-    if (picked == null || !context.mounted) return;
-    controller.setSimulatedToday(dateOnly(picked));
-  }
-}
-
-String formatDisplayDate(DateTime date) {
-  const months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ];
-  return '${months[date.month - 1]} ${date.day}, ${date.year}';
-}
-
-class _PresetSelector extends StatefulWidget {
-  const _PresetSelector({required this.onHistoryDraftChanged});
-
-  final ValueChanged<CycleHistoryDraft> onHistoryDraftChanged;
-
-  @override
-  State<_PresetSelector> createState() => _PresetSelectorState();
-}
-
-class _PresetSelectorState extends State<_PresetSelector> {
-  CyclePreset _selected = CyclePreset.regular;
-
-  Future<void> _applyPreset(CyclePreset preset) async {
-    final controller = context.studioController;
-    await controller.applyPreset(preset);
-    widget.onHistoryDraftChanged(CycleHistoryDraft.fromPreset(preset));
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Preset', style: theme.textTheme.titleSmall),
-        const SizedBox(height: 8),
-        DropdownMenu<CyclePreset>(
-          key: ValueKey(_selected),
-          initialSelection: _selected,
-          expandedInsets: EdgeInsets.zero,
-          dropdownMenuEntries: [
-            for (final preset in CyclePreset.values)
-              DropdownMenuEntry(value: preset, label: preset.label),
-          ],
-          onSelected: (preset) {
-            if (preset == null) return;
-            setState(() => _selected = preset);
-            _applyPreset(preset);
-          },
-        ),
-        const SizedBox(height: 10),
-        Text(
-          _selected.description,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-            height: 1.4,
+        MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: GestureDetector(
+            onTap: onExport,
+            child: Text('Download JSON', style: StudioText.reset),
           ),
         ),
       ],
     );
+  }
+}
+
+class ResetScenarioButton extends StatelessWidget {
+  const ResetScenarioButton({super.key, required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onPressed,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                LucideIcons.rotateCcw,
+                size: 20,
+                color: RituColors.sage500,
+              ),
+              const SizedBox(width: 8),
+              Text('Reset scenario', style: StudioText.reset),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+Future<void> exportStudioBackup(BuildContext context) async {
+  final messenger = ScaffoldMessenger.of(context);
+  final controller = context.studioController;
+  try {
+    final json = await controller.exportBackupJson();
+    if (!context.mounted) return;
+    final stamp = DateTime.now().toIso8601String().split('T').first;
+    downloadTextFile(filename: 'ritu-studio-$stamp.json', contents: json);
+    messenger.showSnackBar(const SnackBar(content: Text('Backup downloaded')));
+  } catch (error) {
+    messenger.showSnackBar(SnackBar(content: Text('Export failed: $error')));
   }
 }

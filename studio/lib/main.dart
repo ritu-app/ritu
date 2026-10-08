@@ -1,11 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:ritu/core/date_format.dart';
+import 'package:ritu/core/home_greeting.dart';
+import 'package:ritu/theme/ritu_colors.dart';
+import 'package:ritu/theme/ritu_theme.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'models/cycle_history_draft.dart';
+import 'panels/console_column.dart';
 import 'panels/control_panel.dart';
-import 'panels/debug_panel.dart';
+import 'panels/logged_data_section.dart';
 import 'panels/preview_panel.dart';
-import 'presets/cycle_presets.dart';
+import 'panels/scenario_readout.dart';
+import 'presets/logged_density.dart';
+import 'presets/studio_scenario.dart';
 import 'scope/studio_scope.dart';
+import 'theme/studio_styles.dart';
+import 'util/studio_labels.dart';
 
 void main() {
   runApp(const CycleStudioApp());
@@ -19,11 +30,8 @@ class CycleStudioApp extends StatelessWidget {
     return MaterialApp(
       title: 'Cycle Studio',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF5F8F7A)),
-        useMaterial3: true,
-      ),
-      home: const StudioScope(child: CycleStudioShell()),
+      theme: buildRituTheme(),
+      home: const StudioBackdrop(child: StudioScope(child: CycleStudioShell())),
     );
   }
 }
@@ -36,91 +44,306 @@ class CycleStudioShell extends StatefulWidget {
 }
 
 class _CycleStudioShellState extends State<CycleStudioShell> {
-  late CycleHistoryDraft _historyDraft =
-      CycleHistoryDraft.fromPreset(CyclePreset.regular);
-  var _loggedDaysCount = 0;
-  var _loggedToday = false;
-  var _journalTodayBody = '';
-  var _pastJournalCount = 0;
+  static final _githubUri = Uri.parse('https://github.com/ritu-app/ritu');
+  static final _supportUri = Uri(scheme: 'mailto', path: 'support@ritu.care');
 
-  void _syncDailyLogs() {
-    context.studioController.applyDailyLogs(
-      loggedDaysCount: _loggedDaysCount,
+  late CycleHistoryDraft _historyDraft = StudioScenario.regularCycle
+      .historyDraft();
+  var _scenario = StudioScenario.regularCycle;
+  var _logDensity = DailyLogDensity.none;
+  var _journalDensity = JournalDensity.off;
+  var _loggedToday = false;
+  var _logGeneration = 0;
+  ConsoleSection? _expanded;
+  final List<String> _changes = [];
+
+  void _toggle(ConsoleSection section) {
+    setState(() {
+      _expanded = _expanded == section ? null : section;
+    });
+  }
+
+  void _note(String message) {
+    setState(() {
+      _changes.insert(0, message);
+      if (_changes.length > 8) {
+        _changes.removeRange(8, _changes.length);
+      }
+    });
+  }
+
+  void _replaceNote(String prefix, String message) {
+    setState(() {
+      _changes.removeWhere((change) => change.startsWith(prefix));
+      _changes.insert(0, message);
+      if (_changes.length > 8) {
+        _changes.removeRange(8, _changes.length);
+      }
+    });
+  }
+
+  void _syncLoggedData() {
+    final controller = context.studioController;
+    controller.applyDailyLogs(
+      loggedDaysCount: _logDensity.days,
       loggedToday: _loggedToday,
+      generation: _logGeneration,
+    );
+    controller.applyJournal(
+      todayBody: loggedJournalBody(_journalDensity, _logGeneration),
+      pastEntryCount: _journalDensity.pastCount,
+      generation: _logGeneration,
     );
   }
 
-  void _syncJournal() {
-    context.studioController.applyJournal(
-      todayBody: _journalTodayBody,
-      pastEntryCount: _pastJournalCount,
+  void _onDate(DateTime picked) {
+    final controller = context.studioController;
+    final previous = dateOnly(controller.simulatedToday);
+    final next = dateOnly(picked);
+    final delta = next.difference(previous).inDays;
+    controller.setSimulatedToday(next);
+    setState(() {
+      if (delta != 0) {
+        _historyDraft = _historyDraft.copyWith(
+          currentCycleDay: (_historyDraft.currentCycleDay + delta).clamp(1, 99),
+        );
+      }
+    });
+    _replaceNote('Date ', 'Date set to ${formatStudioShortDate(next)}');
+  }
+
+  void _onWindow(GreetingTimeWindow window) {
+    context.studioController.setGreetingTimeWindow(window);
+    _replaceNote(
+      'Time of day ',
+      'Time of day set to ${greetingWindowShortLabel(window)}',
+    );
+  }
+
+  void _onCycleDay(int day) {
+    final controller = context.studioController;
+    final updated = _historyDraft.withCurrentCycleDay(
+      cycleDay: day,
+      simulatedToday: controller.simulatedToday,
+    );
+    setState(() => _historyDraft = updated);
+    controller.applyHistory(updated);
+  }
+
+  void _onCycleDayCommit(int day) {
+    _replaceNote('Cycle day ', 'Cycle day set to $day');
+  }
+
+  Future<void> _onScenario(StudioScenario scenario) async {
+    final draft = scenario.historyDraft();
+    setState(() {
+      _scenario = scenario;
+      _historyDraft = draft;
+    });
+    await context.studioController.applyHistory(draft);
+    if (!mounted) return;
+    _replaceNote('Scenario ', 'Scenario set to ${scenario.label}');
+  }
+
+  void _onHistory(CycleHistoryDraft draft) {
+    setState(() => _historyDraft = draft);
+    context.studioController.applyHistory(draft);
+    _replaceNote('Cycle history ', 'Cycle history updated');
+  }
+
+  Future<void> _onExport() async {
+    await exportStudioBackup(context);
+    if (!mounted) return;
+    _note('Exported scenario JSON');
+  }
+
+  Future<void> _reset() async {
+    final controller = context.studioController;
+    final today = dateOnly(DateTime.now());
+    controller.setSimulatedToday(today);
+    controller.setGreetingTimeWindow(greetingTimeWindowFor(DateTime.now()));
+    final regular = StudioScenario.regularCycle.historyDraft();
+    setState(() {
+      _scenario = StudioScenario.regularCycle;
+      _historyDraft = regular;
+      _logDensity = DailyLogDensity.none;
+      _journalDensity = JournalDensity.off;
+      _loggedToday = false;
+      _logGeneration = 0;
+      _expanded = null;
+      _changes.clear();
+    });
+    await controller.applyHistory(regular);
+    await controller.applyDailyLogs(
+      loggedDaysCount: 0,
+      loggedToday: false,
+      generation: 0,
+    );
+    await controller.applyJournal(
+      todayBody: '',
+      pastEntryCount: 0,
+      generation: 0,
+    );
+  }
+
+  Future<void> _openLink(Uri uri) async {
+    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!launched && mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Couldn’t open that link')));
+    }
+  }
+
+  void _getTheApp() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('App Store listing coming soon')),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final controlPanel = ControlPanel(
+    final controller = context.studioController;
+    final window = greetingTimeWindowFor(controller.simulatedClock);
+
+    final console = ConsoleColumn(
+      expanded: _expanded,
+      onToggle: _toggle,
+      date: controller.simulatedToday,
+      window: window,
       historyDraft: _historyDraft,
-      onHistoryDraftChanged: (draft) {
-        setState(() => _historyDraft = draft);
-      },
-      loggedDaysCount: _loggedDaysCount,
+      onDate: _onDate,
+      onWindow: _onWindow,
+      onCycleDay: _onCycleDay,
+      onCycleDayCommit: _onCycleDayCommit,
+      scenario: _scenario,
+      onScenario: _onScenario,
+      onHistoryDraftChanged: _onHistory,
+      logDensity: _logDensity,
+      journalDensity: _journalDensity,
       loggedToday: _loggedToday,
-      onLoggedDaysChanged: (count) {
-        setState(() => _loggedDaysCount = count);
-        _syncDailyLogs();
+      onLogDensity: (density) {
+        setState(() => _logDensity = density);
+        _syncLoggedData();
+        _replaceNote('Daily log ', 'Daily log set to ${density.label}');
       },
-      onLoggedTodayChanged: (logged) {
+      onJournalDensity: (density) {
+        setState(() => _journalDensity = density);
+        _syncLoggedData();
+        _replaceNote('Journal ', 'Journal set to ${density.label}');
+      },
+      onLoggedToday: (logged) {
         setState(() => _loggedToday = logged);
-        _syncDailyLogs();
+        _syncLoggedData();
+        _replaceNote(
+          'Logged today ',
+          logged ? 'Logged today turned on' : 'Logged today turned off',
+        );
       },
-      journalTodayBody: _journalTodayBody,
-      pastJournalCount: _pastJournalCount,
-      onJournalTodayBodyChanged: (body) {
-        setState(() => _journalTodayBody = body);
-        _syncJournal();
+      onRegenerate: () {
+        setState(() => _logGeneration += 1);
+        _syncLoggedData();
+        _replaceNote('Logged data ', 'Logged data regenerated');
       },
-      onPastJournalCountChanged: (count) {
-        setState(() => _pastJournalCount = count);
-        _syncJournal();
-      },
+      onExport: _onExport,
+      onReset: _reset,
+    );
+
+    final readout = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const _SectionIntro(
+          label: 'How Ritu got here',
+          body:
+              'The reasoning behind what\'s on screen right now, updates with anything you change on the left.',
+        ),
+        const ScenarioReadout(),
+      ],
     );
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       body: LayoutBuilder(
         builder: (context, constraints) {
-          final stackControls = constraints.maxWidth < 900;
+          final wide = constraints.maxWidth >= 1100;
+          final header = _StudioHeader(
+            wide: wide,
+            onGithub: () => _openLink(_githubUri),
+            onGetTheApp: _getTheApp,
+          );
+          final footer = _StudioFooter(onSupport: () => _openLink(_supportUri));
 
-          if (stackControls) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                SizedBox(
-                  height: constraints.maxHeight * 0.42,
-                  child: ColoredBox(
-                    color: Theme.of(context).colorScheme.surfaceContainerLow,
-                    child: controlPanel,
-                  ),
-                ),
-                const Divider(height: 1),
-                Expanded(child: _PreviewAndDebugRow()),
-              ],
+          if (!wide) {
+            return SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  header,
+                  const SizedBox(height: 28),
+                  console,
+                  const SizedBox(height: 28),
+                  const SizedBox(height: 640, child: PreviewPanel()),
+                  const SizedBox(height: 28),
+                  readout,
+                  const SizedBox(height: 16),
+                  RecentChangesCard(changes: _changes),
+                  const SizedBox(height: 28),
+                  footer,
+                ],
+              ),
             );
           }
 
-          return Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              SizedBox(
-                width: 380,
-                child: ColoredBox(
-                  color: Theme.of(context).colorScheme.surfaceContainerLow,
-                  child: controlPanel,
+          return Padding(
+            padding: const EdgeInsets.fromLTRB(60, 30, 60, 24),
+            child: Column(
+              children: [
+                header,
+                const SizedBox(height: 28),
+                Expanded(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      SizedBox(
+                        width: 334,
+                        child: SingleChildScrollView(child: console),
+                      ),
+                      const Expanded(child: PreviewPanel()),
+                      SizedBox(
+                        width: 334,
+                        child: LayoutBuilder(
+                          builder: (context, column) {
+                            return SingleChildScrollView(
+                              child: ConstrainedBox(
+                                constraints: BoxConstraints(
+                                  minHeight: column.maxHeight,
+                                ),
+                                child: Column(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    readout,
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 16),
+                                      child: RecentChangesCard(
+                                        changes: _changes,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const VerticalDivider(width: 1),
-              const Expanded(child: _PreviewAndDebugRow()),
-            ],
+                const SizedBox(height: 16),
+                footer,
+              ],
+            ),
           );
         },
       ),
@@ -128,35 +351,133 @@ class _CycleStudioShellState extends State<CycleStudioShell> {
   }
 }
 
-/// Preview and debug side by side — preview scroll stays inside the device frame.
-class _PreviewAndDebugRow extends StatelessWidget {
-  const _PreviewAndDebugRow();
+class _SectionIntro extends StatelessWidget {
+  const _SectionIntro({required this.label, required this.body});
 
-  static const _debugWidth = 300.0;
+  final String label;
+  final String body;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Expanded(
-          child: Padding(
-            padding: EdgeInsets.all(16),
-            child: PreviewPanel(),
-          ),
-        ),
-        const VerticalDivider(width: 1),
-        SizedBox(
-          width: _debugWidth,
-          child: ColoredBox(
-            color: Theme.of(context).colorScheme.surfaceContainerLowest,
-            child: const SingleChildScrollView(
-              padding: EdgeInsets.all(16),
-              child: DebugPanel(),
-            ),
-          ),
-        ),
+        Text(label, style: StudioText.sectionLabel),
+        Text(body, style: StudioText.sectionBody),
+        const SizedBox(height: 16),
+        const Divider(height: 1, thickness: 1, color: RituColors.borderSubtle),
+        const SizedBox(height: 16),
       ],
     );
+  }
+}
+
+class _StudioHeader extends StatelessWidget {
+  const _StudioHeader({
+    required this.wide,
+    required this.onGithub,
+    required this.onGetTheApp,
+  });
+
+  final bool wide;
+  final VoidCallback onGithub;
+  final VoidCallback onGetTheApp;
+
+  @override
+  Widget build(BuildContext context) {
+    final title = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Ritu', style: StudioText.displayTitle),
+            const SizedBox(width: 8),
+            Text('Cycle Studio', style: StudioText.wordmark),
+          ],
+        ),
+        Text('Interactive playground', style: StudioText.eyebrow),
+      ],
+    );
+    final links = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _HeaderLink(label: 'View on GitHub', onTap: onGithub),
+        const SizedBox(width: 32),
+        _HeaderLink(label: 'Get the app', onTap: onGetTheApp),
+      ],
+    );
+
+    if (!wide) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [title, const SizedBox(height: 12), links],
+      );
+    }
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [title, const Spacer(), links],
+    );
+  }
+}
+
+class _HeaderLink extends StatelessWidget {
+  const _HeaderLink({required this.label, required this.onTap});
+
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(label, style: StudioText.link),
+            const Icon(
+              LucideIcons.arrowUpRight,
+              size: 20,
+              color: RituColors.fillBrandPressed,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StudioFooter extends StatelessWidget {
+  const _StudioFooter({required this.onSupport});
+
+  final VoidCallback onSupport;
+
+  @override
+  Widget build(BuildContext context) {
+    final copy = Text(
+      '© ${DateTime.now().year} Ritu.care',
+      style: StudioText.footer,
+    );
+    final mail = MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onSupport,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(LucideIcons.mail, size: 16, color: studioIcon),
+            const SizedBox(width: 4),
+            Text('support@ritu.care', style: StudioText.footer),
+          ],
+        ),
+      ),
+    );
+
+    return Row(children: [copy, const Spacer(), mail]);
   }
 }

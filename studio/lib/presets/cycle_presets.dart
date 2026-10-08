@@ -120,9 +120,13 @@ Future<void> applyHistoryDraft(
 
   for (var i = draft.rows.length - 1; i >= 0; i--) {
     final row = draft.rows[i];
+    final open = i == draft.rows.length - 1 && draft.currentPeriodOpen;
     await repos.periods.upsertPeriod(
       startedOn: cursor,
-      endedOn: PeriodRepository.estimateEnd(cursor, row.periodDuration),
+      endedOn: open
+          ? null
+          : PeriodRepository.estimateEnd(cursor, row.periodDuration),
+      endStatus: open ? PeriodEndStatus.open : null,
       source: PeriodSources.settings,
     );
     if (i > 0) {

@@ -4,6 +4,7 @@ import 'package:ritu/core/date_format.dart';
 import 'package:ritu/data/backup/ritu_backup_service.dart';
 import 'package:ritu/data/repositories/memory/memory_daily_log_repository.dart';
 import 'package:ritu/data/repositories/memory/memory_journal_entry_repository.dart';
+import 'package:ritu/data/repositories/memory/memory_period_end_prompt_repository.dart';
 import 'package:ritu/data/repositories/memory/memory_period_repository.dart';
 import 'package:ritu/data/repositories/memory/memory_profile_repository.dart';
 import 'package:ritu/data/repositories/memory/memory_ritu_store.dart';
@@ -46,11 +47,15 @@ class StudioController {
   final Future<void> Function({
     required int loggedDaysCount,
     required bool loggedToday,
-  }) applyDailyLogs;
+    required int generation,
+  })
+  applyDailyLogs;
   final Future<void> Function({
     required String todayBody,
     required int pastEntryCount,
-  }) applyJournal;
+    required int generation,
+  })
+  applyJournal;
   final Future<String> Function() exportBackupJson;
   final Future<CycleHistoryDraft> Function() loadHistoryDraft;
 }
@@ -89,6 +94,7 @@ class _StudioScopeState extends State<StudioScope> {
     final repos = RituRepos(
       MemoryProfileRepository(store),
       MemoryPeriodRepository(store),
+      MemoryPeriodEndPromptRepository(store),
       MemorySymptomRepository(store),
       MemoryDailyLogRepository(store),
       MemoryJournalEntryRepository(store),
@@ -131,24 +137,28 @@ class _StudioScopeState extends State<StudioScope> {
   Future<void> _applyDailyLogs({
     required int loggedDaysCount,
     required bool loggedToday,
+    required int generation,
   }) {
     return applyDailyLogState(
       repos: _repos!,
       simulatedToday: _simulatedToday,
       loggedDaysCount: loggedDaysCount,
       loggedToday: loggedToday,
+      generation: generation,
     );
   }
 
   Future<void> _applyJournal({
     required String todayBody,
     required int pastEntryCount,
+    required int generation,
   }) {
     return applyJournalState(
       repos: _repos!,
       simulatedToday: _simulatedToday,
       todayBody: todayBody,
       pastEntryCount: pastEntryCount,
+      generation: generation,
     );
   }
 
@@ -165,6 +175,7 @@ class _StudioScopeState extends State<StudioScope> {
     return RituBackupService(
       profiles: repos.profiles,
       periods: repos.periods,
+      periodEndPrompts: repos.periodEndPrompts,
       dailyLogs: repos.dailyLogs,
       journalEntries: repos.journalEntries,
       symptoms: repos.symptoms,
@@ -185,6 +196,7 @@ class _StudioScopeState extends State<StudioScope> {
   Widget build(BuildContext context) {
     if (!_ready) {
       return const Scaffold(
+        backgroundColor: Colors.transparent,
         body: Center(child: CircularProgressIndicator()),
       );
     }
@@ -208,6 +220,9 @@ class _StudioScopeState extends State<StudioScope> {
       overrides: [
         profileRepositoryProvider.overrideWithValue(repos.profiles),
         periodRepositoryProvider.overrideWithValue(repos.periods),
+        periodEndPromptRepositoryProvider.overrideWithValue(
+          repos.periodEndPrompts,
+        ),
         symptomRepositoryProvider.overrideWithValue(repos.symptoms),
         dailyLogRepositoryProvider.overrideWithValue(repos.dailyLogs),
         journalEntryRepositoryProvider.overrideWithValue(repos.journalEntries),
@@ -247,8 +262,7 @@ class _StudioControllerScope extends InheritedWidget {
 
 extension StudioScopeLookup on BuildContext {
   StudioController get studioController {
-    final scope =
-        dependOnInheritedWidgetOfExactType<_StudioControllerScope>();
+    final scope = dependOnInheritedWidgetOfExactType<_StudioControllerScope>();
     assert(scope != null, 'StudioScope not found above $this');
     return scope!.controller;
   }

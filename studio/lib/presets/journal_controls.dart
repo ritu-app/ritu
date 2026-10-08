@@ -4,11 +4,25 @@ import 'package:ritu/data/repositories/memory/memory_journal_entry_repository.da
 
 import '../scope/ritu_repos.dart';
 
+const journalReflections = [
+  'Woke up clear and unhurried.',
+  'A quieter day than I expected.',
+  'Noted the shift before it arrived.',
+  'Kept the afternoon for myself.',
+  'Energy came back after lunch.',
+  'The evening felt softer than the morning.',
+];
+
+String journalReflection(int generation, int daysAgo) {
+  return journalReflections[(generation + daysAgo) % journalReflections.length];
+}
+
 Future<void> applyJournalState({
   required RituRepos repos,
   required DateTime simulatedToday,
   required String todayBody,
   required int pastEntryCount,
+  int generation = 0,
 }) async {
   final journal = repos.journalEntries as MemoryJournalEntryRepository;
   await journal.clearAll();
@@ -22,9 +36,7 @@ Future<void> applyJournalState({
   for (var i = 1; i <= pastEntryCount; i++) {
     await journal.upsert(
       loggedOn: today.subtract(Duration(days: i)),
-      body: i == 1
-          ? 'Sample reflection from yesterday.'
-          : 'Sample reflection from $i days ago.',
+      body: journalReflection(generation, i),
     );
   }
 }

@@ -14,10 +14,7 @@ class CycleHistoryRow {
   int? cycleLength;
   int periodDuration;
 
-  CycleHistoryRow copyWith({
-    int? cycleLength,
-    int? periodDuration,
-  }) {
+  CycleHistoryRow copyWith({int? cycleLength, int? periodDuration}) {
     return CycleHistoryRow(
       cycleLength: cycleLength ?? this.cycleLength,
       periodDuration: periodDuration ?? this.periodDuration,
@@ -30,18 +27,24 @@ class CycleHistoryDraft {
   CycleHistoryDraft({
     required this.currentCycleDay,
     required this.rows,
+    this.currentPeriodOpen = false,
   });
 
   final int currentCycleDay;
   final List<CycleHistoryRow> rows;
 
+  /// Newest period has no confirmed end, so it stays open through simulated today.
+  final bool currentPeriodOpen;
+
   CycleHistoryDraft copyWith({
     int? currentCycleDay,
     List<CycleHistoryRow>? rows,
+    bool? currentPeriodOpen,
   }) {
     return CycleHistoryDraft(
       currentCycleDay: currentCycleDay ?? this.currentCycleDay,
       rows: rows ?? this.rows,
+      currentPeriodOpen: currentPeriodOpen ?? this.currentPeriodOpen,
     );
   }
 
@@ -66,10 +69,7 @@ class CycleHistoryDraft {
     required DateTime simulatedToday,
   }) {
     if (logs.isEmpty) {
-      return CycleHistoryDraft(
-        currentCycleDay: 1,
-        rows: [CycleHistoryRow()],
-      );
+      return CycleHistoryDraft(currentCycleDay: 1, rows: [CycleHistoryRow()]);
     }
 
     final sorted = List<PeriodLog>.from(logs)
@@ -80,32 +80,27 @@ class CycleHistoryDraft {
       final log = sorted[i];
       final periodDuration = log.endedOn == null
           ? CyclePreset.defaultPeriodDuration
-          : dateOnly(log.endedOn!)
-                  .difference(dateOnly(log.startedOn))
-                  .inDays +
-              1;
+          : dateOnly(log.endedOn!).difference(dateOnly(log.startedOn)).inDays +
+                1;
       int? length;
       if (i > 0) {
-        length = dateOnly(log.startedOn)
-            .difference(dateOnly(sorted[i - 1].startedOn))
-            .inDays;
+        length = dateOnly(
+          log.startedOn,
+        ).difference(dateOnly(sorted[i - 1].startedOn)).inDays;
       }
       rows.add(
-        CycleHistoryRow(
-          cycleLength: length,
-          periodDuration: periodDuration,
-        ),
+        CycleHistoryRow(cycleLength: length, periodDuration: periodDuration),
       );
     }
 
     final latest = sorted.last;
     final today = dateOnly(simulatedToday);
-    final cycleDay =
-        today.difference(dateOnly(latest.startedOn)).inDays + 1;
+    final cycleDay = today.difference(dateOnly(latest.startedOn)).inDays + 1;
 
     return CycleHistoryDraft(
       currentCycleDay: cycleDay.clamp(1, 99),
       rows: rows,
+      currentPeriodOpen: latest.isOpen,
     );
   }
 
@@ -158,7 +153,11 @@ class CycleHistoryDraft {
       periodDuration: rows[last].periodDuration,
     );
 
-    return CycleHistoryDraft(currentCycleDay: day, rows: updated);
+    return CycleHistoryDraft(
+      currentCycleDay: day,
+      rows: updated,
+      currentPeriodOpen: currentPeriodOpen,
+    );
   }
 
   /// Sets the period start for [index], keeping other starts fixed.
@@ -197,6 +196,7 @@ class CycleHistoryDraft {
     return CycleHistoryDraft(
       currentCycleDay: cycleDay.clamp(1, 99),
       rows: updated,
+      currentPeriodOpen: currentPeriodOpen,
     );
   }
 
@@ -220,9 +220,7 @@ class CycleHistoryDraft {
     if (rows.isEmpty) {
       return copyWith(rows: [CycleHistoryRow()]);
     }
-    final updated = rows
-        .map((row) => row.copyWith())
-        .toList(growable: true);
+    final updated = rows.map((row) => row.copyWith()).toList(growable: true);
     updated.insert(0, CycleHistoryRow(cycleLength: null));
     updated[1] = updated[1].copyWith(
       cycleLength: updated[1].cycleLength ?? CyclePreset.defaultCycleLength,
@@ -234,12 +232,43 @@ class CycleHistoryDraft {
     if (rows.length <= 1) {
       return copyWith(rows: [CycleHistoryRow()]);
     }
-    final updated = rows
-        .map((row) => row.copyWith())
-        .toList(growable: true);
+    final updated = rows.map((row) => row.copyWith()).toList(growable: true);
     updated.removeAt(0);
     updated[0] = updated[0].copyWith(cycleLength: null);
     return copyWith(rows: updated);
+  }
+
+  /// Drops the row at [index], keeping the other period starts fixed.
+  ///
+  /// Removing the only row clears history. Removing the newest row closes
+  /// [currentPeriodOpen], since the new newest period is a completed one.
+  CycleHistoryDraft removeRow(int index, DateTime simulatedToday) {
+    if (index < 0 || index >= rows.length) return this;
+    if (rows.length == 1) {
+      return CycleHistoryDraft(currentCycleDay: 1, rows: const []);
+    }
+
+    final today = dateOnly(simulatedToday);
+    final starts = List<DateTime>.from(computedStarts(today))..removeAt(index);
+    final durations = [
+      for (var i = 0; i < rows.length; i++)
+        if (i != index) rows[i].periodDuration,
+    ];
+    final updated = <CycleHistoryRow>[
+      for (var i = 0; i < starts.length; i++)
+        CycleHistoryRow(
+          cycleLength: i == 0
+              ? null
+              : starts[i].difference(starts[i - 1]).inDays,
+          periodDuration: durations[i],
+        ),
+    ];
+    final cycleDay = today.difference(starts.last).inDays + 1;
+    return CycleHistoryDraft(
+      currentCycleDay: cycleDay.clamp(1, 99),
+      rows: updated,
+      currentPeriodOpen: currentPeriodOpen && index != rows.length - 1,
+    );
   }
 
   CycleHistoryDraft reorderRows(int oldIndex, int newIndex) {
@@ -248,7 +277,11 @@ class CycleHistoryDraft {
     final item = updated.removeAt(oldIndex);
     updated.insert(newIndex, item);
     for (var i = 0; i < updated.length; i++) {
-      updated[i] = updated[i].copyWith(cycleLength: i == 0 ? null : updated[i].cycleLength ?? CyclePreset.defaultCycleLength);
+      updated[i] = updated[i].copyWith(
+        cycleLength: i == 0
+            ? null
+            : updated[i].cycleLength ?? CyclePreset.defaultCycleLength,
+      );
     }
     return copyWith(rows: updated);
   }
