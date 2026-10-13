@@ -12,9 +12,11 @@ import '../../providers/period_providers.dart';
 import '../../providers/simulated_today_provider.dart';
 import '../../theme/ritu_colors.dart';
 import 'consistent_cycle_copy.dart';
+import 'cycle_length_record.dart';
 import 'cycles_covered_by_logs.dart';
 import 'insight_history.dart';
 import 'most_logged.dart';
+import 'unpredictable_cycle_copy.dart';
 import 'variable_cycle_copy.dart';
 
 /// Insights tab — empty state until the first daily log, then a progress
@@ -26,6 +28,8 @@ import 'variable_cycle_copy.dart';
 /// stays until the cycle is Regular (Figma 899-6470 / 899-6767). A Variable
 /// cycle replaces that note with the length range on Overview, and explains
 /// on every tab that patterns are anchored before the period (Figma 899-9056).
+/// An Unpredictable cycle uses the same slots with its own copy, and adds a
+/// cycle length record on Overview (Figma 899-11340).
 class InsightsScreen extends ConsumerStatefulWidget {
   const InsightsScreen({
     super.key,
@@ -64,6 +68,15 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
       classification: classification,
       cycleLengths: cycleLengths,
     );
+    final unpredictableCycle = unpredictableCycleCopy(
+      classification: classification,
+      cycleLengths: cycleLengths,
+    );
+    final lengthRecord = unpredictableCycle == null
+        ? const <CycleLengthRecordRow>[]
+        : cycleLengthRecord(
+            periodStarts: periods.map((period) => period.startedOn),
+          );
     final cyclesWithLogs = cyclesCoveredByLogs(
       logDates: logs.map((log) => log.loggedOn),
       periodStarts: periods.map((period) => period.startedOn),
@@ -78,6 +91,8 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
         onLensSelected: (lens) => setState(() => _lens = lens),
         consistentCycle: consistentCycle,
         variableCycle: variableCycle,
+        unpredictableCycle: unpredictableCycle,
+        lengthRecord: lengthRecord,
         cyclesWithLogs: cyclesWithLogs,
       );
     }
@@ -399,6 +414,8 @@ class _HistoryView extends StatelessWidget {
     required this.onLensSelected,
     this.consistentCycle,
     this.variableCycle,
+    this.unpredictableCycle,
+    this.lengthRecord = const [],
     this.cyclesWithLogs = 0,
   });
 
@@ -409,6 +426,8 @@ class _HistoryView extends StatelessWidget {
   final ValueChanged<InsightLens> onLensSelected;
   final ConsistentCycleCopy? consistentCycle;
   final VariableCycleCopy? variableCycle;
+  final UnpredictableCycleCopy? unpredictableCycle;
+  final List<CycleLengthRecordRow> lengthRecord;
   final int cyclesWithLogs;
 
   @override
@@ -456,7 +475,16 @@ class _HistoryView extends StatelessWidget {
         ),
         const SizedBox(height: 20),
         if (variableCycle != null) ...[
-          const _HowInsightsWorkCard(),
+          const _HowInsightsWorkCard(
+            body: _variableHowInsightsBody,
+            background: RituColors.fillAttention,
+          ),
+          const SizedBox(height: 20),
+        ] else if (unpredictableCycle != null) ...[
+          _HowInsightsWorkCard(
+            body: unpredictableCycle!.howInsightsBody,
+            background: RituColors.fillCritical,
+          ),
           const SizedBox(height: 20),
         ],
         if (lens != InsightLens.overview && cyclesWithLogs < 3)
@@ -494,10 +522,46 @@ class _HistoryView extends StatelessWidget {
               _ConsistentCycleCard(copy: consistentCycle!),
             ] else if (variableCycle != null) ...[
               const SizedBox(height: 16),
-              _VariableCycleCard(copy: variableCycle!),
+              _CycleVariationCard(
+                title: variableCycle!.title,
+                body: _variableCycleBody,
+                footer: variableCycle!.recorded,
+              ),
+            ] else if (unpredictableCycle != null) ...[
+              const SizedBox(height: 16),
+              _CycleVariationCard(
+                title: unpredictableCycle!.title,
+                body: _unpredictableCycleBody,
+                footer: unpredictableCycle!.recorded,
+              ),
             ] else ...[
               const SizedBox(height: 16),
               const _ConsistencyCard(),
+            ],
+            if (lengthRecord.isNotEmpty) ...[
+              const SizedBox(height: 20),
+              Text(
+                'Cycle length record',
+                style: GoogleFonts.dmSans(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  height: 24 / 15,
+                  color: RituColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 16),
+              _CycleLengthRecordTable(rows: lengthRecord),
+              const SizedBox(height: 12),
+              Text(
+                'This table is included in your doctor PDF report',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.dmSans(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  height: 18 / 11,
+                  color: RituColors.textTertiary,
+                ),
+              ),
             ],
           ] else if (loggedMost.isNotEmpty) ...[
             const SizedBox(height: 20),
@@ -880,8 +944,24 @@ class _ConsistentCycleCard extends StatelessWidget {
   }
 }
 
+const _variableHowInsightsBody =
+    'Because your cycle length varies, patterns here are '
+    'anchored to days before your period - not absolute day '
+    'numbers';
+
+const _variableCycleBody =
+    'Your cycles shift noticeably. This is normal for many women. '
+    'Patterns here use relative timing';
+
+const _unpredictableCycleBody =
+    'This level of variation can sometimes have an underlying cause. '
+    "Worth discussing with a doctor if you haven't already";
+
 class _HowInsightsWorkCard extends StatelessWidget {
-  const _HowInsightsWorkCard();
+  const _HowInsightsWorkCard({required this.body, required this.background});
+
+  final String body;
+  final Color background;
 
   @override
   Widget build(BuildContext context) {
@@ -889,7 +969,7 @@ class _HowInsightsWorkCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: RituColors.fillAttention,
+        color: background,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -921,9 +1001,7 @@ class _HowInsightsWorkCard extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  'Because your cycle length varies, patterns here are '
-                  'anchored to days before your period - not absolute day '
-                  'numbers',
+                  body,
                   style: GoogleFonts.dmSans(
                     fontSize: 11,
                     fontWeight: FontWeight.w500,
@@ -940,10 +1018,16 @@ class _HowInsightsWorkCard extends StatelessWidget {
   }
 }
 
-class _VariableCycleCard extends StatelessWidget {
-  const _VariableCycleCard({required this.copy});
+class _CycleVariationCard extends StatelessWidget {
+  const _CycleVariationCard({
+    required this.title,
+    required this.body,
+    required this.footer,
+  });
 
-  final VariableCycleCopy copy;
+  final String title;
+  final String body;
+  final String footer;
 
   @override
   Widget build(BuildContext context) {
@@ -959,7 +1043,7 @@ class _VariableCycleCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            copy.title,
+            title,
             style: GoogleFonts.dmSans(
               fontSize: 15,
               fontWeight: FontWeight.w600,
@@ -968,8 +1052,7 @@ class _VariableCycleCard extends StatelessWidget {
             ),
           ),
           Text(
-            'Your cycles shift noticeably. This is normal for many women. '
-            'Patterns here use relative timing',
+            body,
             style: GoogleFonts.dmSans(
               fontSize: 13,
               fontWeight: FontWeight.w400,
@@ -979,13 +1062,123 @@ class _VariableCycleCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            copy.recorded,
+            footer,
             style: GoogleFonts.dmSans(
               fontSize: 11,
               fontWeight: FontWeight.w500,
               height: 18 / 11,
               color: RituColors.textCritical,
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CycleLengthRecordTable extends StatelessWidget {
+  const _CycleLengthRecordTable({required this.rows});
+
+  final List<CycleLengthRecordRow> rows;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: RituColors.fillElevated,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: RituColors.borderSubtle),
+      ),
+      child: Column(
+        children: [
+          _RecordRow(
+            span: 'Cycle',
+            length: 'Length',
+            spanStyle: _recordHeaderStyle,
+            lengthStyle: _recordHeaderStyle,
+            showDivider: true,
+          ),
+          for (var i = 0; i < rows.length; i++)
+            _RecordRow(
+              span: rows[i].span,
+              length: rows[i].length,
+              spanStyle: _recordSpanStyle,
+              lengthStyle: rows[i].inProgress
+                  ? _recordProgressStyle
+                  : _recordLengthStyle,
+              showDivider: i < rows.length - 1,
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+const _recordHeaderStyle = TextStyle(
+  fontSize: 13,
+  fontWeight: FontWeight.w400,
+  height: 20 / 13,
+  color: RituColors.textTertiary,
+);
+
+const _recordSpanStyle = TextStyle(
+  fontSize: 13,
+  fontWeight: FontWeight.w500,
+  height: 20 / 13,
+  color: RituColors.textPrimary,
+);
+
+const _recordLengthStyle = TextStyle(
+  fontSize: 13,
+  fontWeight: FontWeight.w600,
+  height: 20 / 13,
+  color: RituColors.textPrimary,
+);
+
+const _recordProgressStyle = TextStyle(
+  fontSize: 13,
+  fontWeight: FontWeight.w600,
+  height: 20 / 13,
+  color: RituColors.textSecondary,
+);
+
+class _RecordRow extends StatelessWidget {
+  const _RecordRow({
+    required this.span,
+    required this.length,
+    required this.spanStyle,
+    required this.lengthStyle,
+    required this.showDivider,
+  });
+
+  final String span;
+  final String length;
+  final TextStyle spanStyle;
+  final TextStyle lengthStyle;
+  final bool showDivider;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      decoration: BoxDecoration(
+        border: showDivider
+            ? const Border(
+                bottom: BorderSide(color: RituColors.borderSubtle, width: 0.5),
+              )
+            : null,
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(span, style: GoogleFonts.dmSans(textStyle: spanStyle)),
+          ),
+          Text(
+            length,
+            textAlign: TextAlign.right,
+            style: GoogleFonts.dmSans(textStyle: lengthStyle),
           ),
         ],
       ),

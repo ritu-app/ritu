@@ -288,6 +288,7 @@ void main() {
       expect(find.text('Consistency is powerful'), findsNothing);
       expect(find.text('Cycle length is consistent'), findsNothing);
       expect(find.text('Low energy 5–8 days before your period'), findsNothing);
+      expect(find.text('Cycle length record'), findsNothing);
       expect(
         tester.getTopLeft(find.text('How insights work for you')).dy,
         lessThan(tester.getTopLeft(find.text('Wellbeing over time')).dy),
@@ -315,6 +316,73 @@ void main() {
           tester.getTopLeft(find.text('How insights work for you')).dy,
           lessThan(tester.getTopLeft(find.text(tab.$2)).dy),
         );
+      }
+    },
+  );
+
+  testWidgets(
+    'shows unpredictable banners on every tab and the record on overview',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(800, 2400));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await pumpInsights(
+        tester,
+        loggedDays: 14,
+        snapshot: snapshotFor(
+          classification: CycleClassification.unpredictable,
+          sample: const [4, 4, 3],
+          completedCycles: 3,
+        ),
+        periodStarts: [
+          DateTime(2026, 9, 1),
+          DateTime(2026, 9, 5),
+          DateTime(2026, 9, 9),
+          DateTime(2026, 9, 12),
+        ],
+      );
+
+      expect(find.text('How insights work for you'), findsOneWidget);
+      expect(
+        find.text(
+          'Your cycles vary quite a bit (3–4 days). '
+          "Phase strips aren't shown. Patterns here are based on what "
+          "you've logged, not cycle timing.",
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.text('Cycles vary significantly - 3 to 4 days'),
+        findsOneWidget,
+      );
+      expect(find.text('3 cycles recorded'), findsOneWidget);
+      expect(find.text('Cycle length record'), findsOneWidget);
+      expect(
+        tester.getTopLeft(find.text('Key insights')).dy,
+        lessThan(tester.getTopLeft(find.text('Cycle length record')).dy),
+      );
+      expect(find.text('Sep → Sep 2026'), findsNWidgets(3));
+      expect(find.text('4 days'), findsNWidgets(2));
+      expect(find.text('3 days'), findsOneWidget);
+      expect(find.text('Sep 2026 → ongoing'), findsOneWidget);
+      expect(find.text('In progress'), findsOneWidget);
+      expect(
+        find.text('This table is included in your doctor PDF report'),
+        findsOneWidget,
+      );
+      expect(find.text('Consistency is powerful'), findsNothing);
+      expect(find.text('Cycle length varies - 24 to 33 days'), findsNothing);
+      expect(find.text('Mood improves after your period ends'), findsNothing);
+
+      for (final tab in ['Mood', 'Energy', 'Body']) {
+        await tester.tap(find.text(tab));
+        await tester.pump();
+        expect(find.text('How insights work for you'), findsOneWidget);
+        expect(
+          find.text('Cycles vary significantly - 3 to 4 days'),
+          findsNothing,
+        );
+        expect(find.text('Cycle length record'), findsNothing);
+        expect(find.text('Key insights'), findsNothing);
       }
     },
   );
