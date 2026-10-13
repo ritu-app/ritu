@@ -48,6 +48,14 @@ class MemoryDailyLogRepository implements DailyLogRepository {
   }
 
   @override
+  Stream<List<DailyLogEntry>> watchAll() async* {
+    yield await getAll();
+    await for (final _ in _store.dailyLogsChanges) {
+      yield await getAll();
+    }
+  }
+
+  @override
   Future<bool> hasLoggedOn(DateTime date) async {
     return await getByDate(date) != null;
   }

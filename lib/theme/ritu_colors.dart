@@ -35,6 +35,11 @@ abstract final class RituColors {
   static const Color iconCritical = Color(0xFFC45C5C);
   static const Color textCritical = Color(0xFF945959);
   static const Color fillBrandPressed = Color(0xFF416252);
+  /// Insights history heatmap (Figma heatmap/low, okay, high, no-data).
+  static const Color heatmapLow = Color(0xFFDDBEAD);
+  static const Color heatmapOkay = Color(0xFFF5D985);
+  static const Color heatmapHigh = Color(0xFFA1D1AA);
+  static const Color heatmapNoData = Color(0xFFDADADA);
   static const Color cycleMenstrual = Color(0xFFC98A8A);
   static const Color rosewood900 = Color(0xFF583333);
   static const Color gradientSh1 = Color(0xFF5F8F7A);

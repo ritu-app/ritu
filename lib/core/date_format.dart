@@ -56,6 +56,9 @@ String formatShortMonthDay(DateTime date) {
   return '${_shortMonths[date.month - 1]} ${date.day}';
 }
 
+/// e.g. Sep — abbreviated month only (insights history rows).
+String formatShortMonth(DateTime date) => _shortMonths[date.month - 1];
+
 /// Variable next-period range, e.g. `~Oct 9-15` or `~Oct 28-Nov 3`.
 String formatEstimatedShortMonthDayRange(DateTime start, DateTime end) {
   final from = dateOnly(start);

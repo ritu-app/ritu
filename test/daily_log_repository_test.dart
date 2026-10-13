@@ -51,6 +51,14 @@ void main() {
     expect(await repository.getCurrentStreak(), 0);
   });
 
+  test('watchAll emits saved logs newest first', () async {
+    await repository.upsert(loggedOn: DateTime(2026, 1, 2), wellbeing: 8);
+    await repository.upsert(loggedOn: DateTime(2026, 1, 4), wellbeing: 2);
+    final logs = await repository.watchAll().first;
+    expect(logs.map((log) => log.loggedOn.day), [4, 2]);
+    expect(logs.first.wellbeing, 2);
+  });
+
   test('a gap in the middle only counts the most recent run', () async {
     await repository.upsert(loggedOn: daysAgo(10));
     await repository.upsert(loggedOn: daysAgo(1));

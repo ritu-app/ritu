@@ -80,6 +80,13 @@ class DriftDailyLogRepository implements DailyLogRepository {
   }
 
   @override
+  Stream<List<DailyLogEntry>> watchAll() {
+    final query = _db.select(_db.dailyLogs)
+      ..orderBy([(t) => OrderingTerm.desc(t.loggedOn)]);
+    return query.watch().map((rows) => rows.map(_mapEntry).toList());
+  }
+
+  @override
   Future<bool> hasLoggedOn(DateTime date) async {
     return await getByDate(date) != null;
   }

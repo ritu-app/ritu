@@ -11,6 +11,9 @@ abstract class DailyLogRepository {
   /// All daily logs, newest [loggedOn] first.
   Future<List<DailyLogEntry>> getAll();
 
+  /// All daily logs, newest [loggedOn] first.
+  Stream<List<DailyLogEntry>> watchAll();
+
   Future<bool> hasLoggedOn(DateTime date);
 
   /// Total number of calendar days with a saved daily log entry, regardless

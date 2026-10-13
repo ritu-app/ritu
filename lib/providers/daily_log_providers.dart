@@ -22,6 +22,10 @@ final totalLoggedDaysProvider = StreamProvider<int>((ref) {
   return ref.watch(dailyLogRepositoryProvider).watchTotalLoggedDays();
 });
 
+final allDailyLogsProvider = StreamProvider<List<DailyLogEntry>>((ref) {
+  return ref.watch(dailyLogRepositoryProvider).watchAll();
+});
+
 final currentStreakProvider = StreamProvider<int>((ref) {
   return ref.watch(dailyLogRepositoryProvider).watchCurrentStreak();
 });

@@ -184,9 +184,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   onLogToday: _openDailyLog,
                 ),
                 1 => InsightsScreen(
-                  loggedDaysCount: loggedDaysCount,
                   patternDaysRequired: widget.patternDaysRequired,
-                  hasLoggedToday: todayLog != null,
                   onLogToday: _openDailyLog,
                 ),
                 2 => JournalScreen(

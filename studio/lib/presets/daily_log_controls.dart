@@ -5,6 +5,13 @@ import '../scope/ritu_repos.dart';
 
 const _moods = ['Calm', 'Happy', 'Content', 'Focused', 'Restless', 'Flat'];
 const _flows = ['Light', 'Medium', 'Spotting', 'Heavy'];
+const _energies = ['Drained', 'Low', 'Moderate', 'High', 'Vibrant'];
+const _symptomSets = <List<String>>[
+  [],
+  ['Headache'],
+  ['Bloating', 'Headache'],
+  ['Acne'],
+];
 
 Future<void> applyDailyLogState({
   required RituRepos repos,
@@ -18,19 +25,31 @@ Future<void> applyDailyLogState({
 
   final today = dateOnly(simulatedToday);
   if (loggedToday) {
-    await dailyLogs.upsert(
-      loggedOn: today,
-      flowIntensity: _flows[generation % _flows.length],
-      moods: [_moods[generation % _moods.length]],
-    );
+    await _seedDay(dailyLogs, day: today, salt: generation);
   }
 
   for (var i = 0; i < loggedDaysCount; i++) {
     final offset = i + 1;
-    await dailyLogs.upsert(
-      loggedOn: today.subtract(Duration(days: offset)),
-      flowIntensity: _flows[(generation + offset) % _flows.length],
-      moods: [_moods[(generation + offset) % _moods.length]],
+    await _seedDay(
+      dailyLogs,
+      day: today.subtract(Duration(days: offset)),
+      salt: generation + offset,
     );
   }
+}
+
+Future<void> _seedDay(
+  MemoryDailyLogRepository dailyLogs, {
+  required DateTime day,
+  required int salt,
+}) {
+  final mood = _moods[salt % _moods.length];
+  return dailyLogs.upsert(
+    loggedOn: day,
+    flowIntensity: _flows[salt % _flows.length],
+    moods: [mood, if (salt % 5 == 0) 'Irritable'],
+    energyLevel: _energies[salt % _energies.length],
+    wellbeing: (salt * 3) % 11,
+    symptoms: _symptomSets[salt % _symptomSets.length],
+  );
 }
