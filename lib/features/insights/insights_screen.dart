@@ -14,13 +14,15 @@ import '../../theme/ritu_colors.dart';
 import 'consistent_cycle_copy.dart';
 import 'cycles_covered_by_logs.dart';
 import 'insight_history.dart';
+import 'most_logged.dart';
 
 /// Insights tab — empty state until the first daily log, then a progress
 /// teaser. Once [patternDaysRequired] logs exist, shows the history heatmap.
 /// Mood, Energy, and Body stay locked until those logs fall in at least
-/// three period cycles (Figma 899-6584). Under Key insights, a consistency
-/// note stays until the cycle is Regular (Figma 899-6470 / 899-6767).
-/// Other insight cards are not shown yet.
+/// three period cycles (Figma 899-6584). After that, those tabs list what
+/// was logged most (Figma 899-6940 / 899-7118 / 899-7301). Pattern banners
+/// are not shown yet. Under Key insights on Overview, a consistency note
+/// stays until the cycle is Regular (Figma 899-6470 / 899-6767).
 class InsightsScreen extends ConsumerStatefulWidget {
   const InsightsScreen({
     super.key,
@@ -401,7 +403,7 @@ class _HistoryView extends StatelessWidget {
   Widget build(BuildContext context) {
     final strips = buildInsightHistory(logs: logs, today: today, lens: lens);
     final copy = _lensCopy(lens);
-    final dayLabel = loggedDaysCount == 1 ? 'day' : 'days';
+    final loggedMost = mostLoggedLabels(logs: logs, today: today, lens: lens);
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
@@ -417,7 +419,10 @@ class _HistoryView extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          'Based on $loggedDaysCount $dayLabel of logs',
+          _historyBasis(
+            loggedDaysCount: loggedDaysCount,
+            cyclesWithLogs: cyclesWithLogs,
+          ),
           style: GoogleFonts.dmSans(
             fontSize: 13,
             fontWeight: FontWeight.w500,
@@ -457,22 +462,49 @@ class _HistoryView extends StatelessWidget {
           ],
           if (strips.isNotEmpty) const SizedBox(height: 8),
           _Legend(labels: copy.legend),
-          const SizedBox(height: 20),
-          Text(
-            'Key insights',
-            style: GoogleFonts.dmSans(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              height: 24 / 15,
-              color: RituColors.textPrimary,
+          if (lens == InsightLens.overview) ...[
+            const SizedBox(height: 20),
+            Text(
+              'Key insights',
+              style: GoogleFonts.dmSans(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                height: 24 / 15,
+                color: RituColors.textPrimary,
+              ),
             ),
-          ),
-          if (lens == InsightLens.overview && consistentCycle != null) ...[
+            if (consistentCycle != null) ...[
+              const SizedBox(height: 16),
+              _ConsistentCycleCard(copy: consistentCycle!),
+            ] else ...[
+              const SizedBox(height: 16),
+              const _ConsistencyCard(),
+            ],
+          ] else if (loggedMost.isNotEmpty) ...[
+            const SizedBox(height: 20),
+            Text(
+              _mostLoggedTitle(lens),
+              style: GoogleFonts.dmSans(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                height: 24 / 15,
+                color: RituColors.textPrimary,
+              ),
+            ),
             const SizedBox(height: 16),
-            _ConsistentCycleCard(copy: consistentCycle!),
-          ] else if (consistentCycle == null) ...[
-            const SizedBox(height: 16),
-            const _ConsistencyCard(),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final label in loggedMost)
+                  _MostLoggedChip(
+                    label: label,
+                    fill: lens == InsightLens.mood
+                        ? RituColors.fillSecondary
+                        : RituColors.fillPositiveSecondary,
+                  ),
+              ],
+            ),
           ],
         ],
       ],
@@ -498,6 +530,27 @@ class _HistoryView extends StatelessWidget {
       title: 'Body signals over time',
       legend: ['2 or more signals', 'one signal', 'No signal', 'No data'],
     ),
+  };
+}
+
+String _historyBasis({
+  required int loggedDaysCount,
+  required int cyclesWithLogs,
+}) {
+  if (cyclesWithLogs >= 3) {
+    final unit = cyclesWithLogs == 1 ? 'cycle' : 'cycles';
+    return 'Based on $cyclesWithLogs $unit';
+  }
+  final unit = loggedDaysCount == 1 ? 'day' : 'days';
+  return 'Based on $loggedDaysCount $unit of logs';
+}
+
+String _mostLoggedTitle(InsightLens lens) {
+  return switch (lens) {
+    InsightLens.mood => 'Most logged moods',
+    InsightLens.energy => 'Energy levels you log most',
+    InsightLens.body => 'Most common signals',
+    InsightLens.overview => '',
   };
 }
 
@@ -543,6 +596,39 @@ class _LensChip extends StatelessWidget {
             fontWeight: FontWeight.w400,
             height: 20 / 13,
             color: selected ? RituColors.textInverse : RituColors.textSecondary,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MostLoggedChip extends StatelessWidget {
+  const _MostLoggedChip({required this.label, required this.fill});
+
+  final String label;
+  final Color fill;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 34,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: fill,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: RituColors.sage600),
+      ),
+      child: Center(
+        widthFactor: 1,
+        heightFactor: 1,
+        child: Text(
+          label,
+          style: GoogleFonts.dmSans(
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+            height: 20 / 13,
+            color: RituColors.textPrimary,
           ),
         ),
       ),

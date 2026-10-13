@@ -76,7 +76,7 @@ class _CycleStudioShellState extends State<CycleStudioShell> {
   void _syncLoggedData() {
     final controller = context.studioController;
     controller.applyDailyLogs(
-      loggedDaysCount: _logDensity.days,
+      loggedDaysCount: _logDensity.pastDays(_historyDraft),
       loggedToday: _loggedToday,
       generation: _logGeneration,
     );
@@ -85,6 +85,11 @@ class _CycleStudioShellState extends State<CycleStudioShell> {
       pastEntryCount: _journalDensity.pastCount,
       generation: _logGeneration,
     );
+  }
+
+  void _syncHistoryLogs() {
+    if (_logDensity == DailyLogDensity.none) return;
+    _syncLoggedData();
   }
 
   void _onDate(DateTime picked) {
@@ -102,6 +107,7 @@ class _CycleStudioShellState extends State<CycleStudioShell> {
       );
       setState(() => _historyDraft = updated);
       controller.applyHistory(updated);
+      _syncHistoryLogs();
     } else if (delta != 0) {
       setState(() {
         _historyDraft = _historyDraft.copyWith(
@@ -129,6 +135,7 @@ class _CycleStudioShellState extends State<CycleStudioShell> {
     );
     setState(() => _historyDraft = updated);
     controller.applyHistory(updated);
+    _syncHistoryLogs();
   }
 
   void _onCycleDayCommit(int day) {
@@ -143,6 +150,7 @@ class _CycleStudioShellState extends State<CycleStudioShell> {
     });
     await context.studioController.applyHistory(draft);
     if (!mounted) return;
+    _syncHistoryLogs();
     _note('Switched to ${scenario.shortLabel}');
   }
 
@@ -156,6 +164,7 @@ class _CycleStudioShellState extends State<CycleStudioShell> {
     };
     setState(() => _historyDraft = draft);
     context.studioController.applyHistory(draft);
+    _syncHistoryLogs();
     _note(message);
   }
 

@@ -123,7 +123,8 @@ void main() {
         ],
       );
 
-      expect(find.text('Based on 14 days of logs'), findsOneWidget);
+      expect(find.text('Based on 3 cycles'), findsOneWidget);
+      expect(find.text('Based on 14 days of logs'), findsNothing);
       expect(find.text('Wellbeing over time'), findsOneWidget);
       expect(find.text('Sep'), findsOneWidget);
       expect(find.text('Low'), findsOneWidget);
@@ -145,11 +146,30 @@ void main() {
       expect(find.text('Heavy'), findsOneWidget);
       expect(find.text('Mixed'), findsOneWidget);
       expect(find.text('Light'), findsOneWidget);
+      expect(find.text('Most logged moods'), findsOneWidget);
+      expect(find.text('Anxious'), findsOneWidget);
+      expect(find.text('Calm'), findsOneWidget);
+      expect(
+        tester.getTopLeft(find.text('Anxious')).dy,
+        tester.getTopLeft(find.text('Calm')).dy,
+      );
+      final chip = find
+          .ancestor(of: find.text('Anxious'), matching: find.byType(Container))
+          .first;
+      expect(
+        tester.getSize(chip).width,
+        lessThan(tester.getSize(find.byType(ListView)).width - 40),
+      );
+      expect(find.text('Key insights'), findsNothing);
+      expect(find.text('Mood patterns'), findsNothing);
 
       await tester.tap(find.text('Energy'));
       await tester.pump();
       expect(find.text('Energy over time'), findsOneWidget);
       expect(find.text('Medium'), findsOneWidget);
+      expect(find.text('Energy levels you log most'), findsOneWidget);
+      expect(find.text('Key insights'), findsNothing);
+      expect(find.text('Energy patterns'), findsNothing);
 
       await tester.tap(find.text('Body'));
       await tester.pump();
@@ -157,7 +177,12 @@ void main() {
       expect(find.text('2 or more signals'), findsOneWidget);
       expect(find.text('one signal'), findsOneWidget);
       expect(find.text('No signal'), findsOneWidget);
-      expect(find.text('Key insights'), findsOneWidget);
+      expect(find.text('Most common signals'), findsOneWidget);
+      expect(find.text('Acne'), findsOneWidget);
+      expect(find.text('Bloating'), findsOneWidget);
+      expect(find.text('Headache'), findsOneWidget);
+      expect(find.text('Key insights'), findsNothing);
+      expect(find.text('Body signals patterns'), findsNothing);
     },
   );
 
@@ -171,6 +196,7 @@ void main() {
       periodStarts: [DateTime(2026, 8, 1)],
     );
 
+    expect(find.text('Based on 14 days of logs'), findsOneWidget);
     expect(find.text('Wellbeing over time'), findsOneWidget);
 
     for (final tab in ['Mood', 'Energy', 'Body']) {
@@ -230,6 +256,7 @@ void main() {
       expect(find.text('Cycle length is consistent'), findsNothing);
       expect(find.text('Consistency is powerful'), findsNothing);
       expect(find.text('Keep going'), findsNothing);
+      expect(find.text('Key insights'), findsNothing);
     }
 
     await tester.tap(find.text('Overview'));

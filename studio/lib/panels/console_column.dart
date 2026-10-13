@@ -141,7 +141,8 @@ class ConsoleColumn extends StatelessWidget {
             completedCycles: historyDraft.rows.isEmpty
                 ? 0
                 : historyDraft.rows.length - 1,
-            loggedDays: logDensity.days + (loggedToday ? 1 : 0),
+            loggedDays:
+                logDensity.pastDays(historyDraft) + (loggedToday ? 1 : 0),
             scenarioLabel: scenario.label,
             dailyLogLabel: logDensity.label,
             journalLabel: journalDensity.label,
