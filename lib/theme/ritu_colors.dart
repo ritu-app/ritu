@@ -6,6 +6,8 @@ abstract final class RituColors {
   static const Color sage600 = Color(0xFF4F7765);
   static const Color meadow600 = Color(0xFF6FA17C);
   static const Color textPositive = Color(0xFF588164);
+  /// Positive card outline (Figma border-positive).
+  static const Color borderPositive = Color(0xFF8DBE9A);
   static const Color neutral500 = Color(0xFFA9A19B);
   static const Color neutral600 = Color(0xFF8A827D);
   static const Color textSecondary = Color(0xFF69635F);

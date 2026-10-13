@@ -3,15 +3,24 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../core/cycle/cycle_classification.dart';
 import '../../data/models/daily_log_entry.dart';
+import '../../data/models/period_log.dart';
+import '../../providers/cycle_snapshot_provider.dart';
 import '../../providers/daily_log_providers.dart';
+import '../../providers/period_providers.dart';
 import '../../providers/simulated_today_provider.dart';
 import '../../theme/ritu_colors.dart';
+import 'consistent_cycle_copy.dart';
+import 'cycles_covered_by_logs.dart';
 import 'insight_history.dart';
 
 /// Insights tab — empty state until the first daily log, then a progress
-/// teaser. Once [patternDaysRequired] logs exist, shows the history heatmap
-/// (Figma 899-6470). Key insights are not shown yet.
+/// teaser. Once [patternDaysRequired] logs exist, shows the history heatmap.
+/// Mood, Energy, and Body stay locked until those logs fall in at least
+/// three period cycles (Figma 899-6584). Under Key insights, a consistency
+/// note stays until the cycle is Regular (Figma 899-6470 / 899-6767).
+/// Other insight cards are not shown yet.
 class InsightsScreen extends ConsumerStatefulWidget {
   const InsightsScreen({
     super.key,
@@ -36,6 +45,18 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
     final logs =
         ref.watch(allDailyLogsProvider).valueOrNull ?? const <DailyLogEntry>[];
     final today = ref.watch(simulatedTodayProvider);
+    final snapshot = ref.watch(cycleSnapshotProvider).valueOrNull;
+    final periods =
+        ref.watch(allPeriodsProvider).valueOrNull ?? const <PeriodLog>[];
+    final consistentCycle = consistentCycleCopy(
+      classification:
+          snapshot?.classification ?? CycleClassification.unclassified,
+      cycleLengths: snapshot?.sample ?? const [],
+    );
+    final cyclesWithLogs = cyclesCoveredByLogs(
+      logDates: logs.map((log) => log.loggedOn),
+      periodStarts: periods.map((period) => period.startedOn),
+    );
 
     if (loggedDaysCount >= widget.patternDaysRequired) {
       return _HistoryView(
@@ -44,6 +65,8 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
         today: today,
         lens: _lens,
         onLensSelected: (lens) => setState(() => _lens = lens),
+        consistentCycle: consistentCycle,
+        cyclesWithLogs: cyclesWithLogs,
       );
     }
 
@@ -362,6 +385,8 @@ class _HistoryView extends StatelessWidget {
     required this.today,
     required this.lens,
     required this.onLensSelected,
+    this.consistentCycle,
+    this.cyclesWithLogs = 0,
   });
 
   final int loggedDaysCount;
@@ -369,6 +394,8 @@ class _HistoryView extends StatelessWidget {
   final DateTime today;
   final InsightLens lens;
   final ValueChanged<InsightLens> onLensSelected;
+  final ConsistentCycleCopy? consistentCycle;
+  final int cyclesWithLogs;
 
   @override
   Widget build(BuildContext context) {
@@ -411,24 +438,43 @@ class _HistoryView extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 20),
-        Text(
-          copy.title,
-          style: GoogleFonts.dmSans(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            height: 24 / 15,
-            color: RituColors.textPrimary,
+        if (lens != InsightLens.overview && cyclesWithLogs < 3)
+          _KeepGoingCard(cyclesWithLogs: cyclesWithLogs)
+        else ...[
+          Text(
+            copy.title,
+            style: GoogleFonts.dmSans(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              height: 24 / 15,
+              color: RituColors.textPrimary,
+            ),
           ),
-        ),
-        const SizedBox(height: 16),
-        for (var i = 0; i < strips.length; i++) ...[
-          if (i > 0) const SizedBox(height: 4),
-          _MonthStrip(strip: strips[i]),
+          const SizedBox(height: 16),
+          for (var i = 0; i < strips.length; i++) ...[
+            if (i > 0) const SizedBox(height: 4),
+            _MonthStrip(strip: strips[i]),
+          ],
+          if (strips.isNotEmpty) const SizedBox(height: 8),
+          _Legend(labels: copy.legend),
+          const SizedBox(height: 20),
+          Text(
+            'Key insights',
+            style: GoogleFonts.dmSans(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              height: 24 / 15,
+              color: RituColors.textPrimary,
+            ),
+          ),
+          if (lens == InsightLens.overview && consistentCycle != null) ...[
+            const SizedBox(height: 16),
+            _ConsistentCycleCard(copy: consistentCycle!),
+          ] else if (consistentCycle == null) ...[
+            const SizedBox(height: 16),
+            const _ConsistencyCard(),
+          ],
         ],
-        if (strips.isNotEmpty) const SizedBox(height: 8),
-        _Legend(labels: copy.legend),
-        const SizedBox(height: 20),
-        const _ConsistencyCard(),
       ],
     );
   }
@@ -606,6 +652,125 @@ class _Legend extends StatelessWidget {
             ],
           ),
       ],
+    );
+  }
+}
+
+class _KeepGoingCard extends StatelessWidget {
+  const _KeepGoingCard({required this.cyclesWithLogs});
+
+  final int cyclesWithLogs;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: RituColors.fillInfo,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(
+            width: 20,
+            height: 20,
+            child: Center(
+              child: Icon(
+                LucideIcons.info,
+                size: 16,
+                color: RituColors.textPrimary,
+              ),
+            ),
+          ),
+          const SizedBox(width: 4),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Keep going',
+                  style: GoogleFonts.dmSans(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    height: 20 / 13,
+                    color: RituColors.textPrimary,
+                  ),
+                ),
+                Text(
+                  _keepGoingBody(cyclesWithLogs),
+                  style: GoogleFonts.dmSans(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    height: 18 / 11,
+                    color: RituColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+String _keepGoingBody(int cyclesWithLogs) {
+  final remaining = (3 - cyclesWithLogs).clamp(1, 3);
+  final unit = remaining == 1 ? 'cycle' : 'cycles';
+  return 'You’re building something meaningful. '
+      '$remaining more $unit to unlock deeper insights';
+}
+
+class _ConsistentCycleCard extends StatelessWidget {
+  const _ConsistentCycleCard({required this.copy});
+
+  final ConsistentCycleCopy copy;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: RituColors.fillPositiveSecondary,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: RituColors.borderPositive),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Cycle length is consistent',
+            style: GoogleFonts.dmSans(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              height: 24 / 15,
+              color: RituColors.textPrimary,
+            ),
+          ),
+          Text(
+            copy.body,
+            style: GoogleFonts.dmSans(
+              fontSize: 13,
+              fontWeight: FontWeight.w400,
+              height: 20 / 13,
+              color: RituColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            copy.average,
+            style: GoogleFonts.dmSans(
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              height: 18 / 11,
+              color: RituColors.textPositive,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ritu/core/cycle/cycle.dart';
 import 'package:ritu/data/models/daily_log_entry.dart';
+import 'package:ritu/data/models/period_log.dart';
 import 'package:ritu/features/insights/insights_screen.dart';
+import 'package:ritu/providers/cycle_snapshot_provider.dart';
 import 'package:ritu/providers/daily_log_providers.dart';
+import 'package:ritu/providers/period_providers.dart';
 import 'package:ritu/providers/simulated_today_provider.dart';
 
 void main() {
@@ -27,11 +31,44 @@ void main() {
     ];
   }
 
+  CycleSnapshot snapshotFor({
+    CycleClassification classification = CycleClassification.unclassified,
+    List<int> sample = const [],
+    double? mean,
+    int completedCycles = 0,
+  }) {
+    return CycleSnapshot(
+      referenceDate: today,
+      completedCycles: completedCycles,
+      insightsMode: completedCycles >= 3
+          ? InsightsMode.full
+          : InsightsMode.partial,
+      classification: classification,
+      sample: sample,
+      mean: mean,
+    );
+  }
+
+  List<PeriodLog> periodsOn(List<DateTime> starts) {
+    return [
+      for (var i = 0; i < starts.length; i++)
+        PeriodLog(
+          id: i + 1,
+          startedOn: starts[i],
+          source: PeriodSources.calendar,
+          createdAt: today,
+          updatedAt: today,
+        ),
+    ];
+  }
+
   Future<void> pumpInsights(
     WidgetTester tester, {
     required int loggedDays,
     int patternDaysRequired = 14,
     bool loggedToday = false,
+    CycleSnapshot? snapshot,
+    List<DateTime> periodStarts = const [],
   }) async {
     await tester.pumpWidget(
       ProviderScope(
@@ -46,6 +83,12 @@ void main() {
             (ref) => Stream.value(loggedToday ? logsFor(1).single : null),
           ),
           simulatedTodayProvider.overrideWithValue(today),
+          cycleSnapshotProvider.overrideWithValue(
+            AsyncData(snapshot ?? snapshotFor()),
+          ),
+          allPeriodsProvider.overrideWith(
+            (ref) => Stream.value(periodsOn(periodStarts)),
+          ),
         ],
         child: MaterialApp(
           home: Scaffold(
@@ -66,41 +109,132 @@ void main() {
     expect(find.text('Key insights'), findsNothing);
   });
 
-  testWidgets('shows history once 14 logs exist and skips key insights', (
+  testWidgets(
+    'shows history once 14 logs exist, with the note under Key insights',
+    (tester) async {
+      await pumpInsights(
+        tester,
+        loggedDays: 14,
+        snapshot: snapshotFor(completedCycles: 3),
+        periodStarts: [
+          DateTime(2026, 9, 1),
+          DateTime(2026, 9, 6),
+          DateTime(2026, 9, 11),
+        ],
+      );
+
+      expect(find.text('Based on 14 days of logs'), findsOneWidget);
+      expect(find.text('Wellbeing over time'), findsOneWidget);
+      expect(find.text('Sep'), findsOneWidget);
+      expect(find.text('Low'), findsOneWidget);
+      expect(find.text('Okay'), findsOneWidget);
+      expect(find.text('High'), findsOneWidget);
+      expect(find.text('No data'), findsOneWidget);
+      expect(find.text('Key insights'), findsOneWidget);
+      expect(find.text('Consistency is powerful'), findsOneWidget);
+      expect(find.text('Starting to notice something'), findsNothing);
+      expect(find.text('What you’ll unlock'), findsNothing);
+      expect(
+        tester.getTopLeft(find.text('Key insights')).dy,
+        lessThan(tester.getTopLeft(find.text('Consistency is powerful')).dy),
+      );
+
+      await tester.tap(find.text('Mood'));
+      await tester.pump();
+      expect(find.text('Mood over time'), findsOneWidget);
+      expect(find.text('Heavy'), findsOneWidget);
+      expect(find.text('Mixed'), findsOneWidget);
+      expect(find.text('Light'), findsOneWidget);
+
+      await tester.tap(find.text('Energy'));
+      await tester.pump();
+      expect(find.text('Energy over time'), findsOneWidget);
+      expect(find.text('Medium'), findsOneWidget);
+
+      await tester.tap(find.text('Body'));
+      await tester.pump();
+      expect(find.text('Body signals over time'), findsOneWidget);
+      expect(find.text('2 or more signals'), findsOneWidget);
+      expect(find.text('one signal'), findsOneWidget);
+      expect(find.text('No signal'), findsOneWidget);
+      expect(find.text('Key insights'), findsOneWidget);
+    },
+  );
+
+  testWidgets('holds mood, energy, and body until three cycles exist', (
     tester,
   ) async {
-    await pumpInsights(tester, loggedDays: 14);
+    await pumpInsights(
+      tester,
+      loggedDays: 14,
+      snapshot: snapshotFor(completedCycles: 6),
+      periodStarts: [DateTime(2026, 8, 1)],
+    );
 
-    expect(find.text('Based on 14 days of logs'), findsOneWidget);
     expect(find.text('Wellbeing over time'), findsOneWidget);
-    expect(find.text('Sep'), findsOneWidget);
-    expect(find.text('Low'), findsOneWidget);
-    expect(find.text('Okay'), findsOneWidget);
-    expect(find.text('High'), findsOneWidget);
-    expect(find.text('No data'), findsOneWidget);
-    expect(find.text('Consistency is powerful'), findsOneWidget);
-    expect(find.text('Key insights'), findsNothing);
-    expect(find.text('What you’ll unlock'), findsNothing);
 
-    await tester.tap(find.text('Mood'));
-    await tester.pump();
-    expect(find.text('Mood over time'), findsOneWidget);
-    expect(find.text('Heavy'), findsOneWidget);
-    expect(find.text('Mixed'), findsOneWidget);
-    expect(find.text('Light'), findsOneWidget);
+    for (final tab in ['Mood', 'Energy', 'Body']) {
+      await tester.tap(find.text(tab));
+      await tester.pump();
+      expect(find.text('Keep going'), findsOneWidget);
+      expect(
+        find.text(
+          'You’re building something meaningful. '
+          '2 more cycles to unlock deeper insights',
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Mood over time'), findsNothing);
+      expect(find.text('Energy over time'), findsNothing);
+      expect(find.text('Body signals over time'), findsNothing);
+      expect(find.text('Key insights'), findsNothing);
+    }
 
-    await tester.tap(find.text('Energy'));
+    await tester.tap(find.text('Overview'));
     await tester.pump();
-    expect(find.text('Energy over time'), findsOneWidget);
-    expect(find.text('Medium'), findsOneWidget);
+    expect(find.text('Wellbeing over time'), findsOneWidget);
+    expect(find.text('Keep going'), findsNothing);
+  });
 
-    await tester.tap(find.text('Body'));
+  testWidgets('replaces the consistency note once the cycle is regular', (
+    tester,
+  ) async {
+    await pumpInsights(
+      tester,
+      loggedDays: 14,
+      snapshot: snapshotFor(
+        classification: CycleClassification.regular,
+        sample: const [27, 28, 27],
+        mean: 82 / 3,
+        completedCycles: 3,
+      ),
+      periodStarts: [
+        DateTime(2026, 9, 1),
+        DateTime(2026, 9, 6),
+        DateTime(2026, 9, 11),
+      ],
+    );
+
+    expect(find.text('Cycle length is consistent'), findsOneWidget);
+    expect(
+      find.text('Last 3 cycles: 27, 28, 27 days. Healthy stable variation'),
+      findsOneWidget,
+    );
+    expect(find.text('Average 27.3 days'), findsOneWidget);
+    expect(find.text('Consistency is powerful'), findsNothing);
+    expect(find.text('Headaches cluster on days 2–3'), findsNothing);
+
+    for (final tab in ['Mood', 'Energy', 'Body']) {
+      await tester.tap(find.text(tab));
+      await tester.pump();
+      expect(find.text('Cycle length is consistent'), findsNothing);
+      expect(find.text('Consistency is powerful'), findsNothing);
+      expect(find.text('Keep going'), findsNothing);
+    }
+
+    await tester.tap(find.text('Overview'));
     await tester.pump();
-    expect(find.text('Body signals over time'), findsOneWidget);
-    expect(find.text('2 or more signals'), findsOneWidget);
-    expect(find.text('one signal'), findsOneWidget);
-    expect(find.text('No signal'), findsOneWidget);
-    expect(find.text('Key insights'), findsNothing);
+    expect(find.text('Cycle length is consistent'), findsOneWidget);
   });
 
   testWidgets('uses the singular day label for a one-day threshold', (
