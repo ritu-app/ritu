@@ -104,6 +104,33 @@ class CycleHistoryDraft {
     );
   }
 
+  /// Days from the earliest period start through the day before simulated today.
+  ///
+  /// Empty history has no window, so logged data cannot be seeded.
+  int get historyPastDays {
+    if (rows.isEmpty) return 0;
+    final elapsed = currentCycleDay > 1 ? currentCycleDay - 1 : 0;
+    var older = 0;
+    for (final row in rows) {
+      final length = row.cycleLength;
+      if (length != null && length > 0) older += length;
+    }
+    return elapsed + older;
+  }
+
+  /// Furthest cycle day that still keeps this history in order.
+  ///
+  /// With a previous period, that is the day before the two starts would
+  /// collide. With no previous period, the default cycle length.
+  int get maxCycleDay {
+    if (rows.length < 2) return CyclePreset.defaultCycleLength;
+    final newest = rows.last.cycleLength;
+    if (newest == null || newest < 1) return CyclePreset.defaultCycleLength;
+    final elapsed = currentCycleDay > 1 ? currentCycleDay - 1 : 0;
+    final max = elapsed + newest;
+    return max < 1 ? 1 : max;
+  }
+
   /// Computes calendar start dates for each row given [simulatedToday].
   List<DateTime> computedStarts(DateTime simulatedToday) {
     if (rows.isEmpty) return const [];

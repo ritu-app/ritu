@@ -17,9 +17,19 @@ enum DailyLogDensity {
   /// [full] is longer than three cycles.
   int pastDays(CycleHistoryDraft draft) => switch (this) {
     DailyLogDensity.none => 0,
-    DailyLogDensity.sparse => sparseDailyLogPastDays(draft),
-    DailyLogDensity.full => fullDailyLogPastDays(draft),
+    DailyLogDensity.sparse => _withinHistory(
+      sparseDailyLogPastDays(draft),
+      draft,
+    ),
+    DailyLogDensity.full => _withinHistory(fullDailyLogPastDays(draft), draft),
   };
+}
+
+int _withinHistory(int days, CycleHistoryDraft draft) {
+  final span = draft.historyPastDays;
+  if (days > span) return span;
+  if (days < 0) return 0;
+  return days;
 }
 
 /// Past days, excluding today, longer than two cycles and shorter than three.
@@ -75,11 +85,27 @@ enum JournalDensity {
 
   const JournalDensity(this.pastCount, this.includesToday, this.label);
 
-  /// Entries on days before simulated today.
+  /// Cap for [occasional] entries before simulated today.
+  ///
+  /// [daily] ignores this and fills every past day in the cycle history.
   final int pastCount;
 
-  /// Whether simulated today also has an entry.
+  /// Whether simulated today also has an entry when history covers today.
   final bool includesToday;
 
   final String label;
+
+  /// Past entries that fall on or after the earliest period start.
+  int pastEntries(CycleHistoryDraft draft) {
+    final span = draft.historyPastDays;
+    return switch (this) {
+      JournalDensity.off => 0,
+      JournalDensity.occasional => span < pastCount ? span : pastCount,
+      JournalDensity.daily => span,
+    };
+  }
+
+  /// Today is seeded only when this density includes it and a cycle exists.
+  bool logsToday(CycleHistoryDraft draft) =>
+      includesToday && draft.rows.isNotEmpty;
 }

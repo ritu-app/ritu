@@ -81,15 +81,23 @@ class _CycleStudioShellState extends State<CycleStudioShell> {
       generation: _logGeneration,
     );
     controller.applyJournal(
-      todayBody: loggedJournalBody(_journalDensity, _logGeneration),
-      pastEntryCount: _journalDensity.pastCount,
+      todayBody: loggedJournalBody(
+        _journalDensity,
+        _logGeneration,
+        includeToday: _journalDensity.logsToday(_historyDraft),
+      ),
+      pastEntryCount: _journalDensity.pastEntries(_historyDraft),
       generation: _logGeneration,
     );
   }
 
   void _syncHistoryLogs() {
-    if (_logDensity == DailyLogDensity.none) return;
     _syncLoggedData();
+  }
+
+  void _markCustom() {
+    if (_scenario == StudioScenario.custom) return;
+    setState(() => _scenario = StudioScenario.custom);
   }
 
   void _onDate(DateTime picked) {
@@ -98,7 +106,7 @@ class _CycleStudioShellState extends State<CycleStudioShell> {
     final next = dateOnly(picked);
     final delta = next.difference(previous).inDays;
     controller.setSimulatedToday(next);
-    final maxDay = _scenario.maxCycleDay;
+    final maxDay = _historyDraft.maxCycleDay;
     final naturalDay = _historyDraft.currentCycleDay + delta;
     if (delta != 0 && naturalDay > maxDay) {
       final updated = _historyDraft.withCurrentCycleDay(
@@ -116,6 +124,7 @@ class _CycleStudioShellState extends State<CycleStudioShell> {
       });
     }
     if (previous != next) {
+      _markCustom();
       _note(
         'Changed simulated ${formatStudioMonthDay(previous)} to ${formatStudioMonthDay(next)}',
       );
@@ -130,10 +139,13 @@ class _CycleStudioShellState extends State<CycleStudioShell> {
   void _onCycleDay(int day) {
     final controller = context.studioController;
     final updated = _historyDraft.withCurrentCycleDay(
-      cycleDay: day.clamp(1, _scenario.maxCycleDay),
+      cycleDay: day.clamp(1, _historyDraft.maxCycleDay),
       simulatedToday: controller.simulatedToday,
     );
-    setState(() => _historyDraft = updated);
+    setState(() {
+      _historyDraft = updated;
+      _scenario = StudioScenario.custom;
+    });
     controller.applyHistory(updated);
     _syncHistoryLogs();
   }
@@ -143,6 +155,7 @@ class _CycleStudioShellState extends State<CycleStudioShell> {
   }
 
   Future<void> _onScenario(StudioScenario scenario) async {
+    if (scenario == StudioScenario.custom) return;
     final draft = scenario.historyDraft();
     setState(() {
       _scenario = scenario;
@@ -162,7 +175,10 @@ class _CycleStudioShellState extends State<CycleStudioShell> {
       < 0 => 'Removed a cycle',
       _ => 'Updated a cycle',
     };
-    setState(() => _historyDraft = draft);
+    setState(() {
+      _historyDraft = draft;
+      _scenario = StudioScenario.custom;
+    });
     context.studioController.applyHistory(draft);
     _syncHistoryLogs();
     _note(message);
@@ -240,22 +256,34 @@ class _CycleStudioShellState extends State<CycleStudioShell> {
       journalDensity: _journalDensity,
       loggedToday: _loggedToday,
       onLogDensity: (density) {
-        setState(() => _logDensity = density);
+        setState(() {
+          _logDensity = density;
+          _scenario = StudioScenario.custom;
+        });
         _syncLoggedData();
         _note('Changed daily log to ${density.label}');
       },
       onJournalDensity: (density) {
-        setState(() => _journalDensity = density);
+        setState(() {
+          _journalDensity = density;
+          _scenario = StudioScenario.custom;
+        });
         _syncLoggedData();
         _note('Changed journal to ${density.label}');
       },
       onLoggedToday: (logged) {
-        setState(() => _loggedToday = logged);
+        setState(() {
+          _loggedToday = logged;
+          _scenario = StudioScenario.custom;
+        });
         _syncLoggedData();
         _note(logged ? "Logged today's check-in" : "Cleared today's check-in");
       },
       onRegenerate: () {
-        setState(() => _logGeneration += 1);
+        setState(() {
+          _logGeneration += 1;
+          _scenario = StudioScenario.custom;
+        });
         _syncLoggedData();
         _note('Regenerated logged data');
       },

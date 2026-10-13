@@ -32,6 +32,7 @@ void main() {
     await tester.ensureVisible(find.text('Scenario preset'));
     await tester.tap(find.text('Scenario preset'));
     await tester.pump();
+    expect(find.text('Custom'), findsOneWidget);
     expect(find.text('Variable cycle'), findsOneWidget);
     expect(find.text('New to Ritu (no cycles yet)'), findsOneWidget);
 
@@ -54,5 +55,21 @@ void main() {
     expect(find.text('Scenario includes'), findsOneWidget);
     expect(find.text('6 completed cycles'), findsOneWidget);
     expect(find.text('Export'), findsOneWidget);
+  });
+
+  testWidgets('editing cycle history switches the preset to Custom', (
+    tester,
+  ) async {
+    await _pumpStudio(tester);
+
+    await tester.ensureVisible(find.text('Cycle history'));
+    await tester.tap(find.text('Cycle history'));
+    await tester.pump();
+    await tester.ensureVisible(find.text('Add cycle'));
+    await tester.tap(find.text('Add cycle'));
+    await tester.pump();
+
+    expect(find.text('Custom'), findsOneWidget);
+    expect(find.text('Regular cycle'), findsNothing);
   });
 }

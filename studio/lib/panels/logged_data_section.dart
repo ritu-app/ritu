@@ -89,7 +89,11 @@ class LoggedDataSection extends StatelessWidget {
   }
 }
 
-String loggedJournalBody(JournalDensity density, int generation) {
-  if (!density.includesToday) return '';
+String loggedJournalBody(
+  JournalDensity density,
+  int generation, {
+  required bool includeToday,
+}) {
+  if (!includeToday) return '';
   return journalReflection(generation, 0);
 }

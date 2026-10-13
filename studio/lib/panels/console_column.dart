@@ -82,7 +82,7 @@ class ConsoleColumn extends StatelessWidget {
             date: date,
             window: window,
             cycleDay: historyDraft.currentCycleDay,
-            maxCycleDay: scenario.maxCycleDay,
+            maxCycleDay: historyDraft.maxCycleDay,
             onDate: onDate,
             onWindow: onWindow,
             onCycleDay: onCycleDay,

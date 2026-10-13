@@ -19,19 +19,28 @@ void main() {
     expect(days, threeCycles + 1);
   });
 
-  test('full still exceeds three default cycles when history is short', () {
+  test('logs and journal stay inside the cycle history window', () {
     final partial = CycleHistoryDraft.fromPreset(CyclePreset.partial1);
     final empty = CycleHistoryDraft(currentCycleDay: 1, rows: const []);
+    final regular = CycleHistoryDraft.fromPreset(CyclePreset.regular);
+
+    expect(DailyLogDensity.full.pastDays(partial), partial.historyPastDays);
+    expect(DailyLogDensity.sparse.pastDays(partial), partial.historyPastDays);
+    expect(DailyLogDensity.full.pastDays(empty), 0);
+    expect(DailyLogDensity.none.pastDays(empty), 0);
+    expect(JournalDensity.daily.pastEntries(empty), 0);
+    expect(JournalDensity.daily.logsToday(empty), isFalse);
 
     expect(
-      DailyLogDensity.full.pastDays(partial),
-      greaterThan(CyclePreset.defaultCycleLength * 3),
+      JournalDensity.daily.pastEntries(regular),
+      regular.historyPastDays,
     );
+    expect(JournalDensity.occasional.pastEntries(regular), 3);
     expect(
-      DailyLogDensity.full.pastDays(empty),
-      CyclePreset.defaultCycleLength * 3 + 1,
+      JournalDensity.occasional.pastEntries(partial) <= partial.historyPastDays,
+      isTrue,
     );
-    expect(DailyLogDensity.none.pastDays(empty), 0);
+    expect(JournalDensity.daily.logsToday(regular), isTrue);
   });
 
   test('sparse covers more than two cycles and less than three', () {
@@ -48,19 +57,6 @@ void main() {
 
     expect(days, greaterThan(twoCycles));
     expect(days, lessThan(threeCycles));
-    expect(
-      DailyLogDensity.sparse.pastDays(
-        CycleHistoryDraft(currentCycleDay: 1, rows: const []),
-      ),
-      greaterThan(CyclePreset.defaultCycleLength * 2),
-    );
-    expect(
-      DailyLogDensity.sparse.pastDays(
-        CycleHistoryDraft(currentCycleDay: 1, rows: const []),
-      ),
-      lessThan(CyclePreset.defaultCycleLength * 3),
-    );
+    expect(days, lessThan(regular.historyPastDays));
   });
 }
-
-final regularDraft = CycleHistoryDraft.fromPreset(CyclePreset.regular);

@@ -4,6 +4,7 @@ import 'cycle_presets.dart';
 /// Scenarios shown in the playground. A subset of [CyclePreset], plus an
 /// empty history and an open current period.
 enum StudioScenario {
+  custom('Custom'),
   regularCycle('Regular cycle'),
   variableCycle('Variable cycle'),
   unpredictableCycle('Unpredictable cycle'),
@@ -25,18 +26,12 @@ enum StudioScenario {
     return label.substring(0, end);
   }
 
-  /// Furthest cycle day the playground slider can reach.
-  int get maxCycleDay => switch (this) {
-    StudioScenario.regularCycle ||
-    StudioScenario.threeCycles ||
-    StudioScenario.periodInProgress => 30,
-    StudioScenario.variableCycle => 35,
-    StudioScenario.unpredictableCycle => 40,
-    StudioScenario.newToRitu => 28,
-  };
-
   CycleHistoryDraft historyDraft() {
     return switch (this) {
+      StudioScenario.custom => CycleHistoryDraft(
+        currentCycleDay: 1,
+        rows: const [],
+      ),
       StudioScenario.regularCycle => CycleHistoryDraft.fromPreset(
         CyclePreset.regular,
       ),
