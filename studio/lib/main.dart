@@ -328,7 +328,7 @@ class _CycleStudioShellState extends State<CycleStudioShell> {
                   const SizedBox(height: 640, child: PreviewPanel()),
                   const SizedBox(height: 28),
                   readout,
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 20),
                   RecentChangesCard(changes: _changes),
                   const SizedBox(height: 28),
                   footer,
@@ -354,29 +354,15 @@ class _CycleStudioShellState extends State<CycleStudioShell> {
                       const Expanded(child: PreviewPanel()),
                       SizedBox(
                         width: 334,
-                        child: LayoutBuilder(
-                          builder: (context, column) {
-                            return SingleChildScrollView(
-                              child: ConstrainedBox(
-                                constraints: BoxConstraints(
-                                  minHeight: column.maxHeight,
-                                ),
-                                child: Column(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    readout,
-                                    Padding(
-                                      padding: const EdgeInsets.only(top: 16),
-                                      child: RecentChangesCard(
-                                        changes: _changes,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
+                        child: SingleChildScrollView(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              readout,
+                              const SizedBox(height: 20),
+                              RecentChangesCard(changes: _changes),
+                            ],
+                          ),
                         ),
                       ),
                     ],
@@ -432,10 +418,15 @@ class _StudioHeader extends StatelessWidget {
       children: [
         Row(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('Ritu', style: StudioText.displayTitle),
             const SizedBox(width: 8),
-            Text('Cycle Studio', style: StudioText.wordmark),
+            // Figma centers an 18px "Cycle Studio" box on the 42px "Ritu" line.
+            Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: Text('Cycle Studio', style: StudioText.wordmark),
+            ),
           ],
         ),
         Text('Interactive playground', style: StudioText.eyebrow),
@@ -458,7 +449,7 @@ class _StudioHeader extends StatelessWidget {
     }
 
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [title, const Spacer(), links],
     );
   }
