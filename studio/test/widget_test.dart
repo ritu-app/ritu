@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ritu_studio/main.dart';
@@ -71,5 +72,32 @@ void main() {
 
     expect(find.text('Custom'), findsOneWidget);
     expect(find.text('Regular cycle'), findsNothing);
+  });
+
+  testWidgets('the phone frame turns toward the pointer', (tester) async {
+    await _pumpStudio(tester);
+
+    final frame = find.byKey(const Key('frame'));
+    expect(frame, findsOneWidget);
+    final center = tester.getCenter(frame);
+    final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    await gesture.addPointer(location: center);
+    addTearDown(gesture.removePointer);
+    await gesture.moveTo(center + const Offset(90, -30));
+    for (var i = 0; i < 24; i++) {
+      await tester.pump(const Duration(milliseconds: 16));
+    }
+
+    final tilting = tester
+        .widgetList<Transform>(
+          find.ancestor(of: frame, matching: find.byType(Transform)),
+        )
+        .firstWhere((transform) => transform.transform.storage[11].abs() > 0);
+    expect(tilting.transform.entry(0, 0), lessThan(0.999));
+
+    await gesture.moveTo(const Offset(8, 8));
+    for (var i = 0; i < 30; i++) {
+      await tester.pump(const Duration(milliseconds: 16));
+    }
   });
 }
