@@ -264,6 +264,61 @@ void main() {
     expect(find.text('Cycle length is consistent'), findsOneWidget);
   });
 
+  testWidgets(
+    'shows the variable explanation on every tab and the range on overview',
+    (tester) async {
+      await pumpInsights(
+        tester,
+        loggedDays: 14,
+        snapshot: snapshotFor(
+          classification: CycleClassification.variable,
+          sample: const [24, 28, 33],
+          completedCycles: 3,
+        ),
+        periodStarts: [
+          DateTime(2026, 9, 1),
+          DateTime(2026, 9, 6),
+          DateTime(2026, 9, 11),
+        ],
+      );
+
+      expect(find.text('How insights work for you'), findsOneWidget);
+      expect(find.text('Cycle length varies - 24 to 33 days'), findsOneWidget);
+      expect(find.text('3 cycles recorded'), findsOneWidget);
+      expect(find.text('Consistency is powerful'), findsNothing);
+      expect(find.text('Cycle length is consistent'), findsNothing);
+      expect(find.text('Low energy 5–8 days before your period'), findsNothing);
+      expect(
+        tester.getTopLeft(find.text('How insights work for you')).dy,
+        lessThan(tester.getTopLeft(find.text('Wellbeing over time')).dy),
+      );
+      expect(
+        tester.getTopLeft(find.text('Key insights')).dy,
+        lessThan(
+          tester
+              .getTopLeft(find.text('Cycle length varies - 24 to 33 days'))
+              .dy,
+        ),
+      );
+
+      for (final tab in [
+        ('Mood', 'Mood over time'),
+        ('Energy', 'Energy over time'),
+        ('Body', 'Body signals over time'),
+      ]) {
+        await tester.tap(find.text(tab.$1));
+        await tester.pump();
+        expect(find.text('How insights work for you'), findsOneWidget);
+        expect(find.text('Cycle length varies - 24 to 33 days'), findsNothing);
+        expect(find.text('Key insights'), findsNothing);
+        expect(
+          tester.getTopLeft(find.text('How insights work for you')).dy,
+          lessThan(tester.getTopLeft(find.text(tab.$2)).dy),
+        );
+      }
+    },
+  );
+
   testWidgets('uses the singular day label for a one-day threshold', (
     tester,
   ) async {
