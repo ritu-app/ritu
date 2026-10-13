@@ -55,8 +55,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     super.initState();
     final now = DateTime.now();
     _calendarMonth = DateTime(now.year, now.month);
-    _notificationLaunchSub =
-        DailyLogNotificationNavigation.requests.listen((_) {
+    _notificationLaunchSub = DailyLogNotificationNavigation.requests.listen((
+      _,
+    ) {
       _openDailyLogFromNotification();
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -109,17 +110,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       );
     }
     if (profile == null || profile.onboardingCompletedAt == null) {
-      return const Scaffold(
-        body: Center(child: Text('Profile not found')),
-      );
+      return const Scaffold(body: Center(child: Text('Profile not found')));
     }
 
     final name = profile.displayName;
     final snapshot = snapshotAsync.valueOrNull;
     final latest = latestAsync.valueOrNull;
     final sampleCycleLengths = snapshot?.sample ?? const [];
-    final lastPeriodLabel =
-        latest == null ? null : formatShortMonthDay(latest.startedOn);
+    final lastPeriodLabel = latest == null
+        ? null
+        : formatShortMonthDay(latest.startedOn);
     final cycleLength =
         snapshot?.effectiveCycleLength ?? snapshot?.mean?.round();
     final classification =
@@ -158,13 +158,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   classification: classification,
                   todayPhase: snapshot?.todayPhase,
                   sampleCycleLengths: sampleCycleLengths,
-                  onBleed: snapshot?.todayPhase == CyclePhase.menstrual &&
+                  onBleed:
+                      snapshot?.todayPhase == CyclePhase.menstrual &&
                       classification == CycleClassification.unpredictable,
                   patternDaysLogged: loggedDaysCount.clamp(
                     0,
                     widget.patternDaysRequired,
                   ),
                   patternDaysRequired: widget.patternDaysRequired,
+                  insightsReady: loggedDaysCount >= widget.patternDaysRequired,
+                  onOpenInsights: () => setState(() => _tabIndex = 1),
                   showSpeedUpBanner: showSpeedUpBanner,
                   selectedMood: _selectedMood,
                   moods: _moods,
@@ -233,6 +236,8 @@ class _HomeTab extends StatelessWidget {
     this.onBleed = false,
     required this.patternDaysLogged,
     required this.patternDaysRequired,
+    required this.insightsReady,
+    required this.onOpenInsights,
     required this.showSpeedUpBanner,
     required this.selectedMood,
     required this.moods,
@@ -259,6 +264,8 @@ class _HomeTab extends StatelessWidget {
   final bool onBleed;
   final int patternDaysLogged;
   final int patternDaysRequired;
+  final bool insightsReady;
+  final VoidCallback onOpenInsights;
   final bool showSpeedUpBanner;
   final String? selectedMood;
   final List<(String, String)> moods;
@@ -330,7 +337,10 @@ class _HomeTab extends StatelessWidget {
                 onLogToday: onLogToday,
               )
             : _LoggedTodayCard(entry: todayLog!, onEdit: onLogToday),
-        if (patternDaysLogged > 0) ...[
+        if (insightsReady) ...[
+          const SizedBox(height: 12),
+          _InsightsReadyCard(onOpenInsights: onOpenInsights),
+        ] else if (patternDaysLogged > 0) ...[
           const SizedBox(height: 12),
           _PatternsCard(
             daysLogged: patternDaysLogged,
@@ -388,7 +398,8 @@ class _StatusCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hasPeriod = cycleDay != null && lastPeriodLabel != null;
-    final showPhaseCard = hasPeriod &&
+    final showPhaseCard =
+        hasPeriod &&
         (classification == CycleClassification.regular ||
             classification == CycleClassification.variable);
     if (showPhaseCard) {
@@ -532,10 +543,7 @@ class _PhaseStatusCard extends StatelessWidget {
       RituColors.gradientLilac1,
       RituColors.gradientLilac2,
     ],
-    _ => const [
-      RituColors.gradientMl1,
-      RituColors.gradientMl2,
-    ],
+    _ => const [RituColors.gradientMl1, RituColors.gradientMl2],
   };
 
   String get _illustrationAsset => switch (todayPhase) {
@@ -545,9 +553,8 @@ class _PhaseStatusCard extends StatelessWidget {
     _ => _follicularAsset,
   };
 
-  String get _daySubtitle => _isMenstrual
-      ? 'days into your period'
-      : 'days into your cycle';
+  String get _daySubtitle =>
+      _isMenstrual ? 'days into your period' : 'days into your cycle';
 
   String get _footerLeading {
     if (_isMenstrual && effectiveCycleLength != null) {
@@ -699,10 +706,7 @@ class _UnpredictableStatusCard extends StatelessWidget {
         gradient: const LinearGradient(
           begin: Alignment(-0.95, -0.25),
           end: Alignment(0.95, 0.35),
-          colors: [
-            RituColors.gradientBe1,
-            RituColors.gradientBe2,
-          ],
+          colors: [RituColors.gradientBe1, RituColors.gradientBe2],
         ),
       ),
       child: Column(
@@ -1082,6 +1086,80 @@ class _MoodChip extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _InsightsReadyCard extends StatelessWidget {
+  const _InsightsReadyCard({required this.onOpenInsights});
+
+  final VoidCallback onOpenInsights;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: RituColors.fillAccent,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onOpenInsights,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Your first insights are ready 🎉',
+                style: GoogleFonts.dmSans(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  height: 24 / 15,
+                  color: RituColors.textPrimary,
+                ),
+              ),
+              Text(
+                'Ritu has noticed something in your first two weeks. '
+                'Open insights to see what your data is saying.',
+                style: GoogleFonts.dmSans(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w400,
+                  height: 20 / 13,
+                  color: RituColors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                height: 36,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: RituColors.terracottaButton,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'See insights',
+                      style: GoogleFonts.dmSans(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        height: 20 / 13,
+                        color: RituColors.textInverse,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    const Icon(
+                      LucideIcons.arrowRight,
+                      size: 16,
+                      color: RituColors.textInverse,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

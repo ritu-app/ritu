@@ -6,6 +6,7 @@ abstract final class RituColors {
   static const Color sage600 = Color(0xFF4F7765);
   static const Color meadow600 = Color(0xFF6FA17C);
   static const Color textPositive = Color(0xFF588164);
+
   /// Positive card outline (Figma border-positive).
   static const Color borderPositive = Color(0xFF8DBE9A);
   static const Color neutral500 = Color(0xFFA9A19B);
@@ -20,16 +21,21 @@ abstract final class RituColors {
   static const Color borderDisabled = Color(0xFFDADADA);
   static const Color fillElevated = Color(0xFFFFFFFF);
   static const Color fillSecondary = Color(0xFFEDF5F0);
+
   /// Sage pill / badge fill (Figma fill-secondary-hover).
   static const Color fillSecondaryHover = Color(0xFFB9D3C0);
   static const Color fillMuted = Color(0xFFEFEFEF);
   static const Color fillSubtle = Color(0xFFF9F7F4);
   static const Color fillAccent = Color(0xFFEFD8CE);
+
+  /// Primary action on the peach insights-ready card (Figma terracotta-button).
+  static const Color terracottaButton = Color(0xFF825E4D);
   static const Color fillInfo = Color(0xFFE1DAF0);
   static const Color fillPositiveSecondary = Color(0xFFF3FBF5);
   static const Color fillAttentionSecondary = Color(0xFFFFFBEF);
   static const Color fillInfoSecondary = Color(0xFFF8F6FC);
   static const Color fillCriticalSecondary = Color(0xFFFCF4F4);
+
   /// Warning / delete callout surface (Figma fill-critical).
   static const Color fillCritical = Color(0xFFEFD0D0);
   static const Color iconAttention = Color(0xFFC49A3A);
@@ -37,6 +43,7 @@ abstract final class RituColors {
   static const Color iconCritical = Color(0xFFC45C5C);
   static const Color textCritical = Color(0xFF945959);
   static const Color fillBrandPressed = Color(0xFF416252);
+
   /// Insights history heatmap (Figma heatmap/low, okay, high, no-data).
   static const Color heatmapLow = Color(0xFFDDBEAD);
   static const Color heatmapOkay = Color(0xFFF5D985);
@@ -47,18 +54,23 @@ abstract final class RituColors {
   static const Color gradientSh1 = Color(0xFF5F8F7A);
   static const Color gradientSh2 = Color(0xFFAFCDB8);
   static const Color gradientSh3 = Color(0xFFE4C6B8);
+
   /// Meadow-light gradient (Regular follicular hero).
   static const Color gradientMl1 = Color(0xFF30473A);
   static const Color gradientMl2 = Color(0xFF588164);
+
   /// Rose-whisper gradient (Regular menstrual hero).
   static const Color gradientRw1 = Color(0xFF583333);
   static const Color gradientRw2 = Color(0xFF945959);
+
   /// Golden-hour gradient (Regular ovulatory hero).
   static const Color gradientGh1 = Color(0xFF624D22);
   static const Color gradientGh2 = Color(0xFFB09149);
+
   /// Moonlit-lilac gradient (Regular luteal hero).
   static const Color gradientLilac1 = Color(0xFF474056);
   static const Color gradientLilac2 = Color(0xFF7E7393);
+
   /// Blush-embrace gradient (Unpredictable hero).
   static const Color gradientBe1 = Color(0xFF6D5049);
   static const Color gradientBe2 = Color(0xFFB58C7D);

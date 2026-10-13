@@ -213,77 +213,65 @@ void main() {
     }
   }
 
-  rituTestWidgets(
-    'Regular user in ovulatory phase sees golden header',
-    (tester) async {
-      await seedRegularHistory();
+  rituTestWidgets('Regular user in ovulatory phase sees golden header', (
+    tester,
+  ) async {
+    await seedRegularHistory();
 
-      await tester.pumpWidget(
-        createRituApp(
-          database: database,
-          simulatedToday: DateTime(2026, 4, 14),
-        ),
-      );
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(
+      createRituApp(database: database, simulatedToday: DateTime(2026, 4, 14)),
+    );
+    await tester.pumpAndSettle();
 
-      expect(find.text('Ovulatory phase'), findsOneWidget);
-      expect(find.text('days into your cycle'), findsOneWidget);
-      expect(find.text('Last period Apr 1'), findsOneWidget);
-      expect(find.text('Next period Apr 29'), findsOneWidget);
-      expect(
-        find.image(const AssetImage('assets/images/phase_ovulatory.png')),
-        findsOneWidget,
-      );
-    },
-  );
+    expect(find.text('Ovulatory phase'), findsOneWidget);
+    expect(find.text('days into your cycle'), findsOneWidget);
+    expect(find.text('Last period Apr 1'), findsOneWidget);
+    expect(find.text('Next period Apr 29'), findsOneWidget);
+    expect(
+      find.image(const AssetImage('assets/images/phase_ovulatory.png')),
+      findsOneWidget,
+    );
+  });
 
-  rituTestWidgets(
-    'Regular user in menstrual phase sees rose header',
-    (tester) async {
-      await seedRegularHistory();
+  rituTestWidgets('Regular user in menstrual phase sees rose header', (
+    tester,
+  ) async {
+    await seedRegularHistory();
 
-      await tester.pumpWidget(
-        createRituApp(
-          database: database,
-          simulatedToday: DateTime(2026, 4, 3),
-        ),
-      );
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(
+      createRituApp(database: database, simulatedToday: DateTime(2026, 4, 3)),
+    );
+    await tester.pumpAndSettle();
 
-      expect(find.text('Menstrual phase'), findsOneWidget);
-      expect(find.text('days into your period'), findsOneWidget);
-      expect(find.text('28 day cycle'), findsOneWidget);
-      expect(find.text('Next period Apr 29'), findsOneWidget);
-      expect(
-        find.image(const AssetImage('assets/images/phase_menstrual.png')),
-        findsOneWidget,
-      );
-    },
-  );
+    expect(find.text('Menstrual phase'), findsOneWidget);
+    expect(find.text('days into your period'), findsOneWidget);
+    expect(find.text('28 day cycle'), findsOneWidget);
+    expect(find.text('Next period Apr 29'), findsOneWidget);
+    expect(
+      find.image(const AssetImage('assets/images/phase_menstrual.png')),
+      findsOneWidget,
+    );
+  });
 
-  rituTestWidgets(
-    'Regular user in luteal phase sees lilac header',
-    (tester) async {
-      await seedRegularHistory();
+  rituTestWidgets('Regular user in luteal phase sees lilac header', (
+    tester,
+  ) async {
+    await seedRegularHistory();
 
-      await tester.pumpWidget(
-        createRituApp(
-          database: database,
-          simulatedToday: DateTime(2026, 4, 26),
-        ),
-      );
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(
+      createRituApp(database: database, simulatedToday: DateTime(2026, 4, 26)),
+    );
+    await tester.pumpAndSettle();
 
-      expect(find.text('Luteal phase'), findsOneWidget);
-      expect(find.text('days into your cycle'), findsOneWidget);
-      expect(find.text('Last period Apr 1'), findsOneWidget);
-      expect(find.text('Next period Apr 29'), findsOneWidget);
-      expect(
-        find.image(const AssetImage('assets/images/phase_luteal.png')),
-        findsOneWidget,
-      );
-    },
-  );
+    expect(find.text('Luteal phase'), findsOneWidget);
+    expect(find.text('days into your cycle'), findsOneWidget);
+    expect(find.text('Last period Apr 1'), findsOneWidget);
+    expect(find.text('Next period Apr 29'), findsOneWidget);
+    expect(
+      find.image(const AssetImage('assets/images/phase_luteal.png')),
+      findsOneWidget,
+    );
+  });
 
   Future<void> seedVariableHistory() async {
     final profiles = DriftProfileRepository(database);
@@ -310,32 +298,31 @@ void main() {
     }
   }
 
-  rituTestWidgets(
-    'Variable user sees estimated phase and next-period range',
-    (tester) async {
-      await seedVariableHistory();
-      final latest = await DriftPeriodRepository(database).getLatest();
-      final lastStart = dateOnly(latest!.startedOn);
-      final today = lastStart.add(const Duration(days: 8)); // cycle day 9
+  rituTestWidgets('Variable user sees estimated phase and next-period range', (
+    tester,
+  ) async {
+    await seedVariableHistory();
+    final latest = await DriftPeriodRepository(database).getLatest();
+    final lastStart = dateOnly(latest!.startedOn);
+    final today = lastStart.add(const Duration(days: 8)); // cycle day 9
 
-      await tester.pumpWidget(
-        createRituApp(database: database, simulatedToday: today),
-      );
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(
+      createRituApp(database: database, simulatedToday: today),
+    );
+    await tester.pumpAndSettle();
 
-      expect(find.text('~Follicular phase'), findsOneWidget);
-      expect(find.text('days into your cycle'), findsOneWidget);
-      expect(
-        find.text('Last period ${formatShortMonthDay(lastStart)}'),
-        findsOneWidget,
-      );
-      // shortest 21 / longest 35 from last start
-      final early = lastStart.add(const Duration(days: 21));
-      final late = lastStart.add(const Duration(days: 35));
-      final expectedRange = formatEstimatedShortMonthDayRange(early, late);
-      expect(find.text('Next period $expectedRange'), findsOneWidget);
-    },
-  );
+    expect(find.text('~Follicular phase'), findsOneWidget);
+    expect(find.text('days into your cycle'), findsOneWidget);
+    expect(
+      find.text('Last period ${formatShortMonthDay(lastStart)}'),
+      findsOneWidget,
+    );
+    // shortest 21 / longest 35 from last start
+    final early = lastStart.add(const Duration(days: 21));
+    final late = lastStart.add(const Duration(days: 35));
+    final expectedRange = formatEstimatedShortMonthDayRange(early, late);
+    expect(find.text('Next period $expectedRange'), findsOneWidget);
+  });
 
   rituTestWidgets('Delete Data clears profile and returns to splash', (
     tester,
@@ -524,7 +511,9 @@ void main() {
     );
   });
 
-  rituTestWidgets('Period History from Settings adds past dates', (tester) async {
+  rituTestWidgets('Period History from Settings adds past dates', (
+    tester,
+  ) async {
     final profiles = DriftProfileRepository(database);
     final periods = DriftPeriodRepository(database);
     await profiles.upsertDisplayName('Maya');
@@ -604,72 +593,72 @@ void main() {
 
     final past = await periods.getPastStartedOn();
     expect(past, [pastStart]);
-    expect(
-      dateOnly((await periods.getLatest())!.startedOn),
-      latestStart,
-    );
+    expect(dateOnly((await periods.getLatest())!.startedOn), latestStart);
     final all = await periods.getAll();
     expect(all.last.source, PeriodSources.manual);
     expect(all.where((p) => p.isManual), hasLength(1));
     expect(all.where((p) => !p.isManual), hasLength(1));
   });
 
-  rituTestWidgets('Custom Symptoms from Settings adds and removes body signals', (
-    tester,
-  ) async {
-    final profiles = DriftProfileRepository(database);
-    await profiles.upsertDisplayName('Maya');
-    await profiles.markOnboardingCompleted();
+  rituTestWidgets(
+    'Custom Symptoms from Settings adds and removes body signals',
+    (tester) async {
+      final profiles = DriftProfileRepository(database);
+      await profiles.upsertDisplayName('Maya');
+      await profiles.markOnboardingCompleted();
 
-    await tester.pumpWidget(createRituApp(database: database));
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(createRituApp(database: database));
+      await tester.pumpAndSettle();
 
-    await tester.tap(find.byIcon(LucideIcons.settings));
-    await tester.pumpAndSettle();
+      await tester.tap(find.byIcon(LucideIcons.settings));
+      await tester.pumpAndSettle();
 
-    expect(find.text('Add your own symptoms to track'), findsOneWidget);
+      expect(find.text('Add your own symptoms to track'), findsOneWidget);
 
-    await tester.tap(find.text('Custom Symptoms'));
-    await tester.pumpAndSettle();
+      await tester.tap(find.text('Custom Symptoms'));
+      await tester.pumpAndSettle();
 
-    expect(find.text('Add your own body signals'), findsOneWidget);
-    final addButton = find.widgetWithText(OutlinedButton, 'Add body signal');
-    expect(addButton, findsOneWidget);
+      expect(find.text('Add your own body signals'), findsOneWidget);
+      final addButton = find.widgetWithText(OutlinedButton, 'Add body signal');
+      expect(addButton, findsOneWidget);
 
-    await tester.enterText(find.byType(TextField), 'Leg pain');
-    await tester.pump();
-    await tester.tap(addButton);
-    await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), 'Leg pain');
+      await tester.pump();
+      await tester.tap(addButton);
+      await tester.pumpAndSettle();
 
-    expect(find.text('Leg pain'), findsOneWidget);
-    expect(find.byType(TextField), findsOneWidget);
-    expect(
-      tester.widget<TextField>(find.byType(TextField)).controller!.text,
-      isEmpty,
-    );
+      expect(find.text('Leg pain'), findsOneWidget);
+      expect(find.byType(TextField), findsOneWidget);
+      expect(
+        tester.widget<TextField>(find.byType(TextField)).controller!.text,
+        isEmpty,
+      );
 
-    await tester.enterText(find.byType(TextField), 'Bacne');
-    await tester.pump();
-    await tester.tap(addButton);
-    await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), 'Bacne');
+      await tester.pump();
+      await tester.tap(addButton);
+      await tester.pumpAndSettle();
 
-    expect(find.text('Bacne'), findsOneWidget);
+      expect(find.text('Bacne'), findsOneWidget);
 
-    final symptomRepository = DriftSymptomRepository(database);
-    final stored = await symptomRepository.getAll();
-    expect(stored.map((s) => s.name), ['Leg pain', 'Bacne']);
+      final symptomRepository = DriftSymptomRepository(database);
+      final stored = await symptomRepository.getAll();
+      expect(stored.map((s) => s.name), ['Leg pain', 'Bacne']);
 
-    await tester.tap(find.byIcon(LucideIcons.x).first);
-    await tester.pumpAndSettle();
+      await tester.tap(find.byIcon(LucideIcons.x).first);
+      await tester.pumpAndSettle();
 
-    expect(find.text('Leg pain'), findsNothing);
-    expect(await symptomRepository.getAll(), hasLength(1));
+      expect(find.text('Leg pain'), findsNothing);
+      expect(await symptomRepository.getAll(), hasLength(1));
 
-    await tester.tap(find.widgetWithIcon(IconButton, LucideIcons.chevronLeft));
-    await tester.pumpAndSettle();
+      await tester.tap(
+        find.widgetWithIcon(IconButton, LucideIcons.chevronLeft),
+      );
+      await tester.pumpAndSettle();
 
-    expect(find.text('1 added'), findsOneWidget);
-  });
+      expect(find.text('1 added'), findsOneWidget);
+    },
+  );
 
   rituTestWidgets('Skipping every Log today step does not count as logged', (
     tester,
@@ -815,10 +804,9 @@ void main() {
       flowIntensity: 'Light',
       moods: const ['Focused'],
     );
-    await DriftJournalEntryRepository(database).upsert(
-      loggedOn: DateTime.now(),
-      body: 'Already logged this morning',
-    );
+    await DriftJournalEntryRepository(
+      database,
+    ).upsert(loggedOn: DateTime.now(), body: 'Already logged this morning');
 
     await tester.pumpWidget(createRituApp(database: database));
     await tester.pumpAndSettle();
@@ -845,47 +833,65 @@ void main() {
     expect(find.text('Already logged this morning'), findsOneWidget);
   });
 
-  rituTestWidgets(
-    'Patterns progress counts logged days, not past periods',
-    (tester) async {
-      final profiles = DriftProfileRepository(database);
-      final periods = DriftPeriodRepository(database);
-      final dailyLogs = DriftDailyLogRepository(database);
-      await profiles.upsertDisplayName('Maya');
-      await profiles.markOnboardingCompleted();
-      await periods.upsertPeriod(
-        startedOn: DateTime(2026, 6, 1),
-        endedOn: DateTime(2026, 6, 5),
-        source: PeriodSources.onboardingLast,
-      );
-      await periods.addPastStart(
-        startedOn: DateTime(2026, 5, 1),
-        typicalPeriodDays: 5,
-      );
-      await periods.addPastStart(
-        startedOn: DateTime(2026, 4, 1),
-        typicalPeriodDays: 5,
-      );
+  rituTestWidgets('Patterns progress counts logged days, not past periods', (
+    tester,
+  ) async {
+    final profiles = DriftProfileRepository(database);
+    final periods = DriftPeriodRepository(database);
+    final dailyLogs = DriftDailyLogRepository(database);
+    await profiles.upsertDisplayName('Maya');
+    await profiles.markOnboardingCompleted();
+    await periods.upsertPeriod(
+      startedOn: DateTime(2026, 6, 1),
+      endedOn: DateTime(2026, 6, 5),
+      source: PeriodSources.onboardingLast,
+    );
+    await periods.addPastStart(
+      startedOn: DateTime(2026, 5, 1),
+      typicalPeriodDays: 5,
+    );
+    await periods.addPastStart(
+      startedOn: DateTime(2026, 4, 1),
+      typicalPeriodDays: 5,
+    );
 
-      await tester.pumpWidget(createRituApp(database: database));
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(createRituApp(database: database));
+    await tester.pumpAndSettle();
 
-      // Three periods logged, but zero daily logs yet — hide the card.
-      expect(find.text('Your patterns will appear here'), findsNothing);
-      expect(find.text('0 of 14 days – pattern unlock at 14'), findsNothing);
+    // Three periods logged, but zero daily logs yet — hide the card.
+    expect(find.text('Your patterns will appear here'), findsNothing);
+    expect(find.text('0 of 14 days – pattern unlock at 14'), findsNothing);
 
-      await dailyLogs.upsert(loggedOn: DateTime.now(), flowIntensity: 'Light');
+    await dailyLogs.upsert(loggedOn: DateTime.now(), flowIntensity: 'Light');
+    await dailyLogs.upsert(
+      loggedOn: DateTime.now().subtract(const Duration(days: 1)),
+      flowIntensity: 'Light',
+    );
+
+    await tester.pump();
+
+    expect(find.text('Your patterns will appear here'), findsOneWidget);
+    expect(find.text('2 of 14 days – pattern unlock at 14'), findsOneWidget);
+    expect(find.text('Your first insights are ready 🎉'), findsNothing);
+
+    for (var day = 2; day < 14; day++) {
       await dailyLogs.upsert(
-        loggedOn: DateTime.now().subtract(const Duration(days: 1)),
+        loggedOn: DateTime.now().subtract(Duration(days: day)),
         flowIntensity: 'Light',
       );
+    }
+    await tester.pump();
 
-      await tester.pump();
+    expect(find.text('Your first insights are ready 🎉'), findsOneWidget);
+    expect(find.text('Your patterns will appear here'), findsNothing);
+    expect(find.textContaining('pattern unlock at'), findsNothing);
 
-      expect(find.text('Your patterns will appear here'), findsOneWidget);
-      expect(find.text('2 of 14 days – pattern unlock at 14'), findsOneWidget);
-    },
-  );
+    await tester.tap(find.text('See insights'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Overview'), findsOneWidget);
+    expect(find.text('Your first insights are ready 🎉'), findsNothing);
+  });
 
   testWidgets('RituChoiceChip options in a Wrap lay out side by side', (
     tester,
@@ -919,10 +925,9 @@ void main() {
     expect(lightTopLeft.dx, greaterThan(spottingTopLeft.dx));
 
     final noneChipSize = tester.getSize(
-      find.ancestor(
-        of: find.text('None'),
-        matching: find.byType(Container),
-      ).first,
+      find
+          .ancestor(of: find.text('None'), matching: find.byType(Container))
+          .first,
     );
     expect(noneChipSize.width, lessThan(200));
   });
