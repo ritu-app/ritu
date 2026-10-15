@@ -87,6 +87,7 @@ flutter:
     - assets/images/journal_reflection.png
     - assets/images/about_hero.png
     - assets/images/summary_health.png
+    - assets/images/summary_ready.png
     - assets/images/phase_follicular.png
     - assets/images/phase_menstrual.png
     - assets/images/phase_ovulatory.png

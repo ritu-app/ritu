@@ -198,6 +198,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 3 => SummaryScreen(
                   loggedDaysCount: loggedDaysCount,
                   patternDaysRequired: widget.patternDaysRequired,
+                  completedCycles: snapshot?.completedCycles ?? 0,
                 ),
                 _ => _PlaceholderTab(label: _tabLabel(_tabIndex)),
               },
