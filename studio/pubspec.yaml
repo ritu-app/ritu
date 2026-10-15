@@ -51,7 +51,8 @@ flutter:
 
   uses-material-design: true
 
-  # Ritu screens load images as `assets/images/…` from the root bundle.
-  # Symlinks reuse the main app's PNGs at that path (see assets/images/).
+  # Ritu screens load images and PDF fonts as `assets/…` from the root bundle.
+  # Symlinks reuse the main app's files at that path (see assets/).
   assets:
     - assets/images/
+    - assets/fonts/

@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:ritu/data/models/journal_entry.dart';
 import 'package:ritu/features/summary/generate_summary_sheet.dart';
+import 'package:ritu/providers/daily_log_providers.dart';
 import 'package:ritu/providers/journal_entry_providers.dart';
 import 'package:ritu/providers/period_providers.dart';
 import 'package:ritu/providers/simulated_today_provider.dart';
@@ -29,6 +30,7 @@ void main() {
             (ref) => Stream.value(entries),
           ),
           allPeriodsProvider.overrideWith((ref) => Stream.value(const [])),
+          allDailyLogsProvider.overrideWith((ref) => Stream.value(const [])),
         ],
         child: MaterialApp(
           theme: buildRituTheme(),

@@ -5,12 +5,15 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/date_format.dart';
 import '../../data/models/journal_entry.dart';
+import '../../providers/daily_log_providers.dart';
 import '../../providers/journal_entry_providers.dart';
 import '../../providers/period_providers.dart';
 import '../../providers/simulated_today_provider.dart';
 import '../../theme/ritu_colors.dart';
 import '../journal/journal_entry_card.dart';
 import '../setup/widgets/ritu_calendar.dart';
+import 'preparing_summary_screen.dart';
+import 'summary_report.dart';
 import 'summary_time_range.dart';
 
 enum _SummaryPage { options, dates, journals }
@@ -112,6 +115,7 @@ class _GenerateSummarySheetState extends ConsumerState<_GenerateSummarySheet> {
     final periods = ref.watch(allPeriodsProvider).valueOrNull ?? const [];
     final entries =
         ref.watch(allJournalEntriesProvider).valueOrNull ?? const [];
+    final logs = ref.watch(allDailyLogsProvider).valueOrNull ?? const [];
     final periodStarts = [for (final period in periods) period.startedOn];
     final window = summaryWindow(
       range: _range,
@@ -182,6 +186,36 @@ class _GenerateSummarySheetState extends ConsumerState<_GenerateSummarySheet> {
                     _journalDraft = {...selectedInRange};
                     _page = _SummaryPage.journals;
                   }),
+                  onGenerate: () {
+                    final request = SummaryReportRequest(
+                      window: window,
+                      generatedOn: today,
+                      includes: SummaryIncludes(
+                        cycleLength: _cycleLength,
+                        moodPatterns: _moodPatterns,
+                        energyPatterns: _energyPatterns,
+                        bodySignals: _bodySignals,
+                        sleepLogs: _sleepLogs,
+                        wellbeingScore: _wellbeingScore,
+                        journalEntries: _journalEntries,
+                      ),
+                      journalIds: _journalEntries
+                          ? {...selectedInRange}
+                          : const {},
+                    );
+                    final navigator = Navigator.of(context);
+                    navigator.pop();
+                    navigator.push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => PreparingSummaryScreen(
+                          request: request,
+                          logs: logs,
+                          periods: periods,
+                          journals: entries,
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
               _SummaryPage.dates => _DateRangePage(
@@ -270,6 +304,7 @@ class _OptionsPage extends StatelessWidget {
     required this.onToggleWellbeing,
     required this.onToggleJournal,
     required this.onChooseJournals,
+    required this.onGenerate,
   });
 
   final SummaryTimeRange range;
@@ -291,6 +326,7 @@ class _OptionsPage extends StatelessWidget {
   final VoidCallback onToggleWellbeing;
   final VoidCallback onToggleJournal;
   final VoidCallback onChooseJournals;
+  final VoidCallback onGenerate;
 
   @override
   Widget build(BuildContext context) {
@@ -393,7 +429,7 @@ class _OptionsPage extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
           child: FilledButton(
-            onPressed: () {},
+            onPressed: onGenerate,
             child: const Text('Generate PDF'),
           ),
         ),
