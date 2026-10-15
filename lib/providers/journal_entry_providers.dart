@@ -18,6 +18,10 @@ final journalEntryByDateProvider =
       .watchByDate(dateOnly(date));
 });
 
+final allJournalEntriesProvider = StreamProvider<List<JournalEntry>>((ref) {
+  return ref.watch(journalEntryRepositoryProvider).watchAll();
+});
+
 final pastJournalEntriesProvider = StreamProvider<List<JournalEntry>>((ref) {
   return ref.watch(journalEntryRepositoryProvider).watchPastEntries(
         before: ref.watch(simulatedTodayProvider),

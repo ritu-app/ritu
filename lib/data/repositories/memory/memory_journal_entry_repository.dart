@@ -29,6 +29,14 @@ class MemoryJournalEntryRepository implements JournalEntryRepository {
   }
 
   @override
+  Stream<List<JournalEntry>> watchAll() async* {
+    yield await getAll();
+    await for (final _ in _store.journalEntriesChanges) {
+      yield await getAll();
+    }
+  }
+
+  @override
   Future<List<JournalEntry>> getPastEntries({
     required DateTime before,
     int limit = 50,

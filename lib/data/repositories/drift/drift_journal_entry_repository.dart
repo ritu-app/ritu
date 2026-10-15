@@ -47,6 +47,14 @@ class DriftJournalEntryRepository implements JournalEntryRepository {
   }
 
   @override
+  Stream<List<JournalEntry>> watchAll() {
+    return (_db.select(_db.journalEntries)
+          ..orderBy([(t) => OrderingTerm.desc(t.loggedOn)]))
+        .watch()
+        .map((rows) => rows.map(_mapEntry).toList());
+  }
+
+  @override
   Future<List<JournalEntry>> getPastEntries({
     required DateTime before,
     int limit = 50,

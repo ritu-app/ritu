@@ -56,6 +56,11 @@ String formatShortMonthDay(DateTime date) {
   return '${_shortMonths[date.month - 1]} ${date.day}';
 }
 
+/// e.g. Aug 17, 2026 — abbreviated month with year (summary date range).
+String formatShortMonthDayYear(DateTime date) {
+  return '${formatShortMonthDay(date)}, ${date.year}';
+}
+
 /// e.g. Sep — abbreviated month only (insights history rows).
 String formatShortMonth(DateTime date) => _shortMonths[date.month - 1];
 

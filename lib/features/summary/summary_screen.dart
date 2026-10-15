@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../theme/ritu_colors.dart';
+import 'generate_summary_sheet.dart';
 
 /// Summary tab.
 ///
@@ -17,7 +18,6 @@ class SummaryScreen extends StatelessWidget {
     this.loggedDaysCount = 0,
     this.patternDaysRequired = 14,
     this.completedCycles = 0,
-    this.onGenerateSummary,
   });
 
   /// Total calendar days with a saved daily log (drives empty vs progress UI).
@@ -27,11 +27,6 @@ class SummaryScreen extends StatelessWidget {
   /// Completed cycles from the cycle engine. Zero keeps the early-days note
   /// on the unlocked summary.
   final int completedCycles;
-
-  /// Generate summary is visible once logging unlocks the tab. The report
-  /// flow itself is wired by the caller. The button stays enabled when this
-  /// is omitted.
-  final VoidCallback? onGenerateSummary;
 
   static const _heroBackground = Color(0xFFF5EFF6);
   static const _heroBorder = Color(0xFFE2DDD8);
@@ -76,7 +71,7 @@ class SummaryScreen extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
       children: [
         const _SummaryHeader(),
-        if (_unlocked) ..._unlockedChildren() else ..._lockedChildren(),
+        if (_unlocked) ..._unlockedChildren(context) else ..._lockedChildren(),
       ],
     );
   }
@@ -95,7 +90,7 @@ class SummaryScreen extends StatelessWidget {
     ];
   }
 
-  List<Widget> _unlockedChildren() {
+  List<Widget> _unlockedChildren(BuildContext context) {
     final showEarlyDays = completedCycles < 1;
     return [
       const SizedBox(height: 16),
@@ -109,7 +104,8 @@ class SummaryScreen extends StatelessWidget {
       ),
       const SizedBox(height: 12),
       Text(
-        'Bring together your logs and cycle into one meaningful summary',
+        'Bring together your journal, mood, sleep, body signals '
+        'and cycle into one meaningful summary',
         textAlign: TextAlign.center,
         style: GoogleFonts.dmSans(
           fontSize: 13,
@@ -124,7 +120,7 @@ class SummaryScreen extends StatelessWidget {
       ],
       const SizedBox(height: 20),
       FilledButton(
-        onPressed: onGenerateSummary ?? () {},
+        onPressed: () => showGenerateSummarySheet(context),
         child: const Text('Generate summary'),
       ),
       const SizedBox(height: 20),

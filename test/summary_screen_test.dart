@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ritu/features/summary/summary_screen.dart';
+import 'package:ritu/providers/journal_entry_providers.dart';
+import 'package:ritu/providers/period_providers.dart';
+import 'package:ritu/providers/simulated_today_provider.dart';
 import 'package:ritu/theme/ritu_theme.dart';
 
 void main() {
@@ -9,20 +13,27 @@ void main() {
     required int loggedDays,
     int completedCycles = 0,
     int patternDaysRequired = 14,
-    VoidCallback? onGenerateSummary,
   }) async {
     await tester.binding.setSurfaceSize(const Size(390, 2000));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
     await tester.pumpWidget(
-      MaterialApp(
-        theme: buildRituTheme(),
-        home: Scaffold(
-          body: SummaryScreen(
-            loggedDaysCount: loggedDays,
-            patternDaysRequired: patternDaysRequired,
-            completedCycles: completedCycles,
-            onGenerateSummary: onGenerateSummary,
+      ProviderScope(
+        overrides: [
+          simulatedTodayProvider.overrideWithValue(DateTime(2026, 8, 20)),
+          allJournalEntriesProvider.overrideWith(
+            (ref) => Stream.value(const []),
+          ),
+          allPeriodsProvider.overrideWith((ref) => Stream.value(const [])),
+        ],
+        child: MaterialApp(
+          theme: buildRituTheme(),
+          home: Scaffold(
+            body: SummaryScreen(
+              loggedDaysCount: loggedDays,
+              patternDaysRequired: patternDaysRequired,
+              completedCycles: completedCycles,
+            ),
           ),
         ),
       ),
@@ -47,7 +58,8 @@ void main() {
     expect(find.text('Your first summary is on the way'), findsNothing);
     expect(
       find.text(
-        'Bring together your logs and cycle into one meaningful summary',
+        'Bring together your journal, mood, sleep, body signals '
+        'and cycle into one meaningful summary',
       ),
       findsOneWidget,
     );
@@ -69,13 +81,7 @@ void main() {
   testWidgets('drops the early-days note after a completed cycle', (
     tester,
   ) async {
-    var taps = 0;
-    await pumpSummary(
-      tester,
-      loggedDays: 20,
-      completedCycles: 1,
-      onGenerateSummary: () => taps++,
-    );
+    await pumpSummary(tester, loggedDays: 20, completedCycles: 1);
 
     expect(find.text('Still early days'), findsNothing);
     expect(find.text('Generate summary'), findsOneWidget);
@@ -85,6 +91,10 @@ void main() {
     );
 
     await tester.tap(find.text('Generate summary'));
-    expect(taps, 1);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.text('Choose what to include in your summary'), findsOneWidget);
+    expect(find.text('Generate PDF'), findsOneWidget);
   });
 }
