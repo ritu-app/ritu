@@ -555,6 +555,41 @@ void main() {
     expect(find.text('Export format'), findsNothing);
   });
 
+  rituTestWidgets('FAQ opens in place without the feedback box', (
+    tester,
+  ) async {
+    final profiles = DriftProfileRepository(database);
+    await profiles.upsertDisplayName('Maya');
+    await profiles.markOnboardingCompleted();
+
+    await tester.pumpWidget(createRituApp(database: database));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(LucideIcons.settings));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('Help & Support'), 200);
+    await tester.tap(find.text('Help & Support'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('How does Ritu read my cycle?'), findsOneWidget);
+    expect(find.text('How does Ritu predict my cycle?'), findsNothing);
+    expect(find.textContaining("doesn't predict"), findsOneWidget);
+    expect(find.textContaining('real data behind them'), findsNothing);
+    expect(find.text('What’s on your mind'), findsNothing);
+    expect(find.text('Tell us in detail...'), findsNothing);
+    expect(find.text('Send feedback'), findsNothing);
+    expect(find.byType(TextField), findsNothing);
+
+    await tester.tap(find.text("Why don't I have insights yet?"));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('real data behind them'), findsOneWidget);
+    expect(find.textContaining("doesn't predict"), findsNothing);
+
+    await tester.drag(find.byType(ListView), const Offset(0, -500));
+    await tester.pumpAndSettle();
+    expect(find.text('support@ritu.care'), findsOneWidget);
+  });
+
   rituTestWidgets('Ended period history shows Last period', (tester) async {
     final profiles = DriftProfileRepository(database);
     final periods = DriftPeriodRepository(database);
@@ -795,8 +830,9 @@ void main() {
 
     expect(find.text('How are you feeling?'), findsOneWidget);
     expect(
-      (await DriftDailyLogRepository(database).getByDate(DateTime.now()))
-          ?.flowIntensity,
+      (await DriftDailyLogRepository(
+        database,
+      ).getByDate(DateTime.now()))?.flowIntensity,
       'Light',
     );
 
@@ -890,8 +926,9 @@ void main() {
 
     expect(find.text('Light flow'), findsOneWidget);
     expect(
-      (await DriftDailyLogRepository(database).getByDate(DateTime.now()))
-          ?.flowIntensity,
+      (await DriftDailyLogRepository(
+        database,
+      ).getByDate(DateTime.now()))?.flowIntensity,
       'Light',
     );
   });

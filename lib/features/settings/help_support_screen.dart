@@ -5,7 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../theme/ritu_colors.dart';
 
-/// Figma 490:1391 — Settings → Help & Support (FAQ + feedback).
+/// Figma 490:1391 — Settings → Help & Support.
 class HelpSupportScreen extends StatefulWidget {
   const HelpSupportScreen({super.key});
 
@@ -18,58 +18,44 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
 
   static const _faqs = <({String question, String answer})>[
     (
-      question: 'How does Ritu predict my cycle?',
+      question: 'How does Ritu read my cycle?',
       answer:
-          'Ritu estimates your cycle day and next period from the period starts you’ve logged and your typical cycle length. Predictions get steadier as you log more cycles.',
+          "Ritu doesn't predict - it reflects. Using the period dates you've logged over time, it looks at how consistent your cycle lengths have been and describes that as Regular, Variable, or Unpredictable. It's a plain-language read of your own history, not a forecast of what's ahead.",
     ),
     (
-      question: 'Why don\'t I have insights yet?',
+      question: "Why don't I have insights yet?",
       answer:
-          'Insights unlock as you build a logging history. Keep tracking daily check-ins so Ritu can learn your patterns over time.',
+          "Insights only show up once there's real data behind them. Ritu never fills gaps with guesses. Some insights need just a handful of logged days; cycle-level patterns need at least one full logged cycle, and full classification needs a few cycles of history. Keep logging, and each insight appears as soon as it has something real to show.",
     ),
     (
-      question: 'Can I edit my past log?',
+      question: 'Can I edit my past period date?',
       answer:
-          'Yes. Open a past day from Home or Journal to review and update what you logged.',
+          "Yes - head to Settings, where you can update a past period date and mark whether it's exact or your best guess.",
     ),
     (
-      question: 'How do I export a report?',
+      question: 'How do I export a summary?',
       answer:
-          'Go to Settings → Export Data to download a JSON copy of your on-device data. PDF and CSV exports are coming later.',
+          'Open your latest summary from the Summary tab and tap Export to save it as a PDF. Summary only include sections backed by real data, so what you export always matches what Ritu actually knows from your logs.',
     ),
     (
       question: 'Can Ritu see my data? Is it safe?',
       answer:
-          'No. Everything stays on this device only — there’s no account and no cloud sync. Your journal and logs never leave your phone unless you export them.',
+          "Your logs stay on your device - there's no account, and nobody at Ritu can see your data. Anything you write in Journal is completely private and never used to shape your patterns; only your structured entries, like period dates, mood, and energy, are read to build your insights.",
     ),
     (
-      question:
-          'What happens to my data if I lose my phone or change phones?',
+      question: 'What happens to my data if I lose my phone or change phones?',
       answer:
-          'Because data is stored only on your phone, it won’t move automatically. Export a backup from Settings before switching devices, then import it on the new one.',
+          "Ritu doesn't back up to the cloud automatically. You can export your data anytime and it'll save to your phone - from there, it's yours to upload to your own cloud storage as a backup. If you get a new phone or reinstall Ritu, you can bring that data back in by importing the file, either during onboarding or later from Settings.",
     ),
   ];
 
-  final _feedbackController = TextEditingController();
-  var _feedback = '';
-  var _sending = false;
+  int? _expanded = 0;
 
-  bool get _canSend => !_sending && _feedback.trim().isNotEmpty;
-
-  @override
-  void dispose() {
-    _feedbackController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _openMail({String? body}) async {
+  Future<void> _openMail() async {
     final uri = Uri(
       scheme: 'mailto',
       path: _supportEmail,
-      queryParameters: {
-        'subject': 'Ritu feedback',
-        if (body != null && body.isNotEmpty) 'body': body,
-      },
+      queryParameters: const {'subject': 'Ritu feedback'},
     );
     final launched = await launchUrl(uri);
     if (!launched && mounted) {
@@ -79,29 +65,8 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
     }
   }
 
-  Future<void> _sendFeedback() async {
-    if (!_canSend) return;
-    setState(() => _sending = true);
-    try {
-      await _openMail(body: _feedback.trim());
-      if (!mounted) return;
-      _feedbackController.clear();
-      setState(() => _feedback = '');
-    } finally {
-      if (mounted) setState(() => _sending = false);
-    }
-  }
-
-  void _openFaq(int index) {
-    final faq = _faqs[index];
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => _FaqAnswerScreen(
-          question: faq.question,
-          answer: faq.answer,
-        ),
-      ),
-    );
+  void _toggleFaq(int index) {
+    setState(() => _expanded = _expanded == index ? null : index);
   }
 
   @override
@@ -152,8 +117,10 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                         for (var i = 0; i < _faqs.length; i++) ...[
                           _FaqRow(
                             question: _faqs[i].question,
+                            answer: _faqs[i].answer,
+                            expanded: _expanded == i,
                             showDivider: i < _faqs.length - 1,
-                            onTap: () => _openFaq(i),
+                            onTap: () => _toggleFaq(i),
                           ),
                         ],
                       ],
@@ -171,240 +138,62 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                   ),
                   const SizedBox(height: 16),
                   _Card(
-                    padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Text(
-                          'What’s on your mind',
-                          style: GoogleFonts.dmSans(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w500,
-                            height: 24 / 15,
-                            color: RituColors.textSecondary,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Container(
-                          height: 125,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
-                          ),
-                          decoration: BoxDecoration(
-                            color: RituColors.fillElevated,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: RituColors.borderSubtle),
-                          ),
-                          child: Theme(
-                            data: Theme.of(context).copyWith(
-                              inputDecorationTheme: const InputDecorationTheme(
-                                filled: false,
-                                border: InputBorder.none,
-                                enabledBorder: InputBorder.none,
-                                focusedBorder: InputBorder.none,
-                                disabledBorder: InputBorder.none,
-                                errorBorder: InputBorder.none,
-                                focusedErrorBorder: InputBorder.none,
-                                contentPadding: EdgeInsets.zero,
-                                isDense: true,
-                              ),
-                            ),
-                            child: TextField(
-                              controller: _feedbackController,
-                              onChanged: (value) =>
-                                  setState(() => _feedback = value),
-                              maxLines: null,
-                              expands: true,
-                              textAlignVertical: TextAlignVertical.top,
-                              cursorColor: RituColors.sage500,
-                              style: GoogleFonts.dmSans(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w500,
-                                height: 20 / 13,
-                                color: RituColors.textPrimary,
-                              ),
-                              decoration: InputDecoration(
-                                isDense: true,
-                                isCollapsed: true,
-                                filled: false,
-                                border: InputBorder.none,
-                                enabledBorder: InputBorder.none,
-                                focusedBorder: InputBorder.none,
-                                disabledBorder: InputBorder.none,
-                                errorBorder: InputBorder.none,
-                                focusedErrorBorder: InputBorder.none,
-                                contentPadding: EdgeInsets.zero,
-                                hintText: 'Tell us in detail...',
-                                hintStyle: GoogleFonts.dmSans(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w500,
-                                  height: 20 / 13,
-                                  color: RituColors.textDisabled,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        SizedBox(
-                          height: 36,
-                          child: FilledButton(
-                            onPressed: _canSend ? _sendFeedback : null,
-                            style: FilledButton.styleFrom(
-                              backgroundColor: RituColors.sage500,
-                              disabledBackgroundColor:
-                                  RituColors.sage500.withValues(alpha: 0.4),
-                              foregroundColor: RituColors.white,
-                              disabledForegroundColor: RituColors.white,
-                              elevation: 0,
-                              padding: EdgeInsets.zero,
-                              shape: const StadiumBorder(),
-                              textStyle: GoogleFonts.dmSans(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                height: 20 / 13,
-                              ),
-                            ),
-                            child: _sending
-                                ? const SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: RituColors.white,
-                                    ),
-                                  )
-                                : const Text('Send feedback'),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  _Card(
                     padding: const EdgeInsets.all(16),
                     child: GestureDetector(
                       behavior: HitTestBehavior.opaque,
                       onTap: () => _openMail(),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 32,
-                            height: 32,
-                            decoration: BoxDecoration(
-                              color: RituColors.fillPositiveSecondary,
-                              borderRadius: BorderRadius.circular(8),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 32,
+                              height: 32,
+                              decoration: BoxDecoration(
+                                color: RituColors.fillPositiveSecondary,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              alignment: Alignment.center,
+                              child: const Icon(
+                                LucideIcons.mail,
+                                size: 16,
+                                color: RituColors.sage600,
+                              ),
                             ),
-                            alignment: Alignment.center,
-                            child: const Icon(
-                              LucideIcons.mail,
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Email us at',
+                                    style: GoogleFonts.dmSans(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w500,
+                                      height: 18 / 11,
+                                      color: RituColors.textTertiary,
+                                    ),
+                                  ),
+                                  Text(
+                                    _supportEmail,
+                                    style: GoogleFonts.dmSans(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      height: 20 / 13,
+                                      color: RituColors.textPrimary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const Icon(
+                              LucideIcons.squareArrowOutUpRight,
                               size: 16,
-                              color: RituColors.sage600,
+                              color: RituColors.textDisabled,
                             ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Email us at',
-                                  style: GoogleFonts.dmSans(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w500,
-                                    height: 18 / 11,
-                                    color: RituColors.textTertiary,
-                                  ),
-                                ),
-                                Text(
-                                  _supportEmail,
-                                  style: GoogleFonts.dmSans(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                    height: 20 / 13,
-                                    color: RituColors.textPrimary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const Icon(
-                            LucideIcons.squareArrowOutUpRight,
-                            size: 16,
-                            color: RituColors.textDisabled,
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _FaqAnswerScreen extends StatelessWidget {
-  const _FaqAnswerScreen({
-    required this.question,
-    required this.answer,
-  });
-
-  final String question;
-  final String answer;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: RituColors.backgroundPage,
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: GestureDetector(
-                  onTap: () => Navigator.of(context).pop(),
-                  behavior: HitTestBehavior.opaque,
-                  child: const SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: Icon(
-                      LucideIcons.chevronLeft,
-                      size: 24,
-                      color: RituColors.textPrimary,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-                children: [
-                  Text(
-                    question,
-                    style: GoogleFonts.dmSans(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      height: 24 / 18,
-                      color: RituColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    answer,
-                    style: GoogleFonts.dmSans(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w400,
-                      height: 20 / 13,
-                      color: RituColors.textSecondary,
                     ),
                   ),
                 ],
@@ -441,11 +230,15 @@ class _Card extends StatelessWidget {
 class _FaqRow extends StatelessWidget {
   const _FaqRow({
     required this.question,
+    required this.answer,
+    required this.expanded,
     required this.showDivider,
     required this.onTap,
   });
 
   final String question;
+  final String answer;
+  final bool expanded;
   final bool showDivider;
   final VoidCallback onTap;
 
@@ -457,7 +250,7 @@ class _FaqRow extends StatelessWidget {
         onTap: onTap,
         child: Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 16),
+          padding: EdgeInsets.symmetric(vertical: expanded ? 8 : 16),
           decoration: showDivider
               ? const BoxDecoration(
                   border: Border(
@@ -468,26 +261,45 @@ class _FaqRow extends StatelessWidget {
                   ),
                 )
               : null,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Text(
-                  question,
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: Text(
+                      question,
+                      style: GoogleFonts.dmSans(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        height: 20 / 13,
+                        color: RituColors.textPrimary,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Icon(
+                    expanded
+                        ? LucideIcons.chevronDown
+                        : LucideIcons.chevronRight,
+                    size: 16,
+                    color: RituColors.textDisabled,
+                  ),
+                ],
+              ),
+              if (expanded) ...[
+                const SizedBox(height: 4),
+                Text(
+                  answer,
                   style: GoogleFonts.dmSans(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    height: 20 / 13,
-                    color: RituColors.textPrimary,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    height: 18 / 11,
+                    color: RituColors.textSecondary,
                   ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              const Icon(
-                LucideIcons.chevronRight,
-                size: 16,
-                color: RituColors.textDisabled,
-              ),
+              ],
             ],
           ),
         ),
