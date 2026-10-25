@@ -12,6 +12,7 @@ import 'package:ritu/data/repositories/drift/drift_period_repository.dart';
 import 'package:ritu/data/repositories/drift/drift_profile_repository.dart';
 import 'package:ritu/data/repositories/drift/drift_symptom_repository.dart';
 import 'package:ritu/data/repositories/period_repository.dart';
+import 'package:ritu/features/log/daily_log_flow.dart';
 import 'package:ritu/features/setup/widgets/choice_chips.dart';
 import 'package:ritu/theme/ritu_colors.dart';
 
@@ -661,7 +662,7 @@ void main() {
     },
   );
 
-  rituTestWidgets('Skipping every Log today step does not count as logged', (
+  rituTestWidgets('Next through an empty Log today does not count as logged', (
     tester,
   ) async {
     final profiles = DriftProfileRepository(database);
@@ -674,13 +675,44 @@ void main() {
     await tester.tap(find.text('Log today'));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Skip'));
+    expect(find.text('Skip'), findsNothing);
+    expect(find.text('Discard'), findsNothing);
+    expect(
+      find.descendant(
+        of: find.byType(DailyLogFlow),
+        matching: find.byIcon(LucideIcons.x),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: find.byType(DailyLogFlow),
+        matching: find.byIcon(LucideIcons.chevronLeft),
+      ),
+      findsNothing,
+    );
+
+    await tester.tap(find.widgetWithText(FilledButton, 'Next'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Skip'));
+    expect(
+      find.descendant(
+        of: find.byType(DailyLogFlow),
+        matching: find.byIcon(LucideIcons.x),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: find.byType(DailyLogFlow),
+        matching: find.byIcon(LucideIcons.chevronLeft),
+      ),
+      findsOneWidget,
+    );
+    await tester.tap(find.widgetWithText(FilledButton, 'Next'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Skip'));
+    await tester.tap(find.widgetWithText(FilledButton, 'Next'));
     await tester.pumpAndSettle();
-    expect(find.text('Notes'), findsOneWidget);
+    expect(find.text("Today's Reflection"), findsOneWidget);
     await tester.tap(find.widgetWithText(FilledButton, 'Save log'));
     await tester.pumpAndSettle();
 
@@ -693,6 +725,191 @@ void main() {
     expect(
       await DriftJournalEntryRepository(database).getByDate(DateTime.now()),
       isNull,
+    );
+  });
+
+  rituTestWidgets('Closing Log today discards an unsaved selection', (
+    tester,
+  ) async {
+    final profiles = DriftProfileRepository(database);
+    await profiles.upsertDisplayName('Maya');
+    await profiles.markOnboardingCompleted();
+
+    await tester.pumpWidget(createRituApp(database: database));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Log today'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(
+      find.descendant(
+        of: find.byType(DailyLogFlow),
+        matching: find.byIcon(LucideIcons.x),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Discard this log?'), findsNothing);
+    expect(find.text("Complete today's check-in"), findsOneWidget);
+
+    await tester.tap(find.text('Log today'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Spotting'));
+    await tester.pump();
+
+    await tester.state<NavigatorState>(find.byType(Navigator)).maybePop();
+    await tester.pump();
+    expect(find.text('Any flow today?'), findsOneWidget);
+
+    await tester.tap(
+      find.descendant(
+        of: find.byType(DailyLogFlow),
+        matching: find.byIcon(LucideIcons.x),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Discard this log?'), findsOneWidget);
+    expect(
+      find.text("What you've entered so far won't be saved."),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.text('Keep logging'));
+    await tester.pumpAndSettle();
+    expect(find.text('Any flow today?'), findsOneWidget);
+    expect(find.text('Discard this log?'), findsNothing);
+
+    await tester.tap(
+      find.descendant(
+        of: find.byType(DailyLogFlow),
+        matching: find.byIcon(LucideIcons.x),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Discard'));
+    await tester.pumpAndSettle();
+
+    expect(find.text("Complete today's check-in"), findsOneWidget);
+    expect(
+      await DriftDailyLogRepository(database).getByDate(DateTime.now()),
+      isNull,
+    );
+  });
+
+  rituTestWidgets('Next saves the current Log today step', (tester) async {
+    final profiles = DriftProfileRepository(database);
+    await profiles.upsertDisplayName('Maya');
+    await profiles.markOnboardingCompleted();
+
+    await tester.pumpWidget(createRituApp(database: database));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Log today'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Light'));
+    await tester.pump();
+    await tester.tap(find.widgetWithText(FilledButton, 'Next'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('How are you feeling?'), findsOneWidget);
+    expect(
+      (await DriftDailyLogRepository(database).getByDate(DateTime.now()))
+          ?.flowIntensity,
+      'Light',
+    );
+
+    await tester.tap(
+      find.descendant(
+        of: find.byType(DailyLogFlow),
+        matching: find.byIcon(LucideIcons.x),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Discard this log?'), findsOneWidget);
+    await tester.tap(find.text('Keep logging'));
+    await tester.pumpAndSettle();
+    expect(find.text('How are you feeling?'), findsOneWidget);
+
+    await tester.tap(
+      find.descendant(
+        of: find.byType(DailyLogFlow),
+        matching: find.byIcon(LucideIcons.x),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Discard'));
+    await tester.pumpAndSettle();
+
+    expect(find.text("Complete today's check-in"), findsOneWidget);
+    expect(
+      await DriftDailyLogRepository(database).getByDate(DateTime.now()),
+      isNull,
+    );
+    expect(
+      await DriftJournalEntryRepository(database).getByDate(DateTime.now()),
+      isNull,
+    );
+  });
+
+  rituTestWidgets('Discarding edits keeps the log that was already saved', (
+    tester,
+  ) async {
+    final profiles = DriftProfileRepository(database);
+    await profiles.upsertDisplayName('Maya');
+    await profiles.markOnboardingCompleted();
+    await DriftDailyLogRepository(
+      database,
+    ).upsert(loggedOn: DateTime.now(), flowIntensity: 'Light');
+
+    await tester.pumpWidget(createRituApp(database: database));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Edit'));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.descendant(
+        of: find.byType(DailyLogFlow),
+        matching: find.byIcon(LucideIcons.x),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Discard this log?'), findsNothing);
+    expect(find.text('Logged today'), findsOneWidget);
+
+    await tester.tap(find.text('Edit'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Heavy'));
+    await tester.pump();
+    expect(find.widgetWithText(FilledButton, 'Done'), findsOneWidget);
+    await tester.tap(find.widgetWithText(FilledButton, 'Done'));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.descendant(
+        of: find.byType(DailyLogFlow),
+        matching: find.byIcon(LucideIcons.x),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Discard your changes?'), findsOneWidget);
+    expect(find.text('Your original log stays as it was.'), findsOneWidget);
+    await tester.tap(find.text('Keep editing'));
+    await tester.pumpAndSettle();
+    expect(find.text('How are you feeling?'), findsOneWidget);
+
+    await tester.tap(
+      find.descendant(
+        of: find.byType(DailyLogFlow),
+        matching: find.byIcon(LucideIcons.x),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Discard changes'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Light flow'), findsOneWidget);
+    expect(
+      (await DriftDailyLogRepository(database).getByDate(DateTime.now()))
+          ?.flowIntensity,
+      'Light',
     );
   });
 
@@ -755,7 +972,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Step 4: notes + save.
-    expect(find.text('Notes'), findsOneWidget);
+    expect(find.text("Today's Reflection"), findsOneWidget);
     await tester.enterText(find.byType(TextField), 'Feeling okay today');
     await tester.pump();
     await tester.tap(find.widgetWithText(FilledButton, 'Save log'));
@@ -823,15 +1040,28 @@ void main() {
     );
     expect(light.selected, isTrue);
 
-    await tester.tap(find.widgetWithText(FilledButton, 'Next'));
+    await tester.tap(find.widgetWithText(FilledButton, 'Done'));
     await tester.pumpAndSettle();
     expect(find.text('Focused'), findsOneWidget);
 
-    await tester.tap(find.widgetWithText(FilledButton, 'Next'));
+    await tester.tap(find.widgetWithText(FilledButton, 'Done'));
     await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(FilledButton, 'Next'));
+    await tester.tap(find.widgetWithText(FilledButton, 'Done'));
     await tester.pumpAndSettle();
+    expect(find.text("Today's Reflection"), findsOneWidget);
+    expect(
+      find.text("Share anything you'd like to remember about today."),
+      findsOneWidget,
+    );
+    expect(
+      find.text('Every reflection is saved to your Journal'),
+      findsOneWidget,
+    );
     expect(find.text('Already logged this morning'), findsOneWidget);
+    expect(find.widgetWithText(FilledButton, 'Save changes'), findsOneWidget);
+    final reflectionField = tester.widget<TextField>(find.byType(TextField));
+    expect(reflectionField.decoration?.enabledBorder, InputBorder.none);
+    expect(reflectionField.decoration?.focusedBorder, InputBorder.none);
   });
 
   rituTestWidgets('Patterns progress counts logged days, not past periods', (
@@ -892,6 +1122,82 @@ void main() {
 
     expect(find.text('Overview'), findsOneWidget);
     expect(find.text('Your first insights are ready 🎉'), findsNothing);
+  });
+
+  rituTestWidgets('Mood log pills keep design gaps and show full labels', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    final profiles = DriftProfileRepository(database);
+    await profiles.upsertDisplayName('Maya');
+    await profiles.markOnboardingCompleted();
+
+    await tester.pumpWidget(createRituApp(database: database));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Log today'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Next'));
+    await tester.pumpAndSettle();
+
+    Rect chipRect(String label) {
+      return tester.getRect(
+        find
+            .ancestor(of: find.text(label), matching: find.byType(Container))
+            .first,
+      );
+    }
+
+    final highText = tester.getRect(find.text('High'));
+    final highChip = chipRect('High');
+    expect(highChip.height, 34);
+    expect(highText.left - highChip.left, greaterThanOrEqualTo(12));
+    expect(highChip.right - highText.right, greaterThanOrEqualTo(12));
+    expect(highText.top, greaterThanOrEqualTo(highChip.top));
+    expect(highText.bottom, lessThanOrEqualTo(highChip.bottom));
+    expect(highText.center.dy, closeTo(highChip.center.dy, 1));
+
+    final drained = chipRect('Drained');
+    final low = chipRect('Low');
+    expect(low.left - drained.right, closeTo(8, 0.1));
+    expect(low.top, drained.top);
+
+    final moderate = chipRect('Moderate');
+    if ((moderate.top - drained.top).abs() < 1) {
+      expect(moderate.left - low.right, closeTo(8, 0.1));
+      expect(highChip.top, drained.top);
+    } else {
+      expect(moderate.top - drained.bottom, closeTo(16, 0.1));
+    }
+    final vibrant = chipRect('Vibrant');
+    final vibrantAnchor = (highChip.top - drained.top).abs() < 1
+        ? highChip
+        : drained;
+    if ((vibrant.top - vibrantAnchor.top).abs() < 1) {
+      expect(vibrant.left, greaterThan(vibrantAnchor.right));
+    } else {
+      expect(vibrant.top - vibrantAnchor.bottom, closeTo(16, 0.1));
+    }
+
+    const moodLabels = [
+      'Calm',
+      'Irritable',
+      'Focused',
+      'Anxious',
+      'Flat',
+      'Sad',
+      'Happy',
+      'Overwhelmed',
+      'Content',
+      'Restless',
+    ];
+    final calm = chipRect('Calm');
+    final wrapped = moodLabels
+        .skip(1)
+        .map(chipRect)
+        .firstWhere((rect) => rect.top > calm.top + 1);
+    expect(wrapped.top - calm.bottom, closeTo(16, 0.1));
   });
 
   testWidgets('RituChoiceChip options in a Wrap lay out side by side', (

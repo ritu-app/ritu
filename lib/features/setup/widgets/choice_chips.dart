@@ -20,12 +20,24 @@ class RituChoiceChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final labelText = Text(
+      label,
+      softWrap: false,
+      style: GoogleFonts.dmSans(
+        fontSize: 13,
+        fontWeight: selected ? FontWeight.w500 : FontWeight.w400,
+        height: 20 / 13,
+        color: selected ? RituColors.textPrimary : RituColors.textMuted,
+      ),
+    );
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
         width: width,
         height: 34,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        alignment: width == null ? null : Alignment.center,
         decoration: BoxDecoration(
           color: selected ? RituColors.fillSecondary : RituColors.fillMuted,
           borderRadius: BorderRadius.circular(999),
@@ -33,16 +45,9 @@ class RituChoiceChip extends StatelessWidget {
             color: selected ? RituColors.sage600 : RituColors.borderDisabled,
           ),
         ),
-        alignment: width == null ? null : Alignment.center,
-        child: Text(
-          label,
-          style: GoogleFonts.dmSans(
-            fontSize: 13,
-            fontWeight: selected ? FontWeight.w500 : FontWeight.w400,
-            height: 20 / 13,
-            color: selected ? RituColors.textPrimary : RituColors.textMuted,
-          ),
-        ),
+        child: width == null
+            ? Row(mainAxisSize: MainAxisSize.min, children: [labelText])
+            : labelText,
       ),
     );
   }

@@ -41,4 +41,7 @@ abstract class DailyLogRepository {
     int? wellbeing,
     List<String> symptoms = const [],
   });
+
+  /// Removes the entry for [date], if one exists.
+  Future<void> deleteByDate(DateTime date);
 }

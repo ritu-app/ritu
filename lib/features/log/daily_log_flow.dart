@@ -15,6 +15,7 @@ import '../../theme/ritu_colors.dart';
 import '../setup/widgets/choice_chips.dart';
 import '../setup/widgets/progress_dots.dart';
 import 'widgets/add_symptom_dialog.dart';
+import 'widgets/discard_log_dialog.dart';
 import 'widgets/log_slider_card.dart';
 
 const _flowOptions = ['None', 'Spotting', 'Light', 'Medium', 'Heavy'];
@@ -49,6 +50,7 @@ const _presetSymptoms = [
 ];
 
 const _totalSteps = 4;
+const _headerIcon = Color(0xFF4C4744);
 
 /// Home "Log today" daily check-in — a 4-step wizard (flow, mood, body
 /// signals, notes). Structured answers upsert a
@@ -69,13 +71,29 @@ class _DailyLogFlowState extends ConsumerState<DailyLogFlow> {
   int _step = 0;
   var _hydrated = false;
   var _saving = false;
+  var _canPop = false;
+  var _confirmingDiscard = false;
+  var _hadExistingLog = false;
+  var _wroteStructured = false;
+  var _dbDiffersFromInitial = false;
+
+  String? _initialFlow;
+  int? _initialCramp;
+  var _initialMoods = <String>{};
+  String? _initialEnergy;
+  String? _initialSleep;
+  int? _initialWellbeing;
+  var _initialSymptoms = <String>{};
+  var _initialNotes = '';
 
   String? _flowIntensity;
   int? _crampIntensity;
+  var _crampSet = false;
   final _moods = <String>{};
   String? _energyLevel;
   String? _sleepQuality;
   int? _wellbeing;
+  var _wellbeingSet = false;
   final _symptoms = <String>{};
   var _customSymptomNames = const <String>[];
   late final TextEditingController _notesController;
@@ -108,17 +126,50 @@ class _DailyLogFlowState extends ConsumerState<DailyLogFlow> {
     _customSymptomNames =
         symptomsAsync.valueOrNull?.map((s) => s.name).toList() ?? [];
     final existing = logAsync.valueOrNull;
+    _hadExistingLog = existing != null;
     if (existing != null) {
       _flowIntensity = existing.flowIntensity;
       _crampIntensity = existing.crampIntensity;
+      _crampSet = existing.crampIntensity != null;
       _moods.addAll(existing.moods);
       _energyLevel = existing.energyLevel;
       _sleepQuality = existing.sleepQuality;
       _wellbeing = existing.wellbeing;
+      _wellbeingSet = existing.wellbeing != null;
       _symptoms.addAll(existing.symptoms);
     }
     _notesController.text = journalAsync.valueOrNull?.body ?? '';
+    _initialFlow = _flowIntensity;
+    _initialCramp = _crampSet ? _crampIntensity : null;
+    _initialMoods = Set.of(_moods);
+    _initialEnergy = _energyLevel;
+    _initialSleep = _sleepQuality;
+    _initialWellbeing = _wellbeingSet ? _wellbeing : null;
+    _initialSymptoms = Set.of(_symptoms);
+    _initialNotes = _notesController.text.trim();
   }
+
+  bool _sameMembers(Set<String> left, Set<String> right) {
+    return left.length == right.length && left.containsAll(right);
+  }
+
+  int? get _persistedCramp => _crampSet ? _crampIntensity : null;
+
+  int? get _persistedWellbeing => _wellbeingSet ? _wellbeing : null;
+
+  bool get _structuredDiffersFromInitial =>
+      _flowIntensity != _initialFlow ||
+      _persistedCramp != _initialCramp ||
+      !_sameMembers(_moods, _initialMoods) ||
+      _energyLevel != _initialEnergy ||
+      _sleepQuality != _initialSleep ||
+      _persistedWellbeing != _initialWellbeing ||
+      !_sameMembers(_symptoms, _initialSymptoms);
+
+  bool get _shouldConfirmDiscard =>
+      _structuredDiffersFromInitial ||
+      _notesController.text.trim() != _initialNotes ||
+      _dbDiffersFromInitial;
 
   bool get _hasStructuredAnswers =>
       _flowIntensity != null ||
@@ -135,17 +186,103 @@ class _DailyLogFlowState extends ConsumerState<DailyLogFlow> {
       if (!_presetSymptoms.contains(name)) name,
   ];
 
-  void _goNext() {
-    if (_step >= _totalSteps - 1) return;
-    setState(() => _step += 1);
+  bool get _currentStepHasAnswers => switch (_step) {
+    0 => _flowIntensity != null || _crampSet,
+    1 =>
+      _moods.isNotEmpty ||
+          _energyLevel != null ||
+          _sleepQuality != null ||
+          _wellbeingSet,
+    2 => _symptoms.isNotEmpty,
+    _ => false,
+  };
+
+  Future<void> _persistCurrentStep() async {
+    // Next writes the step only when something was chosen. An untouched
+    // step, including a slider left at its empty display value, is not stored.
+    if (!_currentStepHasAnswers) return;
+    await _persistStructured();
+  }
+
+  Future<void> _persistStructured() async {
+    await ref.read(dailyLogRepositoryProvider).upsert(
+      loggedOn: widget.date,
+      flowIntensity: _flowIntensity,
+      crampIntensity: _persistedCramp,
+      moods: _moods.toList(),
+      energyLevel: _energyLevel,
+      sleepQuality: _sleepQuality,
+      wellbeing: _persistedWellbeing,
+      symptoms: _symptoms.toList(),
+    );
+    _wroteStructured = true;
+    _dbDiffersFromInitial = _structuredDiffersFromInitial;
+  }
+
+  Future<void> _revertSessionWrite() async {
+    if (!_wroteStructured || !_dbDiffersFromInitial) return;
+    final repository = ref.read(dailyLogRepositoryProvider);
+    if (!_hadExistingLog) {
+      await repository.deleteByDate(widget.date);
+      return;
+    }
+    await repository.upsert(
+      loggedOn: widget.date,
+      flowIntensity: _initialFlow,
+      crampIntensity: _initialCramp,
+      moods: _initialMoods.toList(),
+      energyLevel: _initialEnergy,
+      sleepQuality: _initialSleep,
+      wellbeing: _initialWellbeing,
+      symptoms: _initialSymptoms.toList(),
+    );
+  }
+
+  Future<void> _advance() async {
+    if (_saving) return;
+    if (_step >= _totalSteps - 1) {
+      await _save();
+      return;
+    }
+    setState(() => _saving = true);
+    try {
+      await _persistCurrentStep();
+      if (!mounted) return;
+      setState(() => _step += 1);
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
   }
 
   void _goBack() {
-    if (_step == 0) {
-      Navigator.of(context).pop(false);
-      return;
-    }
+    if (_step == 0 || _saving) return;
     setState(() => _step -= 1);
+  }
+
+  Future<void> _close() async {
+    if (_saving || _confirmingDiscard) return;
+    if (_shouldConfirmDiscard) {
+      setState(() => _confirmingDiscard = true);
+      final discard = await showDiscardLogDialog(
+        context,
+        editing: _hadExistingLog,
+      );
+      if (!mounted) return;
+      setState(() => _confirmingDiscard = false);
+      if (!discard) return;
+      await _revertSessionWrite();
+      if (!mounted) return;
+    }
+    _leave(false);
+  }
+
+  void _leave(bool saved) {
+    if (!mounted) return;
+    setState(() => _canPop = true);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      Navigator.of(context).pop(saved);
+    });
   }
 
   Future<void> _addOwnSymptom() async {
@@ -167,24 +304,14 @@ class _DailyLogFlowState extends ConsumerState<DailyLogFlow> {
 
     final notes = _notesController.text.trim();
     final hasStructured = _hasStructuredAnswers;
-    // Skipping every step should not create an empty "logged" day.
+    // Moving through every step without a selection does not create a log.
     if (!hasStructured && notes.isEmpty) {
-      if (!mounted) return;
-      Navigator.of(context).pop(false);
+      _leave(false);
       return;
     }
 
     if (hasStructured) {
-      await ref.read(dailyLogRepositoryProvider).upsert(
-        loggedOn: widget.date,
-        flowIntensity: _flowIntensity,
-        crampIntensity: _crampIntensity,
-        moods: _moods.toList(),
-        energyLevel: _energyLevel,
-        sleepQuality: _sleepQuality,
-        wellbeing: _wellbeing,
-        symptoms: _symptoms.toList(),
-      );
+      await _persistStructured();
     }
     if (notes.isNotEmpty) {
       await ref.read(journalEntryRepositoryProvider).upsert(
@@ -192,8 +319,7 @@ class _DailyLogFlowState extends ConsumerState<DailyLogFlow> {
         body: notes,
       );
     }
-    if (!mounted) return;
-    Navigator.of(context).pop(true);
+    _leave(true);
   }
 
   @override
@@ -204,7 +330,7 @@ class _DailyLogFlowState extends ConsumerState<DailyLogFlow> {
     _maybeHydrate(logAsync, journalAsync, symptomsAsync);
 
     return PopScope(
-      canPop: false,
+      canPop: _canPop,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
         _goBack();
@@ -218,14 +344,15 @@ class _DailyLogFlowState extends ConsumerState<DailyLogFlow> {
                 )
               : Column(
                   children: [
-                    const SizedBox(height: 16),
-                    ProgressDots(
-                      currentStep: _step + 1,
-                      totalSteps: _totalSteps,
+                    const SizedBox(height: 8),
+                    _LogHeader(
+                      step: _step,
+                      onBack: _goBack,
+                      onClose: _close,
                     ),
                     Expanded(
                       child: SingleChildScrollView(
-                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                        padding: const EdgeInsets.fromLTRB(16, 24, 16, 24),
                         child: _buildStep(),
                       ),
                     ),
@@ -248,7 +375,10 @@ class _DailyLogFlowState extends ConsumerState<DailyLogFlow> {
         selected: _flowIntensity,
         onSelected: (v) => setState(() => _flowIntensity = v),
         crampIntensity: _crampIntensity ?? 0,
-        onCrampChanged: (v) => setState(() => _crampIntensity = v),
+        onCrampChanged: (v) => setState(() {
+          _crampIntensity = v;
+          _crampSet = true;
+        }),
       ),
       1 => _MoodStep(
         heading: 'How are you feeling?',
@@ -262,7 +392,10 @@ class _DailyLogFlowState extends ConsumerState<DailyLogFlow> {
         sleepQuality: _sleepQuality,
         onSleepSelected: (v) => setState(() => _sleepQuality = v),
         wellbeing: _wellbeing ?? 0,
-        onWellbeingChanged: (v) => setState(() => _wellbeing = v),
+        onWellbeingChanged: (v) => setState(() {
+          _wellbeing = v;
+          _wellbeingSet = true;
+        }),
       ),
       2 => _BodySignalsStep(
         heading: 'Any body signals?',
@@ -275,10 +408,8 @@ class _DailyLogFlowState extends ConsumerState<DailyLogFlow> {
         onAddOwn: _addOwnSymptom,
       ),
       _ => _NotesStep(
-        heading: 'Notes',
-        subtitle:
-            "Share anything you'd like to remember about today. Ritu learns "
-            'from these entries to identify patterns over time',
+        heading: "Today's Reflection",
+        subtitle: "Share anything you'd like to remember about today.",
         controller: _notesController,
       ),
     };
@@ -286,6 +417,9 @@ class _DailyLogFlowState extends ConsumerState<DailyLogFlow> {
 
   Widget _buildFooter() {
     final isLastStep = _step == _totalSteps - 1;
+    final label = _hadExistingLog
+        ? (isLastStep ? 'Save changes' : 'Done')
+        : (isLastStep ? 'Save log' : 'Next');
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -293,7 +427,7 @@ class _DailyLogFlowState extends ConsumerState<DailyLogFlow> {
           width: double.infinity,
           height: 48,
           child: FilledButton(
-            onPressed: isLastStep ? (_saving ? null : _save) : _goNext,
+            onPressed: _saving ? null : _advance,
             style: FilledButton.styleFrom(
               backgroundColor: RituColors.sage500,
               disabledBackgroundColor: RituColors.sage500.withValues(
@@ -310,30 +444,72 @@ class _DailyLogFlowState extends ConsumerState<DailyLogFlow> {
                 height: 24 / 15,
               ),
             ),
-            child: Text(isLastStep ? 'Save log' : 'Next'),
+            child: Text(label),
           ),
         ),
-        if (!isLastStep) ...[
-          const SizedBox(height: 16),
-          GestureDetector(
-            onTap: _goNext,
-            behavior: HitTestBehavior.opaque,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              child: Text(
-                'Skip',
-                textAlign: TextAlign.center,
-                style: GoogleFonts.dmSans(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
-                  height: 24 / 15,
-                  color: RituColors.textTertiary,
+      ],
+    );
+  }
+}
+
+class _LogHeader extends StatelessWidget {
+  const _LogHeader({
+    required this.step,
+    required this.onBack,
+    required this.onClose,
+  });
+
+  final int step;
+  final VoidCallback onBack;
+  final VoidCallback onClose;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: SizedBox(
+        height: 24,
+        child: Row(
+          children: [
+            SizedBox(
+              width: 24,
+              height: 24,
+              child: step == 0
+                  ? null
+                  : GestureDetector(
+                      onTap: onBack,
+                      behavior: HitTestBehavior.opaque,
+                      child: const Icon(
+                        LucideIcons.chevronLeft,
+                        size: 24,
+                        color: _headerIcon,
+                        semanticLabel: 'Back',
+                      ),
+                    ),
+            ),
+            Expanded(
+              child: ProgressDots(
+                currentStep: step + 1,
+                totalSteps: _totalSteps,
+              ),
+            ),
+            SizedBox(
+              width: 24,
+              height: 24,
+              child: GestureDetector(
+                onTap: onClose,
+                behavior: HitTestBehavior.opaque,
+                child: const Icon(
+                  LucideIcons.x,
+                  size: 24,
+                  color: _headerIcon,
+                  semanticLabel: 'Close',
                 ),
               ),
             ),
-          ),
-        ],
-      ],
+          ],
+        ),
+      ),
     );
   }
 }
@@ -399,7 +575,7 @@ class _FlowStep extends StatelessWidget {
         const SizedBox(height: 24),
         Wrap(
           spacing: 8,
-          runSpacing: 8,
+          runSpacing: 16,
           children: [
             for (final option in _flowOptions)
               RituChoiceChip(
@@ -455,7 +631,7 @@ class _MoodStep extends StatelessWidget {
         const SizedBox(height: 24),
         Wrap(
           spacing: 8,
-          runSpacing: 8,
+          runSpacing: 16,
           children: [
             for (final option in _moodOptions)
               RituChoiceChip(
@@ -467,10 +643,10 @@ class _MoodStep extends StatelessWidget {
         ),
         const SizedBox(height: 20),
         _SectionLabel('Energy level'),
-        const SizedBox(height: 8),
+        const SizedBox(height: 16),
         Wrap(
           spacing: 8,
-          runSpacing: 8,
+          runSpacing: 16,
           children: [
             for (final option in _energyOptions)
               RituChoiceChip(
@@ -482,10 +658,10 @@ class _MoodStep extends StatelessWidget {
         ),
         const SizedBox(height: 20),
         _SectionLabel('Sleep last night'),
-        const SizedBox(height: 8),
+        const SizedBox(height: 16),
         Wrap(
           spacing: 8,
-          runSpacing: 8,
+          runSpacing: 16,
           children: [
             for (final option in _sleepOptions)
               RituChoiceChip(
@@ -495,7 +671,7 @@ class _MoodStep extends StatelessWidget {
               ),
           ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 20),
         LogSliderCard(
           title: 'Overall wellbeing',
           value: wellbeing,
@@ -552,7 +728,7 @@ class _BodySignalsStep extends StatelessWidget {
         const SizedBox(height: 24),
         Wrap(
           spacing: 8,
-          runSpacing: 8,
+          runSpacing: 16,
           children: [
             for (final option in options)
               RituChoiceChip(
@@ -609,8 +785,9 @@ class _NotesStep extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _StepHeader(heading: heading, subtitle: subtitle),
-        const SizedBox(height: 24),
+        const SizedBox(height: 16),
         Container(
+          height: 140,
           decoration: BoxDecoration(
             color: RituColors.fillElevated,
             borderRadius: BorderRadius.circular(16),
@@ -619,8 +796,9 @@ class _NotesStep extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           child: TextField(
             controller: controller,
-            minLines: 5,
-            maxLines: 8,
+            expands: true,
+            maxLines: null,
+            textAlignVertical: TextAlignVertical.top,
             style: GoogleFonts.dmSans(
               fontSize: 15,
               fontWeight: FontWeight.w400,
@@ -629,7 +807,14 @@ class _NotesStep extends StatelessWidget {
             ),
             decoration: InputDecoration(
               isCollapsed: true,
+              filled: false,
+              contentPadding: EdgeInsets.zero,
               border: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              focusedBorder: InputBorder.none,
+              disabledBorder: InputBorder.none,
+              errorBorder: InputBorder.none,
+              focusedErrorBorder: InputBorder.none,
               hintText: "What's on your mind.....",
               hintStyle: GoogleFonts.dmSans(
                 fontSize: 15,
@@ -643,7 +828,7 @@ class _NotesStep extends StatelessWidget {
         const SizedBox(height: 12),
         Center(
           child: Text(
-            'Every note is saved to your Journal',
+            'Every reflection is saved to your Journal',
             style: GoogleFonts.dmSans(
               fontSize: 13,
               fontWeight: FontWeight.w500,

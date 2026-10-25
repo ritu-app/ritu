@@ -180,4 +180,12 @@ class DriftDailyLogRepository implements DailyLogRepository {
 
     return (await getByDate(day))!;
   }
+
+  @override
+  Future<void> deleteByDate(DateTime date) async {
+    final day = dateOnly(date);
+    await (_db.delete(
+      _db.dailyLogs,
+    )..where((t) => t.loggedOn.equals(day))).go();
+  }
 }

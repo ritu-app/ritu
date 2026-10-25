@@ -59,6 +59,16 @@ void main() {
     expect(logs.first.wellbeing, 2);
   });
 
+  test('deleteByDate removes that day only', () async {
+    await repository.upsert(loggedOn: DateTime.now(), flowIntensity: 'Light');
+    await repository.upsert(loggedOn: daysAgo(1), flowIntensity: 'Heavy');
+
+    await repository.deleteByDate(DateTime.now());
+
+    expect(await repository.getByDate(DateTime.now()), isNull);
+    expect((await repository.getByDate(daysAgo(1)))?.flowIntensity, 'Heavy');
+  });
+
   test('a gap in the middle only counts the most recent run', () async {
     await repository.upsert(loggedOn: daysAgo(10));
     await repository.upsert(loggedOn: daysAgo(1));

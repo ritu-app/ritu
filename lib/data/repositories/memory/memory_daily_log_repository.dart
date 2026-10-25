@@ -137,4 +137,10 @@ class MemoryDailyLogRepository implements DailyLogRepository {
     _store.notifyDailyLogs();
     return _store.dailyLogs[day]!;
   }
+
+  @override
+  Future<void> deleteByDate(DateTime date) async {
+    final removed = _store.dailyLogs.remove(dateOnly(date));
+    if (removed != null) _store.notifyDailyLogs();
+  }
 }
