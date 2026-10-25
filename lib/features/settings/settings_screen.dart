@@ -22,7 +22,6 @@ import 'edit_name_dialog.dart';
 import 'export_data_screen.dart';
 import 'help_support_screen.dart';
 import 'period_history_screen.dart';
-import 'period_started_screen.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -30,7 +29,6 @@ class SettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profileAsync = ref.watch(profileProvider);
-    final latestAsync = ref.watch(latestPeriodProvider);
     final pastAsync = ref.watch(pastPeriodStartsProvider);
     final symptomsAsync = ref.watch(customSymptomsProvider);
 
@@ -50,16 +48,12 @@ class SettingsScreen extends ConsumerWidget {
 
         final name = profile.displayName;
         final loggingSince = profile.onboardingCompletedAt!;
-        final periodStartedLabel = latestAsync.valueOrNull == null
-            ? null
-            : formatDisplayDate(latestAsync.valueOrNull!.startedOn);
         final pastPeriodCount = pastAsync.valueOrNull?.length ?? 0;
         final customSymptomCount = symptomsAsync.valueOrNull?.length ?? 0;
 
         return _SettingsBody(
           name: name,
           loggingSince: loggingSince,
-          periodStartedLabel: periodStartedLabel,
           pastPeriodCount: pastPeriodCount,
           customSymptomCount: customSymptomCount,
           onDeleteData: () => _openDeleteData(context),
@@ -81,7 +75,6 @@ class _SettingsBody extends ConsumerWidget {
   const _SettingsBody({
     required this.name,
     required this.loggingSince,
-    required this.periodStartedLabel,
     required this.pastPeriodCount,
     required this.customSymptomCount,
     required this.onDeleteData,
@@ -89,7 +82,6 @@ class _SettingsBody extends ConsumerWidget {
 
   final String name;
   final DateTime loggingSince;
-  final String? periodStartedLabel;
   final int pastPeriodCount;
   final int customSymptomCount;
   final VoidCallback onDeleteData;
@@ -118,14 +110,6 @@ class _SettingsBody extends ConsumerWidget {
     if (updated == null || !context.mounted) return;
     if (updated == name) return;
     await ref.read(profileRepositoryProvider).upsertDisplayName(updated);
-  }
-
-  Future<void> _editPeriodStarted(BuildContext context) async {
-    await Navigator.of(context).push<DateTime>(
-      MaterialPageRoute<DateTime>(
-        builder: (_) => const PeriodStartedScreen(),
-      ),
-    );
   }
 
   Future<void> _editPeriodHistory(BuildContext context) async {
@@ -221,27 +205,12 @@ class _SettingsBody extends ConsumerWidget {
                     _SettingsGroup(
                       children: [
                         _SettingsRow(
-                          icon: LucideIcons.calendar1,
-                          iconBackground: RituColors.fillPositiveSecondary,
-                          iconColor: RituColors.sage600,
-                          title: 'Period Started',
-                          subtitle: periodStartedLabel ?? 'Not set',
-                          onTap: () => _editPeriodStarted(context),
-                        ),
-                        _SettingsRow(
                           icon: LucideIcons.undo2,
                           iconBackground: RituColors.fillPositiveSecondary,
                           iconColor: RituColors.sage600,
                           title: 'Period History',
                           subtitle: _periodHistorySubtitle,
                           onTap: () => _editPeriodHistory(context),
-                        ),
-                        _SettingsRow(
-                          icon: LucideIcons.clock,
-                          iconBackground: RituColors.fillPositiveSecondary,
-                          iconColor: RituColors.sage600,
-                          title: 'Cycle Learning',
-                          subtitle: 'Unclassified – needs 3 cycles',
                         ),
                         _SettingsRow(
                           icon: LucideIcons.badgePlus,
@@ -265,22 +234,8 @@ class _SettingsBody extends ConsumerWidget {
                           iconColor: RituColors.iconAttention,
                           title: 'Daily Reminder',
                           subtitle: reminderSubtitle,
-                          onTap: () => _openDailyReminder(context),
-                        ),
-                        const _SettingsRow(
-                          icon: LucideIcons.sparkles,
-                          iconBackground: RituColors.fillAttentionSecondary,
-                          iconColor: RituColors.iconAttention,
-                          title: 'Insight Alerts',
-                          subtitle: 'When Ritu spots something new',
-                        ),
-                        const _SettingsRow(
-                          icon: LucideIcons.moon,
-                          iconBackground: RituColors.fillAttentionSecondary,
-                          iconColor: RituColors.iconAttention,
-                          title: 'Period Reminder',
-                          subtitle: 'A gentle nudge before your period',
                           showDivider: false,
+                          onTap: () => _openDailyReminder(context),
                         ),
                       ],
                     ),
@@ -305,13 +260,6 @@ class _SettingsBody extends ConsumerWidget {
                     const SizedBox(height: 8),
                     _SettingsGroup(
                       children: [
-                        const _SettingsRow(
-                          icon: LucideIcons.cloudUpload,
-                          iconBackground: RituColors.fillInfoSecondary,
-                          iconColor: RituColors.iconInfo,
-                          title: 'iCloud Backup',
-                          subtitle: 'Off',
-                        ),
                         _SettingsRow(
                           icon: LucideIcons.stickyNoteCheck,
                           iconBackground: RituColors.fillPositiveSecondary,
@@ -319,13 +267,6 @@ class _SettingsBody extends ConsumerWidget {
                           title: 'Export Data',
                           subtitle: 'Download a complete copy of everything',
                           onTap: () => _openExportData(context),
-                        ),
-                        const _SettingsRow(
-                          icon: LucideIcons.chartNoAxesCombined,
-                          iconBackground: RituColors.fillAttentionSecondary,
-                          iconColor: RituColors.iconAttention,
-                          title: 'Usage Analytics',
-                          subtitle: 'Helps improve Ritu – no personal data',
                         ),
                         _SettingsRow(
                           icon: LucideIcons.trash2,

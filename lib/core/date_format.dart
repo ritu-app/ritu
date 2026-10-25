@@ -17,7 +17,7 @@ String formatDisplayDate(DateTime date) {
   return '${months[date.month - 1]} ${date.day}, ${date.year}';
 }
 
-/// e.g. June 18 — full month name, no year (period history stats).
+/// e.g. June 18 — full month name, no year.
 String formatMonthDay(DateTime date) {
   const months = [
     'January',

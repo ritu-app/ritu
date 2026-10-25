@@ -353,6 +353,26 @@ void main() {
     await tester.tap(find.text('Delete all data'));
     await tester.pumpAndSettle();
 
+    expect(find.text('Are you sure?'), findsOneWidget);
+    expect(
+      find.text(
+        'Once deleted, your logs, journal entries, insights, and reports cannot be recovered.',
+      ),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Are you sure?'), findsNothing);
+    expect(find.text('Delete everything'), findsOneWidget);
+    expect(await profiles.getProfile(), isNotNull);
+
+    await tester.tap(find.text('Delete all data'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Permanently delete'));
+    await tester.pumpAndSettle();
+
     expect(find.text('Get started'), findsOneWidget);
     expect(await profiles.getProfile(), isNull);
   });
@@ -390,129 +410,6 @@ void main() {
     expect(find.text('Nora ✨'), findsOneWidget);
   });
 
-  rituTestWidgets('Editing period started from Settings updates latest log', (
-    tester,
-  ) async {
-    final profiles = DriftProfileRepository(database);
-    final periods = DriftPeriodRepository(database);
-    await profiles.upsertDisplayName('Maya');
-    await profiles.setTypicalPeriodDays(5);
-    await profiles.markOnboardingCompleted();
-    await periods.upsertPeriod(
-      startedOn: DateTime(2026, 6, 1),
-      endedOn: DateTime(2026, 6, 5),
-      source: PeriodSources.onboardingLast,
-    );
-
-    await tester.pumpWidget(createRituApp(database: database));
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.byIcon(LucideIcons.settings));
-    await tester.pumpAndSettle();
-
-    expect(find.text(formatDisplayDate(DateTime(2026, 6, 1))), findsOneWidget);
-
-    await tester.tap(find.text('Period Started'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('When did your last period start?'), findsOneWidget);
-    expect(find.byType(Dialog), findsNothing);
-
-    final day15 = find.text('15');
-    expect(day15, findsOneWidget);
-    await tester.ensureVisible(day15);
-    await tester.tap(day15);
-    await tester.pump();
-
-    final save = find.widgetWithText(FilledButton, 'Save');
-    await tester.ensureVisible(save);
-    await tester.tap(save);
-    await tester.pumpAndSettle();
-
-    final settingsLabel = formatDisplayDate(DateTime(2026, 6, 15));
-    expect(find.text(settingsLabel), findsOneWidget);
-
-    final latest = await periods.getLatest();
-    expect(latest, isNotNull);
-    expect(dateOnly(latest!.startedOn), DateTime(2026, 6, 15));
-    expect(dateOnly(latest.endedOn!), DateTime(2026, 6, 19));
-    expect(latest.source, PeriodSources.settings);
-
-    await tester.tap(find.byIcon(LucideIcons.chevronLeft));
-    await tester.pumpAndSettle();
-
-    expect(
-      find.text('Last period ${formatShortMonthDay(DateTime(2026, 6, 15))}'),
-      findsOneWidget,
-    );
-  });
-
-  rituTestWidgets('Period start calendar does not accept future dates', (
-    tester,
-  ) async {
-    final profiles = DriftProfileRepository(database);
-    final periods = DriftPeriodRepository(database);
-    await profiles.upsertDisplayName('Maya');
-    await profiles.markOnboardingCompleted();
-    await periods.upsertPeriod(
-      startedOn: DateTime.now(),
-      source: PeriodSources.onboardingLast,
-    );
-
-    await tester.pumpWidget(createRituApp(database: database));
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.byIcon(LucideIcons.settings));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Period Started'));
-    await tester.pumpAndSettle();
-
-    expect(find.byType(Dialog), findsNothing);
-
-    // Move to next month (should be blocked) and try a late day in current month.
-    final forward = find.byIcon(LucideIcons.chevronRight);
-    await tester.tap(forward);
-    await tester.pumpAndSettle();
-
-    // Still on current month — month title includes current year/month name.
-    final now = DateTime.now();
-    const months = [
-      'January',
-      'February',
-      'March',
-      'April',
-      'May',
-      'June',
-      'July',
-      'August',
-      'September',
-      'October',
-      'November',
-      'December',
-    ];
-    expect(find.text('${months[now.month - 1]} ${now.year}'), findsOneWidget);
-
-    if (now.day < 28) {
-      final futureDay = find.text('${now.day + 1}');
-      await tester.ensureVisible(futureDay);
-      await tester.tap(futureDay);
-      await tester.pump();
-      await tester.tap(find.widgetWithText(FilledButton, 'Save'));
-      await tester.pumpAndSettle();
-
-      final latest = await periods.getLatest();
-      expect(dateOnly(latest!.startedOn), dateOnly(now));
-    }
-
-    expect(
-      () => periods.upsertPeriod(
-        startedOn: DateTime.now().add(const Duration(days: 3)),
-        source: PeriodSources.settings,
-      ),
-      throwsArgumentError,
-    );
-  });
-
   rituTestWidgets('Period History from Settings adds past dates', (
     tester,
   ) async {
@@ -538,6 +435,12 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('No dates added'), findsOneWidget);
+    expect(find.text('Period Started'), findsNothing);
+    expect(find.text('Cycle Learning'), findsNothing);
+    expect(find.text('Insight Alerts'), findsNothing);
+    expect(find.text('Period Reminder'), findsNothing);
+    expect(find.text('iCloud Backup'), findsNothing);
+    expect(find.text('Usage Analytics'), findsNothing);
 
     await tester.tap(find.text('Period History'));
     await tester.pumpAndSettle();
@@ -600,6 +503,86 @@ void main() {
     expect(all.last.source, PeriodSources.manual);
     expect(all.where((p) => p.isManual), hasLength(1));
     expect(all.where((p) => !p.isManual), hasLength(1));
+  });
+
+  rituTestWidgets('Export Data opens the export and import choices', (
+    tester,
+  ) async {
+    final profiles = DriftProfileRepository(database);
+    await profiles.upsertDisplayName('Maya');
+    await profiles.markOnboardingCompleted();
+
+    await tester.pumpWidget(createRituApp(database: database));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(LucideIcons.settings));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('Export Data'), 200);
+    await tester.tap(find.text('Export Data'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Export & Import'), findsOneWidget);
+    expect(
+      find.text(
+        'Back up your journal, or restore it from a file you’ve exported before.',
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Download a copy of your data as a file'), findsOneWidget);
+    expect(
+      find.text('Restore from a previously exported file'),
+      findsOneWidget,
+    );
+    expect(find.text('PDF report'), findsNothing);
+
+    await tester.tap(find.text('Export Data'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Export your data'), findsOneWidget);
+    expect(
+      find.text(
+        'Download a copy of your data as a JSON file. Raw data for backup or advanced use',
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Includes'), findsOneWidget);
+    expect(find.text('Logs'), findsOneWidget);
+    expect(find.text('Journal entries'), findsOneWidget);
+    expect(find.text('Insights & patterns'), findsOneWidget);
+    expect(find.text('Settings'), findsOneWidget);
+    expect(find.widgetWithText(FilledButton, 'Save'), findsOneWidget);
+    expect(find.text('Import from file'), findsNothing);
+    expect(find.text('Export format'), findsNothing);
+  });
+
+  rituTestWidgets('Ended period history shows Last period', (tester) async {
+    final profiles = DriftProfileRepository(database);
+    final periods = DriftPeriodRepository(database);
+    await profiles.upsertDisplayName('Maya');
+    await profiles.markOnboardingCompleted();
+
+    final today = dateOnly(DateTime.now());
+    final startedOn = today.subtract(const Duration(days: 40));
+    await periods.upsertPeriod(
+      startedOn: startedOn,
+      endedOn: today.subtract(const Duration(days: 35)),
+      source: PeriodSources.manual,
+    );
+
+    await tester.pumpWidget(createRituApp(database: database));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(LucideIcons.settings));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Period History'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Last period'), findsOneWidget);
+    expect(find.text('Current period'), findsNothing);
+    expect(find.text('Manual'), findsOneWidget);
+    expect(find.text('-'), findsWidgets);
+    expect(find.text(formatShortMonthDay(startedOn)), findsWidgets);
+    expect(find.text(formatMonthDay(startedOn)), findsNothing);
   });
 
   rituTestWidgets(

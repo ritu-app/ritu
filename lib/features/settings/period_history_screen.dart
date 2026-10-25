@@ -10,7 +10,7 @@ import '../../providers/period_providers.dart';
 import '../../theme/ritu_colors.dart';
 import 'add_period_screen.dart';
 
-/// Figma 922:4534 — Settings → Period History (Logged vs Manual).
+/// Figma 1132:5946 / 1132:6069 — Settings → Period History.
 class PeriodHistoryScreen extends ConsumerWidget {
   const PeriodHistoryScreen({super.key});
 
@@ -69,10 +69,10 @@ class PeriodHistoryScreen extends ConsumerWidget {
                         ),
                       ),
                     ),
+                    const SizedBox(width: 16),
                     Expanded(
                       child: Text(
                         'Period history',
-                        textAlign: TextAlign.center,
                         style: GoogleFonts.dmSerifDisplay(
                           fontSize: 18,
                           fontWeight: FontWeight.w400,
@@ -121,7 +121,7 @@ class PeriodHistoryScreen extends ConsumerWidget {
                           avgCycleDays: mean,
                           mostRecent: mostRecent,
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 20),
                         if (periods.isEmpty)
                           Padding(
                             padding: const EdgeInsets.only(top: 24),
@@ -169,10 +169,11 @@ class _StatsBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final avgLabel = avgCycleDays == null
-        ? '—'
+        ? '-'
         : avgCycleDays!.toStringAsFixed(1);
-    final recentLabel =
-        mostRecent == null ? '—' : formatMonthDay(mostRecent!);
+    final recentLabel = mostRecent == null
+        ? '-'
+        : formatShortMonthDay(mostRecent!);
 
     return Container(
       width: double.infinity,
@@ -185,7 +186,7 @@ class _StatsBanner extends StatelessWidget {
         children: [
           Expanded(
             child: _StatCell(
-              value: '$loggedCount',
+              value: loggedCount == 0 ? '-' : '$loggedCount',
               label: 'Periods logged',
             ),
           ),
@@ -306,7 +307,12 @@ class _PeriodRow extends StatelessWidget {
   final VoidCallback? onTap;
 
   String _subtitleFor(DateTime start) {
-    if (isLatest) return 'Current period';
+    if (isLatest) {
+      final end = log.endedOn;
+      final stillGoing =
+          end == null || !dateOnly(end).isBefore(dateOnly(DateTime.now()));
+      return stillGoing ? 'Current period' : 'Last period';
+    }
     // Last row in the list — Figma always uses this copy.
     if (isOldest) return 'Oldest entry on record';
     if (nextNewerStart == null) return 'Oldest entry on record';

@@ -15,6 +15,7 @@ import '../../providers/profile_providers.dart';
 import '../../providers/repository_providers.dart';
 import '../../theme/ritu_colors.dart';
 
+/// Figma 1249:5779 — Settings → Export & Import.
 class ExportDataScreen extends ConsumerStatefulWidget {
   const ExportDataScreen({super.key});
 
@@ -23,55 +24,14 @@ class ExportDataScreen extends ConsumerStatefulWidget {
 }
 
 class _ExportDataScreenState extends ConsumerState<ExportDataScreen> {
-  var _includeLogs = true;
-  var _includeJournal = true;
-  var _includeSettings = true;
   var _busy = false;
 
-  bool get _canSave =>
-      !_busy && (_includeLogs || _includeJournal || _includeSettings);
-
-  /// iOS requires a non-zero [sharePositionOrigin] for the share sheet popover.
-  Rect _sharePositionOrigin(BuildContext context) {
-    final box = context.findRenderObject() as RenderBox?;
-    if (box != null && box.hasSize && box.size.width > 0 && box.size.height > 0) {
-      return box.localToGlobal(Offset.zero) & box.size;
-    }
-    final size = MediaQuery.sizeOf(context);
-    return Rect.fromCenter(
-      center: Offset(size.width / 2, size.height / 2),
-      width: 1,
-      height: 1,
+  Future<void> _openExport() {
+    return Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => const _ExportOptionsScreen(),
+      ),
     );
-  }
-
-  Future<void> _export() async {
-    if (!_canSave) return;
-    final shareOrigin = _sharePositionOrigin(context);
-    setState(() => _busy = true);
-    try {
-      final json = await ref.read(rituBackupServiceProvider).exportJson(
-            includeLogs: _includeLogs,
-            includeJournal: _includeJournal,
-            includeSettings: _includeSettings,
-          );
-
-      final dir = await getTemporaryDirectory();
-      final stamp = DateTime.now().toIso8601String().split('T').first;
-      final file = File(p.join(dir.path, 'ritu-backup-$stamp.json'));
-      await file.writeAsString(json);
-
-      await Share.shareXFiles(
-        [XFile(file.path, mimeType: 'application/json')],
-        subject: 'Ritu data export',
-        sharePositionOrigin: shareOrigin,
-      );
-    } catch (error) {
-      if (!mounted) return;
-      _showMessage('Export failed: $error');
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
   }
 
   Future<void> _import() async {
@@ -171,23 +131,133 @@ class _ExportDataScreenState extends ConsumerState<ExportDataScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: IconButton(
-                  onPressed: _busy ? null : () => Navigator.of(context).pop(),
-                  icon: const Icon(
-                    LucideIcons.chevronLeft,
-                    size: 28,
-                    color: RituColors.textPrimary,
-                  ),
-                ),
-              ),
+            _BackChevron(
+              onTap: _busy ? null : () => Navigator.of(context).pop(),
             ),
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+                children: [
+                  Text(
+                    'Export & Import',
+                    style: GoogleFonts.dmSans(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      height: 24 / 18,
+                      color: RituColors.textPrimary,
+                    ),
+                  ),
+                  Text(
+                    'Back up your journal, or restore it from a file you’ve exported before.',
+                    style: GoogleFonts.dmSans(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w400,
+                      height: 20 / 13,
+                      color: RituColors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  _NavCard(
+                    title: 'Export Data',
+                    subtitle: 'Download a copy of your data as a file',
+                    onTap: _busy ? null : _openExport,
+                  ),
+                  const SizedBox(height: 16),
+                  _NavCard(
+                    title: 'Import Data',
+                    subtitle: 'Restore from a previously exported file',
+                    onTap: _busy ? null : _import,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Figma 471:1641 — JSON export options.
+class _ExportOptionsScreen extends ConsumerStatefulWidget {
+  const _ExportOptionsScreen();
+
+  @override
+  ConsumerState<_ExportOptionsScreen> createState() =>
+      _ExportOptionsScreenState();
+}
+
+class _ExportOptionsScreenState extends ConsumerState<_ExportOptionsScreen> {
+  var _includeLogs = true;
+  var _includeJournal = true;
+  var _includeSettings = true;
+  var _busy = false;
+
+  bool get _canSave =>
+      !_busy && (_includeLogs || _includeJournal || _includeSettings);
+
+  /// iOS requires a non-zero [sharePositionOrigin] for the share sheet popover.
+  Rect _sharePositionOrigin(BuildContext context) {
+    final box = context.findRenderObject() as RenderBox?;
+    if (box != null &&
+        box.hasSize &&
+        box.size.width > 0 &&
+        box.size.height > 0) {
+      return box.localToGlobal(Offset.zero) & box.size;
+    }
+    final size = MediaQuery.sizeOf(context);
+    return Rect.fromCenter(
+      center: Offset(size.width / 2, size.height / 2),
+      width: 1,
+      height: 1,
+    );
+  }
+
+  Future<void> _export() async {
+    if (!_canSave) return;
+    final shareOrigin = _sharePositionOrigin(context);
+    setState(() => _busy = true);
+    try {
+      final json = await ref.read(rituBackupServiceProvider).exportJson(
+            includeLogs: _includeLogs,
+            includeJournal: _includeJournal,
+            includeSettings: _includeSettings,
+          );
+
+      final dir = await getTemporaryDirectory();
+      final stamp = DateTime.now().toIso8601String().split('T').first;
+      final file = File(p.join(dir.path, 'ritu-backup-$stamp.json'));
+      await file.writeAsString(json);
+
+      await Share.shareXFiles(
+        [XFile(file.path, mimeType: 'application/json')],
+        subject: 'Ritu data export',
+        sharePositionOrigin: shareOrigin,
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Export failed: $error')),
+      );
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: RituColors.backgroundPage,
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _BackChevron(
+              onTap: _busy ? null : () => Navigator.of(context).pop(),
+            ),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
                 children: [
                   Text(
                     'Export your data',
@@ -199,7 +269,7 @@ class _ExportDataScreenState extends ConsumerState<ExportDataScreen> {
                     ),
                   ),
                   Text(
-                    'Download a copy of all your data in the format you prefer',
+                    'Download a copy of your data as a JSON file. Raw data for backup or advanced use',
                     style: GoogleFonts.dmSans(
                       fontSize: 13,
                       fontWeight: FontWeight.w400,
@@ -207,44 +277,7 @@ class _ExportDataScreenState extends ConsumerState<ExportDataScreen> {
                       color: RituColors.textSecondary,
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  Text(
-                    'Export format',
-                    style: GoogleFonts.dmSans(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      height: 24 / 15,
-                      color: RituColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  const _Card(
-                    children: [
-                      _FormatRow(
-                        title: 'PDF report',
-                        subtitle:
-                            'Best for sharing with healthcare professionals',
-                        enabled: false,
-                        selected: false,
-                        showDivider: true,
-                      ),
-                      _FormatRow(
-                        title: 'CSV',
-                        subtitle: 'Spreadsheet for detailed analysis',
-                        enabled: false,
-                        selected: false,
-                        showDivider: true,
-                      ),
-                      _FormatRow(
-                        title: 'JSON',
-                        subtitle: 'RAW data for advanced use',
-                        enabled: true,
-                        selected: true,
-                        showDivider: false,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 16),
                   Text(
                     'Includes',
                     style: GoogleFonts.dmSans(
@@ -277,7 +310,7 @@ class _ExportDataScreenState extends ConsumerState<ExportDataScreen> {
                       const _IncludeRow(
                         title: 'Insights & patterns',
                         selected: false,
-                        enabled: false,
+                        enabled: true,
                         showDivider: true,
                       ),
                       _IncludeRow(
@@ -291,7 +324,7 @@ class _ExportDataScreenState extends ConsumerState<ExportDataScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
                   SizedBox(
                     height: 48,
                     child: FilledButton(
@@ -322,23 +355,105 @@ class _ExportDataScreenState extends ConsumerState<ExportDataScreen> {
                           : const Text('Save'),
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  TextButton(
-                    onPressed: _busy ? null : _import,
-                    child: Text(
-                      'Import from file',
-                      style: GoogleFonts.dmSans(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        height: 20 / 13,
-                        color: RituColors.sage600,
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _BackChevron extends StatelessWidget {
+  const _BackChevron({required this.onTap});
+
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: GestureDetector(
+          onTap: onTap,
+          behavior: HitTestBehavior.opaque,
+          child: const SizedBox(
+            width: 24,
+            height: 24,
+            child: Icon(
+              LucideIcons.chevronLeft,
+              size: 24,
+              color: RituColors.textPrimary,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _NavCard extends StatelessWidget {
+  const _NavCard({
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  final String title;
+  final String subtitle;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: RituColors.fillElevated,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: RituColors.borderSubtle),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: GoogleFonts.dmSans(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        height: 20 / 13,
+                        color: RituColors.textPrimary,
+                      ),
+                    ),
+                    Text(
+                      subtitle,
+                      style: GoogleFonts.dmSans(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        height: 18 / 11,
+                        color: RituColors.textTertiary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(
+                LucideIcons.chevronRight,
+                size: 16,
+                color: RituColors.textTertiary,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -361,76 +476,6 @@ class _Card extends StatelessWidget {
         border: Border.all(color: RituColors.borderSubtle),
       ),
       child: Column(children: children),
-    );
-  }
-}
-
-class _FormatRow extends StatelessWidget {
-  const _FormatRow({
-    required this.title,
-    required this.subtitle,
-    required this.enabled,
-    required this.selected,
-    required this.showDivider,
-  });
-
-  final String title;
-  final String subtitle;
-  final bool enabled;
-  final bool selected;
-  final bool showDivider;
-
-  @override
-  Widget build(BuildContext context) {
-    final titleColor =
-        enabled ? RituColors.textPrimary : RituColors.textTertiary;
-    final subtitleColor =
-        enabled ? RituColors.textTertiary : RituColors.textDisabled;
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      decoration: showDivider
-          ? const BoxDecoration(
-              border: Border(
-                bottom: BorderSide(
-                  color: RituColors.borderSubtle,
-                  width: 0.5,
-                ),
-              ),
-            )
-          : null,
-      child: Row(
-        children: [
-          _SelectionMark(selected: selected, enabled: enabled, radio: true),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: GoogleFonts.dmSans(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    height: 20 / 13,
-                    color: titleColor,
-                  ),
-                ),
-                Text(
-                  subtitle,
-                  style: GoogleFonts.dmSans(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                    height: 18 / 11,
-                    color: subtitleColor,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
@@ -471,11 +516,7 @@ class _IncludeRow extends StatelessWidget {
               : null,
           child: Row(
             children: [
-              _SelectionMark(
-                selected: selected,
-                enabled: enabled,
-                radio: false,
-              ),
+              _SelectionMark(selected: selected, enabled: enabled),
               const SizedBox(width: 16),
               Expanded(
                 child: Text(
@@ -502,12 +543,10 @@ class _SelectionMark extends StatelessWidget {
   const _SelectionMark({
     required this.selected,
     required this.enabled,
-    required this.radio,
   });
 
   final bool selected;
   final bool enabled;
-  final bool radio;
 
   @override
   Widget build(BuildContext context) {
@@ -528,18 +567,6 @@ class _SelectionMark extends StatelessWidget {
           color: enabled ? RituColors.textDisabled : RituColors.borderSubtle,
         ),
       ),
-      child: radio && selected
-          ? Center(
-              child: Container(
-                width: 8,
-                height: 8,
-                decoration: const BoxDecoration(
-                  color: RituColors.sage500,
-                  shape: BoxShape.circle,
-                ),
-              ),
-            )
-          : null,
     );
   }
 }

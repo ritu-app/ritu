@@ -30,6 +30,16 @@ class _DeleteDataScreenState extends ConsumerState<DeleteDataScreen> {
     'Settings and preferences',
   ];
 
+  Future<void> _confirmDelete() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierColor: const Color(0xB3000000),
+      builder: (_) => const _DeleteDataDialog(),
+    );
+    if (confirmed != true || !mounted) return;
+    await _deleteAll();
+  }
+
   Future<void> _deleteAll() async {
     if (_busy) return;
     setState(() => _busy = true);
@@ -178,7 +188,7 @@ class _DeleteDataScreenState extends ConsumerState<DeleteDataScreen> {
                     width: double.infinity,
                     height: 48,
                     child: FilledButton(
-                      onPressed: _busy ? null : _deleteAll,
+                      onPressed: _busy ? null : _confirmDelete,
                       style: FilledButton.styleFrom(
                         backgroundColor: RituColors.textCritical,
                         disabledBackgroundColor:
@@ -210,6 +220,109 @@ class _DeleteDataScreenState extends ConsumerState<DeleteDataScreen> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DeleteDataDialog extends StatelessWidget {
+  const _DeleteDataDialog();
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 358),
+        child: Material(
+          color: RituColors.fillElevated,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(
+              color: RituColors.borderSubtle,
+              width: 0.5,
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Are you sure?',
+                  style: GoogleFonts.dmSans(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    height: 24 / 18,
+                    color: RituColors.textPrimary,
+                  ),
+                ),
+                Text(
+                  'Once deleted, your logs, journal entries, insights, and reports cannot be recovered.',
+                  style: GoogleFonts.dmSans(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w400,
+                    height: 20 / 13,
+                    color: RituColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    _DialogAction(
+                      label: 'Permanently delete',
+                      color: RituColors.textCritical,
+                      onPressed: () => Navigator.of(context).pop(true),
+                    ),
+                    const SizedBox(width: 32),
+                    _DialogAction(
+                      label: 'Cancel',
+                      color: RituColors.textTertiary,
+                      onPressed: () => Navigator.of(context).pop(false),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DialogAction extends StatelessWidget {
+  const _DialogAction({
+    required this.label,
+    required this.color,
+    required this.onPressed,
+  });
+
+  final String label;
+  final Color color;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextButton(
+      onPressed: onPressed,
+      style: TextButton.styleFrom(
+        padding: EdgeInsets.zero,
+        minimumSize: const Size(0, 36),
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        foregroundColor: color,
+      ),
+      child: Text(
+        label,
+        style: GoogleFonts.dmSans(
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+          height: 20 / 13,
         ),
       ),
     );
