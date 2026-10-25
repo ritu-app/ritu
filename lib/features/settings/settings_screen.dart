@@ -9,6 +9,7 @@ import '../../core/date_format.dart';
 import '../../data/models/app_appearance.dart';
 import '../../data/models/daily_reminder.dart';
 import '../../providers/app_appearance_provider.dart';
+import '../../providers/package_info_provider.dart';
 import '../../providers/cycle_snapshot_provider.dart';
 import '../../providers/daily_reminder_provider.dart';
 import '../../providers/period_providers.dart';
@@ -603,11 +604,16 @@ class _SettingsRow extends StatelessWidget {
   }
 }
 
-class _Footer extends StatelessWidget {
+class _Footer extends ConsumerWidget {
   const _Footer();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final version = ref.watch(packageInfoProvider).asData?.value.version;
+    final label = version == null || version.isEmpty
+        ? null
+        : 'Version $version';
+
     return Column(
       children: [
         Text(
@@ -618,16 +624,18 @@ class _Footer extends StatelessWidget {
             color: context.ritu.sage600,
           ),
         ),
-        const SizedBox(height: 4),
-        Text(
-          'Version 1.0.0',
-          style: GoogleFonts.dmSans(
-            fontSize: 11,
-            fontWeight: FontWeight.w500,
-            height: 18 / 11,
-            color: context.ritu.textTertiary,
+        if (label != null) ...[
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: GoogleFonts.dmSans(
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              height: 18 / 11,
+              color: context.ritu.textTertiary,
+            ),
           ),
-        ),
+        ],
       ],
     );
   }
