@@ -4,19 +4,22 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/cycle/cycle_classification.dart';
+import '../../core/date_format.dart';
 import '../../data/models/app_appearance.dart';
 import '../../data/models/daily_reminder.dart';
 import '../../providers/app_appearance_provider.dart';
+import '../../providers/cycle_snapshot_provider.dart';
 import '../../providers/daily_reminder_provider.dart';
 import '../../providers/period_providers.dart';
 import '../../providers/profile_providers.dart';
 import '../../providers/repository_providers.dart';
 import '../../providers/symptom_providers.dart';
-import '../../core/date_format.dart';
 import '../../theme/ritu_colors.dart';
 import 'about_ritu_screen.dart';
 import 'app_appearance_screen.dart';
 import 'custom_symptoms_screen.dart';
+import 'cycle_learning_screen.dart';
 import 'daily_reminder_screen.dart';
 import 'delete_data_screen.dart';
 import 'edit_name_dialog.dart';
@@ -42,9 +45,7 @@ class SettingsScreen extends ConsumerWidget {
       error: (error, _) => Scaffold(body: Center(child: Text('$error'))),
       data: (profile) {
         if (profile == null) {
-          return const Scaffold(
-            body: Center(child: Text('No profile found')),
-          );
+          return const Scaffold(body: Center(child: Text('No profile found')));
         }
 
         final name = profile.displayName;
@@ -65,9 +66,7 @@ class SettingsScreen extends ConsumerWidget {
 
   Future<void> _openDeleteData(BuildContext context) async {
     await Navigator.of(context).push<void>(
-      MaterialPageRoute<void>(
-        builder: (_) => const DeleteDataScreen(),
-      ),
+      MaterialPageRoute<void>(builder: (_) => const DeleteDataScreen()),
     );
   }
 }
@@ -115,69 +114,58 @@ class _SettingsBody extends ConsumerWidget {
 
   Future<void> _editPeriodHistory(BuildContext context) async {
     await Navigator.of(context).push<int>(
-      MaterialPageRoute<int>(
-        builder: (_) => const PeriodHistoryScreen(),
-      ),
+      MaterialPageRoute<int>(builder: (_) => const PeriodHistoryScreen()),
+    );
+  }
+
+  Future<void> _openCycleLearning(BuildContext context) async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(builder: (_) => const CycleLearningScreen()),
     );
   }
 
   Future<void> _editCustomSymptoms(BuildContext context) async {
     await Navigator.of(context).push<int>(
-      MaterialPageRoute<int>(
-        builder: (_) => const CustomSymptomsScreen(),
-      ),
+      MaterialPageRoute<int>(builder: (_) => const CustomSymptomsScreen()),
     );
   }
 
   Future<void> _openExportData(BuildContext context) async {
     await Navigator.of(context).push<void>(
-      MaterialPageRoute<void>(
-        builder: (_) => const ExportDataScreen(),
-      ),
+      MaterialPageRoute<void>(builder: (_) => const ExportDataScreen()),
     );
   }
 
   Future<void> _openHelpSupport(BuildContext context) async {
     await Navigator.of(context).push<void>(
-      MaterialPageRoute<void>(
-        builder: (_) => const HelpSupportScreen(),
-      ),
+      MaterialPageRoute<void>(builder: (_) => const HelpSupportScreen()),
     );
   }
 
   Future<void> _openAboutRitu(BuildContext context) async {
     await Navigator.of(context).push<void>(
-      MaterialPageRoute<void>(
-        builder: (_) => const AboutRituScreen(),
-      ),
+      MaterialPageRoute<void>(builder: (_) => const AboutRituScreen()),
     );
   }
 
   Future<void> _openWebPage(BuildContext context, Uri uri) async {
-    final launched = await launchUrl(
-      uri,
-      mode: LaunchMode.externalApplication,
-    );
+    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
     if (!launched && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Couldn’t open the link')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Couldn’t open the link')));
     }
   }
 
   Future<void> _openAppAppearance(BuildContext context) async {
     await Navigator.of(context).push<void>(
-      MaterialPageRoute<void>(
-        builder: (_) => const AppAppearanceScreen(),
-      ),
+      MaterialPageRoute<void>(builder: (_) => const AppAppearanceScreen()),
     );
   }
 
   Future<void> _openDailyReminder(BuildContext context) async {
     await Navigator.of(context).push<void>(
-      MaterialPageRoute<void>(
-        builder: (_) => const DailyReminderScreen(),
-      ),
+      MaterialPageRoute<void>(builder: (_) => const DailyReminderScreen()),
     );
   }
 
@@ -185,10 +173,20 @@ class _SettingsBody extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final appearanceLabel =
         ref.watch(appAppearanceProvider).valueOrNull?.label ??
-            AppAppearance.system.label;
+        AppAppearance.system.label;
     final reminderSubtitle =
         ref.watch(dailyReminderProvider).valueOrNull?.settingsSubtitle ??
-            DailyReminder.defaults.settingsSubtitle;
+        DailyReminder.defaults.settingsSubtitle;
+    final classification = ref
+        .watch(cycleSnapshotProvider)
+        .valueOrNull
+        ?.classification;
+    final cycleLearningSubtitle = switch (classification) {
+      CycleClassification.regular => 'Regular',
+      CycleClassification.variable => 'Variable',
+      CycleClassification.unpredictable => 'Unpredictable',
+      _ => 'Unclassified – needs 3 cycles',
+    };
 
     return PopScope(
       canPop: false,
@@ -224,6 +222,14 @@ class _SettingsBody extends ConsumerWidget {
                           title: 'Period History',
                           subtitle: _periodHistorySubtitle,
                           onTap: () => _editPeriodHistory(context),
+                        ),
+                        _SettingsRow(
+                          icon: LucideIcons.clock,
+                          iconBackground: RituColors.fillPositiveSecondary,
+                          iconColor: RituColors.sage600,
+                          title: 'Cycle Learning',
+                          subtitle: cycleLearningSubtitle,
+                          onTap: () => _openCycleLearning(context),
                         ),
                         _SettingsRow(
                           icon: LucideIcons.badgePlus,

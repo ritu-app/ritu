@@ -48,6 +48,26 @@ class _RecordingUrlLauncher extends UrlLauncherPlatform {
   }
 }
 
+Future<void> _logCycleLengths(
+  DriftPeriodRepository periods,
+  List<int> lengthsOldestFirst,
+) async {
+  final today = dateOnly(DateTime.now());
+  var cursor = today;
+  final starts = <DateTime>[today];
+  for (final length in lengthsOldestFirst.reversed) {
+    cursor = cursor.subtract(Duration(days: length));
+    starts.add(cursor);
+  }
+  for (final startedOn in starts) {
+    await periods.upsertPeriod(
+      startedOn: startedOn,
+      endedOn: startedOn.add(const Duration(days: 4)),
+      source: PeriodSources.onboardingLast,
+    );
+  }
+}
+
 void main() {
   late AppDatabase database;
 
@@ -451,7 +471,8 @@ void main() {
 
     expect(find.text('No dates added'), findsOneWidget);
     expect(find.text('Period Started'), findsNothing);
-    expect(find.text('Cycle Learning'), findsNothing);
+    expect(find.text('Cycle Learning'), findsOneWidget);
+    expect(find.text('Unclassified – needs 3 cycles'), findsOneWidget);
     expect(find.text('Insight Alerts'), findsNothing);
     expect(find.text('Period Reminder'), findsNothing);
     expect(find.text('iCloud Backup'), findsNothing);
@@ -672,6 +693,163 @@ void main() {
     } finally {
       UrlLauncherPlatform.instance = previousLauncher;
     }
+  });
+
+  rituTestWidgets('Cycle Learning explains an unclassified cycle', (
+    tester,
+  ) async {
+    final profiles = DriftProfileRepository(database);
+    await profiles.upsertDisplayName('Maya');
+    await profiles.markOnboardingCompleted();
+
+    await tester.pumpWidget(createRituApp(database: database));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(LucideIcons.settings));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.text('Cycle Learning'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.ensureVisible(find.text('Cycle Learning'));
+    await tester.tap(find.text('Cycle Learning'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Learning your rhythm'), findsOneWidget);
+    expect(
+      find.text('Ritu needs more data to classify your cycle type'),
+      findsOneWidget,
+    );
+    expect(find.text('Current status - Unclassified'), findsOneWidget);
+    expect(find.text('Where you fall'), findsNothing);
+    expect(find.byType(Image), findsOneWidget);
+  });
+
+  rituTestWidgets('Cycle Learning shows a regular classification', (
+    tester,
+  ) async {
+    final profiles = DriftProfileRepository(database);
+    final periods = DriftPeriodRepository(database);
+    await profiles.upsertDisplayName('Maya');
+    await profiles.markOnboardingCompleted();
+    await _logCycleLengths(periods, List<int>.filled(6, 28));
+
+    await tester.pumpWidget(createRituApp(database: database));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(LucideIcons.settings));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.text('Cycle Learning'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.ensureVisible(find.text('Cycle Learning'));
+    expect(find.text('Regular'), findsOneWidget);
+    await tester.tap(find.text('Cycle Learning'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Personal average'), findsOneWidget);
+    expect(find.text('28 days'), findsOneWidget);
+    expect(find.text('±0 days'), findsOneWidget);
+    expect(find.text('6'), findsOneWidget);
+    expect(
+      find.text(
+        "They're all within about 4 days of each other, so you're Regular",
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Learning your rhythm'), findsNothing);
+  });
+
+  rituTestWidgets('Cycle Learning shows a variable classification', (
+    tester,
+  ) async {
+    final profiles = DriftProfileRepository(database);
+    final periods = DriftPeriodRepository(database);
+    await profiles.upsertDisplayName('Maya');
+    await profiles.markOnboardingCompleted();
+    await _logCycleLengths(periods, [22, 34, 24, 36, 23, 35]);
+
+    await tester.pumpWidget(createRituApp(database: database));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(LucideIcons.settings));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.text('Cycle Learning'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.ensureVisible(find.text('Cycle Learning'));
+    await tester.tap(find.text('Cycle Learning'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('22-36 days'), findsOneWidget);
+    expect(find.text('Typical range'), findsOneWidget);
+    expect(find.text('±6 days'), findsOneWidget);
+    expect(
+      find.text(
+        "They differ by 5–9 days on average, so you're Variable, we'll show dates as ranges, not exact days",
+      ),
+      findsOneWidget,
+    );
+  });
+
+  rituTestWidgets('Cycle Learning shows an unpredictable classification', (
+    tester,
+  ) async {
+    final profiles = DriftProfileRepository(database);
+    final periods = DriftPeriodRepository(database);
+    await profiles.upsertDisplayName('Maya');
+    await profiles.markOnboardingCompleted();
+    await _logCycleLengths(periods, [21, 46, 22, 45, 23, 44]);
+
+    await tester.pumpWidget(createRituApp(database: database));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(LucideIcons.settings));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.text('Cycle Learning'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.ensureVisible(find.text('Cycle Learning'));
+    await tester.tap(find.text('Cycle Learning'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('21-46 days'), findsOneWidget);
+    expect(find.text('±12 days'), findsOneWidget);
+    final bar = find.byKey(const Key('cycle-spectrum-bar'));
+    expect(tester.getSize(bar).height, 5);
+    expect(tester.getSize(bar).width, greaterThan(200));
+    final segments = find.descendant(
+      of: bar,
+      matching: find.byType(DecoratedBox),
+    );
+    expect(segments, findsNWidgets(2));
+    expect(tester.getSize(segments.first).height, 5);
+    expect(tester.getSize(segments.first).width, greaterThan(50));
+    expect(
+      find.text(
+        "They differ by 10 or more days on average, that's Unpredictable, not a diagnosis, just a pattern in your own data.",
+      ),
+      findsOneWidget,
+    );
+    await tester.scrollUntilVisible(
+      find.text(
+        'This can change. Ritu re-checks every time you log a new period',
+      ),
+      200,
+    );
+    expect(
+      find.text(
+        'This can change. Ritu re-checks every time you log a new period',
+      ),
+      findsOneWidget,
+    );
   });
 
   rituTestWidgets('Ended period history shows Last period', (tester) async {
