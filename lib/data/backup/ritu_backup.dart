@@ -41,7 +41,9 @@ class RituBackup {
       if (periodLogs.isNotEmpty)
         'periodLogs': periodLogs.map(_periodToJson).toList(),
       if (periodEndPrompts.isNotEmpty)
-        'periodEndPrompts': periodEndPrompts.map(_periodEndPromptToJson).toList(),
+        'periodEndPrompts': periodEndPrompts
+            .map(_periodEndPromptToJson)
+            .toList(),
       if (dailyLogs.isNotEmpty)
         'dailyLogs': dailyLogs.map(_dailyLogToJson).toList(),
       if (journalEntries.isNotEmpty)
@@ -62,6 +64,15 @@ class RituBackup {
       throw const FormatException('Backup root must be a JSON object');
     }
     return fromJson(decoded);
+  }
+
+  /// True when [raw] is a Ritu backup that includes a profile and can be restored.
+  static bool isRestorable(String raw) {
+    try {
+      return decode(raw).profile != null;
+    } catch (_) {
+      return false;
+    }
   }
 
   static RituBackup fromJson(Map<String, dynamic> json) {
@@ -111,12 +122,11 @@ class RituBackup {
 }
 
 Map<String, Object?> _profileToJson(Profile profile) => {
-      'displayName': profile.displayName,
-      'createdAt': profile.createdAt.toIso8601String(),
-      'onboardingCompletedAt':
-          profile.onboardingCompletedAt?.toIso8601String(),
-      'typicalPeriodDays': profile.typicalPeriodDays,
-    };
+  'displayName': profile.displayName,
+  'createdAt': profile.createdAt.toIso8601String(),
+  'onboardingCompletedAt': profile.onboardingCompletedAt?.toIso8601String(),
+  'typicalPeriodDays': profile.typicalPeriodDays,
+};
 
 Profile _profileFromJson(Map<String, dynamic> json) {
   return Profile(
@@ -128,19 +138,19 @@ Profile _profileFromJson(Map<String, dynamic> json) {
 }
 
 Map<String, Object?> _periodToJson(PeriodLog log) => {
-      'startedOn': log.startedOn.toIso8601String(),
-      'endedOn': log.endedOn?.toIso8601String(),
-      'source': log.source,
-      'startSource': log.startSource,
-      'startConfidence': log.startConfidence,
-      'endStatus': log.endStatus,
-      if (log.endSource != null) 'endSource': log.endSource,
-      if (log.endConfidence != null) 'endConfidence': log.endConfidence,
-      if (log.roughDurationBucket != null)
-        'roughDurationBucket': log.roughDurationBucket,
-      'createdAt': log.createdAt.toIso8601String(),
-      'updatedAt': log.updatedAt.toIso8601String(),
-    };
+  'startedOn': log.startedOn.toIso8601String(),
+  'endedOn': log.endedOn?.toIso8601String(),
+  'source': log.source,
+  'startSource': log.startSource,
+  'startConfidence': log.startConfidence,
+  'endStatus': log.endStatus,
+  if (log.endSource != null) 'endSource': log.endSource,
+  if (log.endConfidence != null) 'endConfidence': log.endConfidence,
+  if (log.roughDurationBucket != null)
+    'roughDurationBucket': log.roughDurationBucket,
+  'createdAt': log.createdAt.toIso8601String(),
+  'updatedAt': log.updatedAt.toIso8601String(),
+};
 
 PeriodLog _periodFromJson(Map<String, dynamic> json) {
   final startedOn = _requireDate(json, 'startedOn');
@@ -163,15 +173,15 @@ PeriodLog _periodFromJson(Map<String, dynamic> json) {
 }
 
 Map<String, Object?> _periodEndPromptToJson(PeriodEndPrompt prompt) => {
-      'periodLogId': prompt.periodLogId,
-      if (prompt.periodStartedOn != null)
-        'periodStartedOn': prompt.periodStartedOn!.toIso8601String(),
-      'shownOn': prompt.shownOn.toIso8601String(),
-      if (prompt.response != null) 'response': prompt.response,
-      if (prompt.respondedOn != null)
-        'respondedOn': prompt.respondedOn!.toIso8601String(),
-      'createdAt': prompt.createdAt.toIso8601String(),
-    };
+  'periodLogId': prompt.periodLogId,
+  if (prompt.periodStartedOn != null)
+    'periodStartedOn': prompt.periodStartedOn!.toIso8601String(),
+  'shownOn': prompt.shownOn.toIso8601String(),
+  if (prompt.response != null) 'response': prompt.response,
+  if (prompt.respondedOn != null)
+    'respondedOn': prompt.respondedOn!.toIso8601String(),
+  'createdAt': prompt.createdAt.toIso8601String(),
+};
 
 PeriodEndPrompt _periodEndPromptFromJson(Map<String, dynamic> json) {
   return PeriodEndPrompt(
@@ -186,17 +196,17 @@ PeriodEndPrompt _periodEndPromptFromJson(Map<String, dynamic> json) {
 }
 
 Map<String, Object?> _dailyLogToJson(DailyLogEntry entry) => {
-      'loggedOn': entry.loggedOn.toIso8601String(),
-      'flowIntensity': entry.flowIntensity,
-      'crampIntensity': entry.crampIntensity,
-      'moods': entry.moods,
-      'energyLevel': entry.energyLevel,
-      'sleepQuality': entry.sleepQuality,
-      'wellbeing': entry.wellbeing,
-      'symptoms': entry.symptoms,
-      'createdAt': entry.createdAt.toIso8601String(),
-      'updatedAt': entry.updatedAt.toIso8601String(),
-    };
+  'loggedOn': entry.loggedOn.toIso8601String(),
+  'flowIntensity': entry.flowIntensity,
+  'crampIntensity': entry.crampIntensity,
+  'moods': entry.moods,
+  'energyLevel': entry.energyLevel,
+  'sleepQuality': entry.sleepQuality,
+  'wellbeing': entry.wellbeing,
+  'symptoms': entry.symptoms,
+  'createdAt': entry.createdAt.toIso8601String(),
+  'updatedAt': entry.updatedAt.toIso8601String(),
+};
 
 DailyLogEntry _dailyLogFromJson(Map<String, dynamic> json) {
   return DailyLogEntry(
@@ -215,11 +225,11 @@ DailyLogEntry _dailyLogFromJson(Map<String, dynamic> json) {
 }
 
 Map<String, Object?> _journalToJson(JournalEntry entry) => {
-      'loggedOn': entry.loggedOn.toIso8601String(),
-      'body': entry.body,
-      'createdAt': entry.createdAt.toIso8601String(),
-      'updatedAt': entry.updatedAt.toIso8601String(),
-    };
+  'loggedOn': entry.loggedOn.toIso8601String(),
+  'body': entry.body,
+  'createdAt': entry.createdAt.toIso8601String(),
+  'updatedAt': entry.updatedAt.toIso8601String(),
+};
 
 JournalEntry _journalFromJson(Map<String, dynamic> json) {
   return JournalEntry(
@@ -232,9 +242,9 @@ JournalEntry _journalFromJson(Map<String, dynamic> json) {
 }
 
 Map<String, Object?> _symptomToJson(CustomSymptom symptom) => {
-      'name': symptom.name,
-      'createdAt': symptom.createdAt.toIso8601String(),
-    };
+  'name': symptom.name,
+  'createdAt': symptom.createdAt.toIso8601String(),
+};
 
 CustomSymptom _symptomFromJson(Map<String, dynamic> json) {
   return CustomSymptom(
@@ -253,9 +263,7 @@ List<T> _mapList<T>(
   if (raw is! List) {
     throw FormatException('$field must be a list');
   }
-  return raw
-      .map((item) => map(_asMap(item, field)))
-      .toList();
+  return raw.map((item) => map(_asMap(item, field))).toList();
 }
 
 Map<String, dynamic> _asMap(Object? value, String field) {

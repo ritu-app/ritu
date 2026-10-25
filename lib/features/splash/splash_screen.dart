@@ -4,9 +4,10 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../theme/ritu_colors.dart';
 
 class SplashScreen extends StatelessWidget {
-  const SplashScreen({super.key, this.onGetStarted});
+  const SplashScreen({super.key, this.onGetStarted, this.onRestoreFromBackup});
 
   final VoidCallback? onGetStarted;
+  final VoidCallback? onRestoreFromBackup;
 
   @override
   Widget build(BuildContext context) {
@@ -27,6 +28,22 @@ class SplashScreen extends StatelessWidget {
                   onPressed: onGetStarted ?? () {},
                   child: const Text('Get started'),
                 ),
+              ),
+              const SizedBox(height: 24),
+              TextButton(
+                onPressed: onRestoreFromBackup ?? () {},
+                style: TextButton.styleFrom(
+                  foregroundColor: RituColors.textTertiary,
+                  padding: EdgeInsets.zero,
+                  minimumSize: const Size(double.infinity, 24),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  textStyle: GoogleFonts.dmSans(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                    height: 24 / 15,
+                  ),
+                ),
+                child: const Text('Restore from backup'),
               ),
               const SizedBox(height: 16),
             ],
@@ -75,11 +92,7 @@ class _BrandBlock extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 4),
-        Container(
-          width: 114,
-          height: 1,
-          color: RituColors.divider,
-        ),
+        Container(width: 114, height: 1, color: RituColors.divider),
         const SizedBox(height: 4),
         SizedBox(
           width: 113,

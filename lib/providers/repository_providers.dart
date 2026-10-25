@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../data/backup/restore_backup_file.dart';
 import '../data/backup/ritu_backup_service.dart';
 import '../data/repositories/daily_log_repository.dart';
 import '../data/repositories/drift/drift_daily_log_repository.dart';
@@ -23,8 +24,9 @@ final periodRepositoryProvider = Provider<PeriodRepository>((ref) {
   return DriftPeriodRepository(ref.watch(databaseProvider));
 });
 
-final periodEndPromptRepositoryProvider =
-    Provider<PeriodEndPromptRepository>((ref) {
+final periodEndPromptRepositoryProvider = Provider<PeriodEndPromptRepository>((
+  ref,
+) {
   return DriftPeriodEndPromptRepository(ref.watch(databaseProvider));
 });
 
@@ -39,6 +41,11 @@ final dailyLogRepositoryProvider = Provider<DailyLogRepository>((ref) {
 final journalEntryRepositoryProvider = Provider<JournalEntryRepository>((ref) {
   return DriftJournalEntryRepository(ref.watch(databaseProvider));
 });
+
+final restoreBackupPickerProvider =
+    Provider<Future<RestoreBackupFile?> Function()>((ref) {
+      return pickRestoreBackupFile;
+    });
 
 final rituBackupServiceProvider = Provider<RituBackupService>((ref) {
   return RituBackupService(

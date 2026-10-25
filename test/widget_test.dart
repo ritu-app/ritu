@@ -50,6 +50,7 @@ void main() {
 
     expect(find.text('Ritu'), findsOneWidget);
     expect(find.text('Get started'), findsOneWidget);
+    expect(find.text('Restore from backup'), findsOneWidget);
   });
 
   rituTestWidgets('Onboarding completes into homepage and persists name', (

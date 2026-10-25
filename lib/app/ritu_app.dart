@@ -6,6 +6,8 @@ import '../data/local/app_database.dart';
 import '../features/home/home_screen.dart';
 import '../features/onboarding/confirmation_screen.dart';
 import '../features/onboarding/name_screen.dart';
+import '../features/onboarding/restore_backup_screen.dart';
+import '../features/onboarding/restore_confirmation_screen.dart';
 import '../features/setup/last_period_screen.dart';
 import '../features/setup/widgets/period_episode_form_fields.dart';
 import '../features/setup/notification_screen.dart';
@@ -45,16 +47,13 @@ class _AppBootstrap extends ConsumerWidget {
     final profileAsync = ref.watch(profileProvider);
 
     return profileAsync.when(
-      loading: () => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      ),
-      error: (error, _) => Scaffold(
-        body: Center(
-          child: Text('Something went wrong: $error'),
-        ),
-      ),
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
+      error: (error, _) =>
+          Scaffold(body: Center(child: Text('Something went wrong: $error'))),
       data: (profile) {
-        if (profile != null && profile.hasCompletedOnboarding) {
+        final restoring = ref.watch(onboardingRestoreLockProvider);
+        if (!restoring && profile != null && profile.hasCompletedOnboarding) {
           return const HomeScreen();
         }
 
@@ -75,6 +74,35 @@ class _OnboardingFlow extends ConsumerWidget {
     await ref.read(profileRepositoryProvider).markOnboardingCompleted();
     ref.invalidate(profileProvider);
     ref.read(appRestartProvider.notifier).state++;
+  }
+
+  Future<void> _finishRestore(WidgetRef ref) async {
+    final profiles = ref.read(profileRepositoryProvider);
+    final profile = await profiles.getProfile();
+    if (profile != null && !profile.hasCompletedOnboarding) {
+      await profiles.markOnboardingCompleted();
+    }
+    ref.read(onboardingRestoreLockProvider.notifier).state = false;
+    ref.invalidate(profileProvider);
+    ref.read(appRestartProvider.notifier).state++;
+  }
+
+  Widget _nameScreen(BuildContext context, WidgetRef ref) {
+    return NameScreen(
+      onContinue: (name) async {
+        await ref.read(profileRepositoryProvider).upsertDisplayName(name);
+        if (!context.mounted) return;
+        _push(
+          context,
+          ConfirmationScreen(
+            name: name,
+            onContinue: () {
+              _push(context, _lastPeriod(context, ref, name));
+            },
+          ),
+        );
+      },
+    );
   }
 
   Widget _pastDates(BuildContext context, WidgetRef ref, String name) {
@@ -156,22 +184,33 @@ class _OnboardingFlow extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return SplashScreen(
-      onGetStarted: () {
+      onGetStarted: () => _push(context, _nameScreen(context, ref)),
+      onRestoreFromBackup: () {
         _push(
           context,
-          NameScreen(
-            onContinue: (name) async {
-              await ref
+          RestoreBackupScreen(
+            pickFile: ref.read(restoreBackupPickerProvider),
+            onStartFresh: () => _push(context, _nameScreen(context, ref)),
+            onContinue: (file) async {
+              ref.read(onboardingRestoreLockProvider.notifier).state = true;
+              try {
+                await ref
+                    .read(rituBackupServiceProvider)
+                    .importJson(file.contents);
+              } catch (_) {
+                ref.read(onboardingRestoreLockProvider.notifier).state = false;
+                rethrow;
+              }
+              if (!context.mounted) return;
+              final profile = await ref
                   .read(profileRepositoryProvider)
-                  .upsertDisplayName(name);
+                  .getProfile();
               if (!context.mounted) return;
               _push(
                 context,
-                ConfirmationScreen(
-                  name: name,
-                  onContinue: () {
-                    _push(context, _lastPeriod(context, ref, name));
-                  },
+                RestoreConfirmationScreen(
+                  name: profile?.displayName ?? '',
+                  onContinue: () => _finishRestore(ref),
                 ),
               );
             },
@@ -184,12 +223,17 @@ class _OnboardingFlow extends ConsumerWidget {
 
 /// Root widget for tests and Widgetbook. Wraps [RituApp] in a [ProviderScope],
 /// optionally overriding the shared [AppDatabase] and simulated today.
-Widget createRituApp({AppDatabase? database, DateTime? simulatedToday}) {
+Widget createRituApp({
+  AppDatabase? database,
+  DateTime? simulatedToday,
+  List<Override> overrides = const [],
+}) {
   return ProviderScope(
     overrides: [
       if (database != null) databaseProvider.overrideWithValue(database),
       if (simulatedToday != null)
         simulatedTodayProvider.overrideWithValue(dateOnly(simulatedToday)),
+      ...overrides,
     ],
     child: const RituApp(),
   );

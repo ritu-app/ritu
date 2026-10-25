@@ -276,6 +276,36 @@ final directories = <_widgetbook.WidgetbookNode>[
               ),
             ],
           ),
+          _widgetbook.WidgetbookComponent(
+            name: 'RestoreBackupScreen',
+            useCases: [
+              _widgetbook.WidgetbookUseCase(
+                name: 'Empty',
+                builder: _ritu_widgetbook_use_cases_screens_onboarding_use_cases
+                    .restoreBackupEmptyUseCase,
+              ),
+              _widgetbook.WidgetbookUseCase(
+                name: 'File selected',
+                builder: _ritu_widgetbook_use_cases_screens_onboarding_use_cases
+                    .restoreBackupSelectedUseCase,
+              ),
+              _widgetbook.WidgetbookUseCase(
+                name: 'Import failed',
+                builder: _ritu_widgetbook_use_cases_screens_onboarding_use_cases
+                    .restoreBackupFailedUseCase,
+              ),
+            ],
+          ),
+          _widgetbook.WidgetbookComponent(
+            name: 'RestoreConfirmationScreen',
+            useCases: [
+              _widgetbook.WidgetbookUseCase(
+                name: 'Default',
+                builder: _ritu_widgetbook_use_cases_screens_onboarding_use_cases
+                    .restoreConfirmationUseCase,
+              ),
+            ],
+          ),
         ],
       ),
       _widgetbook.WidgetbookFolder(

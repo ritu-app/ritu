@@ -48,6 +48,7 @@ void main() {
       expect(decoded.periodLogs.single.startedOn, DateTime(2026, 7, 1));
       expect(decoded.dailyLogs, isEmpty);
       expect(decoded.journalEntries, isEmpty);
+      expect(RituBackup.isRestorable(original.encodePretty()), isTrue);
     });
 
     test('decodes legacy period logs without new metadata fields', () {
@@ -71,6 +72,17 @@ void main() {
       expect(log.startSource, PeriodStartSources.periodHistory);
       expect(log.endStatus, PeriodEndStatus.rough);
       expect(log.hasApproximateEnd, isTrue);
+      expect(
+        RituBackup.isRestorable('''
+{
+  "format": "ritu.backup",
+  "version": 1,
+  "exportedAt": "2026-08-08T12:00:00.000Z",
+  "periodLogs": []
+}
+'''),
+        isFalse,
+      );
     });
 
     test('rejects invalid format', () {
@@ -78,6 +90,11 @@ void main() {
         () => RituBackup.decode('{"format":"other","version":1}'),
         throwsA(isA<FormatException>()),
       );
+      expect(
+        RituBackup.isRestorable('{"format":"other","version":1}'),
+        isFalse,
+      );
+      expect(RituBackup.isRestorable('not json'), isFalse);
     });
 
     test('rejects missing profile fields on decode of bad profile', () {

@@ -5,11 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../theme/ritu_colors.dart';
 
 class ConfirmationScreen extends StatelessWidget {
-  const ConfirmationScreen({
-    super.key,
-    required this.name,
-    this.onContinue,
-  });
+  const ConfirmationScreen({super.key, required this.name, this.onContinue});
 
   final String name;
   final VoidCallback? onContinue;
@@ -38,7 +34,7 @@ class ConfirmationScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 4),
-                  const _WavingHand(),
+                  const WavingHand(),
                 ],
               ),
               const SizedBox(height: 8),
@@ -83,8 +79,8 @@ class ConfirmationScreen extends StatelessWidget {
 
 /// A hand emoji that waves a couple of times, then pauses before looping —
 /// mimics a natural greeting rather than a constant robotic swing.
-class _WavingHand extends StatelessWidget {
-  const _WavingHand();
+class WavingHand extends StatelessWidget {
+  const WavingHand({super.key});
 
   @override
   Widget build(BuildContext context) {
