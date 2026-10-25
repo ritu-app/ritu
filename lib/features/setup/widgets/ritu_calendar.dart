@@ -5,7 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/date_format.dart';
-import '../../../theme/ritu_colors.dart';
+import '../../../theme/ritu_palette.dart';
 
 enum RituCalendarSelectionStyle { filled, dotted }
 
@@ -78,17 +78,13 @@ class RituCalendar extends StatelessWidget {
   bool _isSameDay(DateTime a, DateTime b) =>
       a.year == b.year && a.month == b.month && a.day == b.day;
 
-  bool _isMarked(DateTime day) =>
-      markedDates.any((d) => _isSameDay(d, day));
+  bool _isMarked(DateTime day) => markedDates.any((d) => _isSameDay(d, day));
 
-  bool _isEntry(DateTime day) =>
-      entryDates.any((d) => _isSameDay(d, day));
+  bool _isEntry(DateTime day) => entryDates.any((d) => _isSameDay(d, day));
 
-  bool _isPeriod(DateTime day) =>
-      periodDates.any((d) => _isSameDay(d, day));
+  bool _isPeriod(DateTime day) => periodDates.any((d) => _isSameDay(d, day));
 
-  bool _isPreview(DateTime day) =>
-      previewDates.any((d) => _isSameDay(d, day));
+  bool _isPreview(DateTime day) => previewDates.any((d) => _isSameDay(d, day));
 
   bool _isToday(DateTime day) {
     final now = DateTime.now();
@@ -115,22 +111,31 @@ class RituCalendar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final firstOfMonth = _normalizedMonth;
-    final daysInMonth = DateTime(firstOfMonth.year, firstOfMonth.month + 1, 0)
-        .day;
+    final daysInMonth = DateTime(
+      firstOfMonth.year,
+      firstOfMonth.month + 1,
+      0,
+    ).day;
     // DateTime.weekday: Mon=1..Sun=7. Convert to Sun=0..Sat=6.
     final startOffset = firstOfMonth.weekday % 7;
     final totalCells = startOffset + daysInMonth;
     final rowCount = ((totalCells + 6) / 7).floor();
     final min = minSelectableDate == null ? null : dateOnly(minSelectableDate!);
     final max = maxSelectableDate == null ? null : dateOnly(maxSelectableDate!);
-    final canGoBack = monthNavigationEnabled &&
+    final canGoBack =
+        monthNavigationEnabled &&
         (min == null ||
-            DateTime(firstOfMonth.year, firstOfMonth.month)
-                .isAfter(DateTime(min.year, min.month)));
-    final canGoForward = monthNavigationEnabled &&
+            DateTime(
+              firstOfMonth.year,
+              firstOfMonth.month,
+            ).isAfter(DateTime(min.year, min.month)));
+    final canGoForward =
+        monthNavigationEnabled &&
         (max == null ||
-            DateTime(firstOfMonth.year, firstOfMonth.month + 1)
-                .isBefore(DateTime(max.year, max.month + 1)));
+            DateTime(
+              firstOfMonth.year,
+              firstOfMonth.month + 1,
+            ).isBefore(DateTime(max.year, max.month + 1)));
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
@@ -149,9 +154,9 @@ class RituCalendar extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.fromLTRB(12, 16, 12, 24),
         decoration: BoxDecoration(
-          color: RituColors.fillElevated,
+          color: context.ritu.fillElevated,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: RituColors.borderSubtle),
+          border: Border.all(color: context.ritu.borderSubtle),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.04),
@@ -178,7 +183,7 @@ class RituCalendar extends StatelessWidget {
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
                       height: 24 / 15,
-                      color: RituColors.textPrimary,
+                      color: context.ritu.textPrimary,
                     ),
                   ),
                 ),
@@ -207,7 +212,7 @@ class RituCalendar extends StatelessWidget {
                               fontSize: 10,
                               fontWeight: FontWeight.w500,
                               height: 14 / 10,
-                              color: RituColors.textDisabled,
+                              color: context.ritu.textQuaternary,
                             ),
                           ),
                         ),
@@ -221,6 +226,7 @@ class RituCalendar extends StatelessWidget {
                       children: [
                         for (var col = 0; col < 7; col++)
                           _buildDayCell(
+                            context,
                             startOffset,
                             daysInMonth,
                             row * 7 + col,
@@ -237,7 +243,12 @@ class RituCalendar extends StatelessWidget {
     );
   }
 
-  Widget _buildDayCell(int startOffset, int daysInMonth, int index) {
+  Widget _buildDayCell(
+    BuildContext context,
+    int startOffset,
+    int daysInMonth,
+    int index,
+  ) {
     final dayNumber = index - startOffset + 1;
     if (dayNumber < 1 || dayNumber > daysInMonth) {
       return const SizedBox(width: 30, height: 36);
@@ -247,7 +258,8 @@ class RituCalendar extends StatelessWidget {
     final selectable = _isSelectable(date);
     final isSelected =
         selectable && selectedDate != null && _isSameDay(selectedDate!, date);
-    final isAnchor = selectable &&
+    final isAnchor =
+        selectable &&
         anchorDate != null &&
         _isSameDay(anchorDate!, date) &&
         !isSelected;
@@ -259,18 +271,16 @@ class RituCalendar extends StatelessWidget {
     final isToday = _isToday(date);
     final showTodayDot = isPeriod && isToday;
     final dayColor = isPeriod
-        ? RituColors.rosewood900
+        ? context.ritu.rosewood900
         : isPreview
-            ? RituColors.iconCritical
-            : !selectable
-                ? RituColors.textDisabled
-                : isSelected &&
-                        selectionStyle == RituCalendarSelectionStyle.filled
-                    ? RituColors.textInverse
-                    : isSelected &&
-                            selectionStyle == RituCalendarSelectionStyle.dotted
-                        ? RituColors.iconCritical
-                        : RituColors.textPrimary;
+        ? context.ritu.iconCritical
+        : !selectable
+        ? context.ritu.textDisabled
+        : isSelected && selectionStyle == RituCalendarSelectionStyle.filled
+        ? context.ritu.textInverse
+        : isSelected && selectionStyle == RituCalendarSelectionStyle.dotted
+        ? context.ritu.iconCritical
+        : context.ritu.textPrimary;
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
@@ -290,8 +300,8 @@ class RituCalendar extends StatelessWidget {
                     width: 30,
                     height: 30,
                     alignment: Alignment.center,
-                    decoration: const BoxDecoration(
-                      color: RituColors.cycleMenstrual,
+                    decoration: BoxDecoration(
+                      color: context.ritu.cycleMenstrual,
                       shape: BoxShape.circle,
                     ),
                     child: Stack(
@@ -307,7 +317,7 @@ class RituCalendar extends StatelessWidget {
                           ),
                         ),
                         if (showTodayDot)
-                          const Positioned(
+                          Positioned(
                             bottom: 3,
                             child: SizedBox(
                               width: 4,
@@ -315,7 +325,7 @@ class RituCalendar extends StatelessWidget {
                               child: DecoratedBox(
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: RituColors.white,
+                                  color: context.ritu.white,
                                 ),
                               ),
                             ),
@@ -325,96 +335,98 @@ class RituCalendar extends StatelessWidget {
                   ),
                 ),
               )
-            : selectionStyle == RituCalendarSelectionStyle.filled &&
-                    isSelected
-                ? Center(
-                    child: Container(
-                      width: 30,
-                      height: 30,
-                      alignment: Alignment.center,
-                      decoration: const BoxDecoration(
-                        color: RituColors.fillBrandPressed,
-                        shape: BoxShape.circle,
-                      ),
+            : selectionStyle == RituCalendarSelectionStyle.filled && isSelected
+            ? Center(
+                child: Container(
+                  width: 30,
+                  height: 30,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: context.ritu.fillBrandPressed,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Text(
+                    '$dayNumber',
+                    style: GoogleFonts.dmSans(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      height: 1,
+                      color: dayColor,
+                    ),
+                  ),
+                ),
+              )
+            : isAnchor
+            ? Center(
+                child: CustomPaint(
+                  painter: _DashedCirclePainter(context.ritu.sage600),
+                  child: SizedBox(
+                    width: 30,
+                    height: 30,
+                    child: Center(
                       child: Text(
                         '$dayNumber',
                         style: GoogleFonts.dmSans(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
                           height: 1,
-                          color: dayColor,
+                          color: context.ritu.textPrimary,
                         ),
                       ),
                     ),
-                  )
-                : isAnchor
-                    ? Center(
-                        child: CustomPaint(
-                          painter: _DashedCirclePainter(),
-                          child: SizedBox(
-                            width: 30,
-                            height: 30,
-                            child: Center(
-                              child: Text(
-                                '$dayNumber',
-                                style: GoogleFonts.dmSans(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w600,
-                                  height: 1,
-                                  color: RituColors.textPrimary,
-                                ),
-                              ),
-                            ),
+                  ),
+                ),
+              )
+            : Stack(
+                alignment: Alignment.center,
+                children: [
+                  Text(
+                    '$dayNumber',
+                    style: GoogleFonts.dmSans(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      height: 1,
+                      color: dayColor,
+                    ),
+                  ),
+                  if (isMarked ||
+                      isEntry ||
+                      isToday ||
+                      (selectionStyle == RituCalendarSelectionStyle.dotted &&
+                          isSelected))
+                    Positioned(
+                      bottom: 0,
+                      child: SizedBox(
+                        width: 4,
+                        height: 4,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: isMarked
+                                ? context.ritu.cycleMenstrual
+                                : isToday
+                                ? context.ritu.sage600
+                                : context.ritu.sage500,
                           ),
-                        ),
-                      )
-                : Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      Text(
-                        '$dayNumber',
-                        style: GoogleFonts.dmSans(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          height: 1,
-                          color: dayColor,
                         ),
                       ),
-                      if (isMarked ||
-                          isEntry ||
-                          isToday ||
-                          (selectionStyle ==
-                                  RituCalendarSelectionStyle.dotted &&
-                              isSelected))
-                        Positioned(
-                          bottom: 0,
-                          child: SizedBox(
-                            width: 4,
-                            height: 4,
-                            child: DecoratedBox(
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: isMarked
-                                    ? RituColors.cycleMenstrual
-                                    : isToday
-                                        ? RituColors.sage600
-                                        : RituColors.sage500,
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
+                    ),
+                ],
+              ),
       ),
     );
   }
 }
 
 class _DashedCirclePainter extends CustomPainter {
+  const _DashedCirclePainter(this.color);
+
+  final Color color;
+
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = RituColors.sage600
+      ..color = color
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5;
     final center = Offset(size.width / 2, size.height / 2);
@@ -435,7 +447,8 @@ class _DashedCirclePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _DashedCirclePainter oldDelegate) =>
+      oldDelegate.color != color;
 }
 
 class _NavIcon extends StatelessWidget {
@@ -462,8 +475,8 @@ class _NavIcon extends StatelessWidget {
           icon,
           size: 18,
           color: enabled
-              ? RituColors.textDisabled
-              : RituColors.textDisabled.withValues(alpha: 0.35),
+              ? context.ritu.textQuaternary
+              : context.ritu.textQuaternary.withValues(alpha: 0.35),
         ),
       ),
     );

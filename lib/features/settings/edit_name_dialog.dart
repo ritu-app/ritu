@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '../../theme/ritu_colors.dart';
+import '../../theme/ritu_palette.dart';
 
 /// Modal to change the user's first name (Figma 11.1-Name edit).
 Future<String?> showEditNameDialog(
@@ -11,7 +11,7 @@ Future<String?> showEditNameDialog(
 }) {
   return showDialog<String>(
     context: context,
-    barrierColor: const Color(0xB3000000), // black @ 70%
+    barrierColor: context.ritu.barrier, // black @ 70%
     builder: (dialogContext) {
       return _EditNameDialog(currentName: currentName);
     },
@@ -66,7 +66,7 @@ class _EditNameDialogState extends State<_EditNameDialog> {
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: 16),
       child: Material(
-        color: RituColors.backgroundPage,
+        color: context.ritu.backgroundPage,
         borderRadius: BorderRadius.circular(16),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
@@ -87,7 +87,7 @@ class _EditNameDialogState extends State<_EditNameDialog> {
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
                             height: 24 / 18,
-                            color: RituColors.textPrimary,
+                            color: context.ritu.textPrimary,
                           ),
                         ),
                         Text(
@@ -96,7 +96,7 @@ class _EditNameDialogState extends State<_EditNameDialog> {
                             fontSize: 13,
                             fontWeight: FontWeight.w400,
                             height: 20 / 13,
-                            color: RituColors.textSecondary,
+                            color: context.ritu.textSecondary,
                           ),
                         ),
                       ],
@@ -106,12 +106,12 @@ class _EditNameDialogState extends State<_EditNameDialog> {
                   GestureDetector(
                     onTap: () => Navigator.of(context).pop(),
                     behavior: HitTestBehavior.opaque,
-                    child: const Padding(
+                    child: Padding(
                       padding: EdgeInsets.all(0),
                       child: Icon(
                         LucideIcons.x,
                         size: 24,
-                        color: RituColors.textPrimary,
+                        color: context.ritu.textPrimary,
                       ),
                     ),
                   ),
@@ -128,30 +128,30 @@ class _EditNameDialogState extends State<_EditNameDialog> {
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
                   height: 20 / 13,
-                  color: RituColors.textPrimary,
+                  color: context.ritu.textPrimary,
                 ),
-                cursorColor: RituColors.sage500,
+                cursorColor: context.ritu.sage500,
                 decoration: InputDecoration(
                   hintText: 'Your first name',
                   hintStyle: GoogleFonts.dmSans(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
                     height: 20 / 13,
-                    color: RituColors.textDisabled,
+                    color: context.ritu.textDisabled,
                   ),
                   filled: true,
-                  fillColor: RituColors.fillElevated,
+                  fillColor: context.ritu.fillElevated,
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 12,
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: RituColors.borderSubtle),
+                    borderSide: BorderSide(color: context.ritu.borderSubtle),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: RituColors.sage500),
+                    borderSide: BorderSide(color: context.ritu.sage500),
                   ),
                 ),
               ),
@@ -162,11 +162,12 @@ class _EditNameDialogState extends State<_EditNameDialog> {
                 child: FilledButton(
                   onPressed: _canSave ? _save : null,
                   style: FilledButton.styleFrom(
-                    backgroundColor: RituColors.sage500,
-                    disabledBackgroundColor:
-                        RituColors.sage500.withValues(alpha: 0.4),
-                    foregroundColor: RituColors.white,
-                    disabledForegroundColor: RituColors.white,
+                    backgroundColor: context.ritu.sage500,
+                    disabledBackgroundColor: context.ritu.sage500.withValues(
+                      alpha: 0.4,
+                    ),
+                    foregroundColor: context.ritu.white,
+                    disabledForegroundColor: context.ritu.white,
                     elevation: 0,
                     padding: EdgeInsets.zero,
                     shape: const StadiumBorder(),

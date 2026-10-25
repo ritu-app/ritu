@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/date_format.dart';
-import '../../../theme/ritu_colors.dart';
+import '../../../theme/ritu_palette.dart';
 import 'ritu_calendar.dart';
 
 /// Bottom sheet for picking an exact period end date (Figma 1123:5335).
@@ -16,15 +16,14 @@ Future<DateTime?> showPeriodEndDateSheet({
   return showModalBottomSheet<DateTime>(
     context: context,
     isScrollControlled: true,
-    backgroundColor: RituColors.fillElevated,
+    backgroundColor: context.ritu.fillElevated,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
     ),
     builder: (context) => _PeriodEndDateSheet(
       startedOn: dateOnly(startedOn),
       maxEndDate: dateOnly(maxEndDate),
-      initialEndDate:
-          initialEndDate == null ? null : dateOnly(initialEndDate),
+      initialEndDate: initialEndDate == null ? null : dateOnly(initialEndDate),
     ),
   );
 }
@@ -109,7 +108,7 @@ class _PeriodEndDateSheetState extends State<_PeriodEndDateSheet> {
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
                             height: 24 / 18,
-                            color: RituColors.textPrimary,
+                            color: context.ritu.textPrimary,
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -119,7 +118,7 @@ class _PeriodEndDateSheetState extends State<_PeriodEndDateSheet> {
                             fontSize: 13,
                             fontWeight: FontWeight.w400,
                             height: 20 / 13,
-                            color: RituColors.textSecondary,
+                            color: context.ritu.textSecondary,
                           ),
                         ),
                       ],
@@ -127,10 +126,10 @@ class _PeriodEndDateSheetState extends State<_PeriodEndDateSheet> {
                   ),
                   IconButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(
+                    icon: Icon(
                       LucideIcons.x,
                       size: 24,
-                      color: RituColors.textPrimary,
+                      color: context.ritu.textPrimary,
                     ),
                   ),
                 ],
@@ -145,7 +144,8 @@ class _PeriodEndDateSheetState extends State<_PeriodEndDateSheet> {
                 previewDates: _rangePreviewDates,
                 minSelectableDate: widget.startedOn,
                 maxSelectableDate: widget.maxEndDate,
-                onMonthChanged: (month) => setState(() => _visibleMonth = month),
+                onMonthChanged: (month) =>
+                    setState(() => _visibleMonth = month),
                 onDateSelected: (date) {
                   setState(() => _selectedEnd = dateOnly(date));
                 },
@@ -158,7 +158,7 @@ class _PeriodEndDateSheetState extends State<_PeriodEndDateSheet> {
                 child: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: RituColors.fillCritical,
+                    color: context.ritu.fillCritical,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
@@ -168,7 +168,7 @@ class _PeriodEndDateSheetState extends State<_PeriodEndDateSheet> {
                       fontSize: 13,
                       fontWeight: FontWeight.w400,
                       height: 20 / 13,
-                      color: RituColors.textCritical,
+                      color: context.ritu.textCritical,
                     ),
                   ),
                 ),
@@ -185,11 +185,12 @@ class _PeriodEndDateSheetState extends State<_PeriodEndDateSheet> {
                       ? null
                       : () => Navigator.of(context).pop(_selectedEnd),
                   style: FilledButton.styleFrom(
-                    backgroundColor: RituColors.sage500,
-                    disabledBackgroundColor:
-                        RituColors.sage500.withValues(alpha: 0.4),
-                    foregroundColor: RituColors.white,
-                    disabledForegroundColor: RituColors.white,
+                    backgroundColor: context.ritu.sage500,
+                    disabledBackgroundColor: context.ritu.sage500.withValues(
+                      alpha: 0.4,
+                    ),
+                    foregroundColor: context.ritu.white,
+                    disabledForegroundColor: context.ritu.white,
                     elevation: 0,
                     shape: const StadiumBorder(),
                     textStyle: GoogleFonts.dmSans(

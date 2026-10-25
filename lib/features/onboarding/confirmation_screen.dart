@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../theme/ritu_colors.dart';
+import '../../theme/ritu_palette.dart';
 
 class ConfirmationScreen extends StatelessWidget {
   const ConfirmationScreen({super.key, required this.name, this.onContinue});
@@ -13,7 +13,7 @@ class ConfirmationScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: RituColors.backgroundPage,
+      backgroundColor: context.ritu.backgroundPage,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -30,7 +30,7 @@ class ConfirmationScreen extends StatelessWidget {
                       fontSize: 38,
                       fontWeight: FontWeight.w400,
                       height: 42 / 38,
-                      color: RituColors.textPrimary,
+                      color: context.ritu.textPrimary,
                     ),
                   ),
                   const SizedBox(width: 4),
@@ -45,7 +45,7 @@ class ConfirmationScreen extends StatelessWidget {
                   fontSize: 15,
                   fontWeight: FontWeight.w400,
                   height: 24 / 15,
-                  color: RituColors.textSecondary,
+                  color: context.ritu.textSecondary,
                 ),
               ),
               const Spacer(),
@@ -56,7 +56,7 @@ class ConfirmationScreen extends StatelessWidget {
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
                   height: 20 / 13,
-                  color: RituColors.textTertiary,
+                  color: context.ritu.textTertiary,
                 ),
               ),
               const SizedBox(height: 12),
@@ -90,7 +90,7 @@ class WavingHand extends StatelessWidget {
             fontSize: 38,
             fontWeight: FontWeight.w400,
             height: 42 / 38,
-            color: RituColors.textPrimary,
+            color: context.ritu.textPrimary,
           ),
         )
         .animate(onPlay: (controller) => controller.repeat())

@@ -7,7 +7,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../data/models/daily_reminder.dart';
 import '../../providers/daily_reminder_provider.dart';
 import '../../services/daily_reminder_notifications.dart';
-import '../../theme/ritu_colors.dart';
+import '../../theme/ritu_palette.dart';
 
 /// Figma 452:1272 — Settings → Daily Reminder.
 class DailyReminderScreen extends ConsumerWidget {
@@ -44,15 +44,14 @@ class DailyReminderScreen extends ConsumerWidget {
   ) async {
     final initial = TimeOfDay(hour: current.hour, minute: current.minute);
     final platform = Theme.of(context).platform;
-    final picked = platform == TargetPlatform.iOS ||
-            platform == TargetPlatform.macOS
+    final picked =
+        platform == TargetPlatform.iOS || platform == TargetPlatform.macOS
         ? await _showCupertinoTimePicker(context, initial: initial)
         : await showTimePicker(context: context, initialTime: initial);
     if (picked == null) return;
-    await ref.read(dailyReminderProvider.notifier).setTime(
-          hour: picked.hour,
-          minute: picked.minute,
-        );
+    await ref
+        .read(dailyReminderProvider.notifier)
+        .setTime(hour: picked.hour, minute: picked.minute);
   }
 
   Future<TimeOfDay?> _showCupertinoTimePicker(
@@ -80,24 +79,21 @@ class DailyReminderScreen extends ConsumerWidget {
                         'Cancel',
                         style: GoogleFonts.dmSans(
                           fontSize: 16,
-                          color: RituColors.textTertiary,
+                          color: context.ritu.textTertiary,
                         ),
                       ),
                     ),
                     CupertinoButton(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       onPressed: () => Navigator.of(context).pop(
-                        TimeOfDay(
-                          hour: selected.hour,
-                          minute: selected.minute,
-                        ),
+                        TimeOfDay(hour: selected.hour, minute: selected.minute),
                       ),
                       child: Text(
                         'Done',
                         style: GoogleFonts.dmSans(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: RituColors.sage600,
+                          color: context.ritu.sage600,
                         ),
                       ),
                     ),
@@ -125,7 +121,7 @@ class DailyReminderScreen extends ConsumerWidget {
         ref.watch(dailyReminderProvider).valueOrNull ?? DailyReminder.defaults;
 
     return Scaffold(
-      backgroundColor: RituColors.backgroundPage,
+      backgroundColor: context.ritu.backgroundPage,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -137,13 +133,13 @@ class DailyReminderScreen extends ConsumerWidget {
                 child: GestureDetector(
                   onTap: () => Navigator.of(context).pop(),
                   behavior: HitTestBehavior.opaque,
-                  child: const SizedBox(
+                  child: SizedBox(
                     width: 24,
                     height: 24,
                     child: Icon(
                       LucideIcons.chevronLeft,
                       size: 24,
-                      color: RituColors.textPrimary,
+                      color: context.ritu.textPrimary,
                     ),
                   ),
                 ),
@@ -159,7 +155,7 @@ class DailyReminderScreen extends ConsumerWidget {
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
                       height: 24 / 18,
-                      color: RituColors.textPrimary,
+                      color: context.ritu.textPrimary,
                     ),
                   ),
                   Text(
@@ -168,7 +164,7 @@ class DailyReminderScreen extends ConsumerWidget {
                       fontSize: 13,
                       fontWeight: FontWeight.w400,
                       height: 20 / 13,
-                      color: RituColors.textSecondary,
+                      color: context.ritu.textSecondary,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -182,7 +178,7 @@ class DailyReminderScreen extends ConsumerWidget {
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
                               height: 20 / 13,
-                              color: RituColors.textPrimary,
+                              color: context.ritu.textPrimary,
                             ),
                           ),
                         ),
@@ -190,10 +186,10 @@ class DailyReminderScreen extends ConsumerWidget {
                           value: reminder.enabled,
                           onChanged: (value) =>
                               _setEnabled(context, ref, value),
-                          activeTrackColor: RituColors.sage600,
-                          activeThumbColor: RituColors.fillElevated,
-                          inactiveTrackColor: RituColors.borderDisabled,
-                          inactiveThumbColor: RituColors.fillElevated,
+                          activeTrackColor: context.ritu.sage600,
+                          activeThumbColor: context.ritu.fillElevated,
+                          inactiveTrackColor: context.ritu.borderDisabled,
+                          inactiveThumbColor: context.ritu.fillElevated,
                         ),
                       ],
                     ),
@@ -213,7 +209,7 @@ class DailyReminderScreen extends ConsumerWidget {
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
                                   height: 20 / 13,
-                                  color: RituColors.textPrimary,
+                                  color: context.ritu.textPrimary,
                                 ),
                               ),
                               Text(
@@ -222,16 +218,16 @@ class DailyReminderScreen extends ConsumerWidget {
                                   fontSize: 11,
                                   fontWeight: FontWeight.w500,
                                   height: 18 / 11,
-                                  color: RituColors.textTertiary,
+                                  color: context.ritu.textTertiary,
                                 ),
                               ),
                             ],
                           ),
                         ),
-                        const Icon(
+                        Icon(
                           LucideIcons.chevronRight,
                           size: 16,
-                          color: RituColors.textTertiary,
+                          color: context.ritu.textTertiary,
                         ),
                       ],
                     ),
@@ -255,18 +251,15 @@ class _Card extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: RituColors.fillElevated,
+      color: context.ritu.fillElevated,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: RituColors.borderSubtle),
+        side: BorderSide(color: context.ritu.borderSubtle),
       ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: child,
-        ),
+        child: Padding(padding: const EdgeInsets.all(16), child: child),
       ),
     );
   }

@@ -13,6 +13,8 @@ import '../features/setup/widgets/period_episode_form_fields.dart';
 import '../features/setup/notification_screen.dart';
 import '../features/setup/past_dates_screen.dart';
 import '../features/splash/splash_screen.dart';
+import '../data/models/app_appearance.dart';
+import '../providers/app_appearance_provider.dart';
 import '../providers/app_restart_provider.dart';
 import '../providers/daily_reminder_provider.dart';
 import '../providers/database_provider.dart';
@@ -20,6 +22,7 @@ import '../providers/profile_providers.dart';
 import '../providers/repository_providers.dart';
 import '../providers/simulated_today_provider.dart';
 import '../services/daily_reminder_notifications.dart';
+import '../theme/ritu_palette.dart';
 import '../theme/ritu_theme.dart';
 
 class RituApp extends ConsumerWidget {
@@ -28,12 +31,16 @@ class RituApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final restartKey = ref.watch(appRestartProvider);
+    final appearance =
+        ref.watch(appAppearanceProvider).valueOrNull ?? AppAppearance.system;
 
     return MaterialApp(
       key: ValueKey(restartKey),
       title: 'Ritu',
       debugShowCheckedModeBanner: false,
-      theme: buildRituTheme(),
+      theme: buildRituTheme(RituPalette.light),
+      darkTheme: buildRituTheme(RituPalette.dark),
+      themeMode: themeModeFor(appearance),
       home: const _AppBootstrap(),
     );
   }

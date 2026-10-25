@@ -8,9 +8,7 @@ import '../../data/backup/ritu_backup.dart';
 import '../../providers/app_restart_provider.dart';
 import '../../providers/profile_providers.dart';
 import '../../providers/repository_providers.dart';
-import '../../theme/ritu_colors.dart';
-
-const _borderDefault = Color(0xFFE2DDD8);
+import '../../theme/ritu_palette.dart';
 
 /// Figma 1249:5890 / 1249:5977 / 1249:6162 / 1249:6221 —
 /// Settings → Export & Import → Import Data.
@@ -58,7 +56,7 @@ class _ImportDataScreenState extends ConsumerState<ImportDataScreen> {
 
     final confirmed = await showDialog<bool>(
       context: context,
-      barrierColor: const Color(0xB3000000),
+      barrierColor: context.ritu.barrier,
       builder: (_) => _ReplaceDataDialog(fileName: file.name),
     );
     if (confirmed != true || !mounted) return;
@@ -85,7 +83,7 @@ class _ImportDataScreenState extends ConsumerState<ImportDataScreen> {
     final file = _file;
 
     return Scaffold(
-      backgroundColor: RituColors.backgroundPage,
+      backgroundColor: context.ritu.backgroundPage,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -97,13 +95,13 @@ class _ImportDataScreenState extends ConsumerState<ImportDataScreen> {
                 child: GestureDetector(
                   onTap: _busy ? null : () => Navigator.of(context).pop(),
                   behavior: HitTestBehavior.opaque,
-                  child: const SizedBox(
+                  child: SizedBox(
                     width: 24,
                     height: 24,
                     child: Icon(
                       LucideIcons.chevronLeft,
                       size: 24,
-                      color: RituColors.textPrimary,
+                      color: context.ritu.textPrimary,
                     ),
                   ),
                 ),
@@ -119,7 +117,7 @@ class _ImportDataScreenState extends ConsumerState<ImportDataScreen> {
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
                       height: 24 / 18,
-                      color: RituColors.textPrimary,
+                      color: context.ritu.textPrimary,
                     ),
                   ),
                   Text(
@@ -128,7 +126,7 @@ class _ImportDataScreenState extends ConsumerState<ImportDataScreen> {
                       fontSize: 13,
                       fontWeight: FontWeight.w400,
                       height: 20 / 13,
-                      color: RituColors.textSecondary,
+                      color: context.ritu.textSecondary,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -149,7 +147,7 @@ class _ImportDataScreenState extends ConsumerState<ImportDataScreen> {
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
                         height: 20 / 13,
-                        color: RituColors.textTertiary,
+                        color: context.ritu.textTertiary,
                       ),
                     ),
                   ],
@@ -163,12 +161,11 @@ class _ImportDataScreenState extends ConsumerState<ImportDataScreen> {
                     child: FilledButton(
                       onPressed: _canImport ? _confirmImport : null,
                       style: FilledButton.styleFrom(
-                        backgroundColor: RituColors.sage500,
-                        disabledBackgroundColor: RituColors.sage500.withValues(
-                          alpha: 0.4,
-                        ),
-                        foregroundColor: RituColors.white,
-                        disabledForegroundColor: RituColors.white.withValues(
+                        backgroundColor: context.ritu.sage500,
+                        disabledBackgroundColor: context.ritu.sage500
+                            .withValues(alpha: 0.4),
+                        foregroundColor: context.ritu.white,
+                        disabledForegroundColor: context.ritu.white.withValues(
                           alpha: 0.4,
                         ),
                         elevation: 0,
@@ -180,12 +177,12 @@ class _ImportDataScreenState extends ConsumerState<ImportDataScreen> {
                         ),
                       ),
                       child: _busy
-                          ? const SizedBox(
+                          ? SizedBox(
                               width: 20,
                               height: 20,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                color: RituColors.white,
+                                color: context.ritu.white,
                               ),
                             )
                           : const Text('Import'),
@@ -219,7 +216,7 @@ class _UploadZone extends StatelessWidget {
     final selected = file != null;
     const radius = BorderRadius.all(Radius.circular(8));
     final body = Material(
-      color: selected ? RituColors.fillSecondary : RituColors.fillElevated,
+      color: selected ? context.ritu.fillSecondary : context.ritu.fillElevated,
       borderRadius: radius,
       child: InkWell(
         onTap: enabled ? onTap : null,
@@ -232,7 +229,7 @@ class _UploadZone extends StatelessWidget {
           decoration: selected
               ? BoxDecoration(
                   borderRadius: radius,
-                  border: Border.all(color: RituColors.sage600, width: 0.5),
+                  border: Border.all(color: context.ritu.sage600, width: 0.5),
                 )
               : null,
           child: selected
@@ -245,8 +242,8 @@ class _UploadZone extends StatelessWidget {
     if (selected) return body;
 
     return CustomPaint(
-      foregroundPainter: const _DashedRRectPainter(
-        color: _borderDefault,
+      foregroundPainter: _DashedRRectPainter(
+        color: context.ritu.borderDefault,
         radius: 8,
         strokeWidth: 2,
       ),
@@ -265,11 +262,7 @@ class _EmptyFilePrompt extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Icon(
-          LucideIcons.import,
-          size: 24,
-          color: RituColors.textDisabled,
-        ),
+        Icon(LucideIcons.import, size: 24, color: context.ritu.textDisabled),
         Text(
           prompt,
           textAlign: TextAlign.center,
@@ -277,7 +270,7 @@ class _EmptyFilePrompt extends StatelessWidget {
             fontSize: 15,
             fontWeight: FontWeight.w500,
             height: 24 / 15,
-            color: RituColors.textDisabled,
+            color: context.ritu.textDisabled,
           ),
         ),
       ],
@@ -295,10 +288,10 @@ class _SelectedFile extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Icon(
+        Icon(
           LucideIcons.fileCheckCorner,
           size: 24,
-          color: RituColors.sage500,
+          color: context.ritu.sage500,
         ),
         Text(
           file.name,
@@ -309,7 +302,7 @@ class _SelectedFile extends StatelessWidget {
             fontSize: 15,
             fontWeight: FontWeight.w500,
             height: 24 / 15,
-            color: RituColors.textPrimary,
+            color: context.ritu.textPrimary,
           ),
         ),
         Text(
@@ -319,7 +312,7 @@ class _SelectedFile extends StatelessWidget {
             fontSize: 13,
             fontWeight: FontWeight.w500,
             height: 20 / 13,
-            color: RituColors.textSecondary,
+            color: context.ritu.textSecondary,
           ),
         ),
       ],
@@ -336,19 +329,19 @@ class _ImportErrorBanner extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: RituColors.fillCritical,
+        color: context.ritu.fillCritical,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(
+          SizedBox(
             width: 20,
             height: 20,
             child: Icon(
               LucideIcons.info,
               size: 16,
-              color: RituColors.textCritical,
+              color: context.ritu.textCritical,
             ),
           ),
           const SizedBox(width: 4),
@@ -362,7 +355,7 @@ class _ImportErrorBanner extends StatelessWidget {
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                     height: 20 / 13,
-                    color: RituColors.textPrimary,
+                    color: context.ritu.textPrimary,
                   ),
                 ),
                 Text(
@@ -371,7 +364,7 @@ class _ImportErrorBanner extends StatelessWidget {
                     fontSize: 11,
                     fontWeight: FontWeight.w500,
                     height: 18 / 11,
-                    color: RituColors.textSecondary,
+                    color: context.ritu.textSecondary,
                   ),
                 ),
               ],
@@ -397,11 +390,11 @@ class _ReplaceDataDialog extends StatelessWidget {
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 358),
         child: Material(
-          color: RituColors.fillElevated,
+          color: context.ritu.fillElevated,
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
-            side: const BorderSide(color: RituColors.borderSubtle, width: 0.5),
+            side: BorderSide(color: context.ritu.borderSubtle, width: 0.5),
           ),
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
@@ -415,7 +408,7 @@ class _ReplaceDataDialog extends StatelessWidget {
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
                     height: 24 / 18,
-                    color: RituColors.textPrimary,
+                    color: context.ritu.textPrimary,
                   ),
                 ),
                 Text(
@@ -424,7 +417,7 @@ class _ReplaceDataDialog extends StatelessWidget {
                     fontSize: 13,
                     fontWeight: FontWeight.w400,
                     height: 20 / 13,
-                    color: RituColors.textSecondary,
+                    color: context.ritu.textSecondary,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -432,13 +425,13 @@ class _ReplaceDataDialog extends StatelessWidget {
                   children: [
                     _DialogAction(
                       label: 'Overwrite and continue',
-                      color: RituColors.textCritical,
+                      color: context.ritu.textCritical,
                       onPressed: () => Navigator.of(context).pop(true),
                     ),
                     const SizedBox(width: 32),
                     _DialogAction(
                       label: 'Cancel',
-                      color: RituColors.textTertiary,
+                      color: context.ritu.textTertiary,
                       onPressed: () => Navigator.of(context).pop(false),
                     ),
                   ],

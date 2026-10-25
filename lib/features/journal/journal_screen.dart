@@ -9,7 +9,7 @@ import '../../providers/journal_entry_providers.dart';
 import '../../providers/period_providers.dart';
 import '../../providers/repository_providers.dart';
 import '../../providers/simulated_today_provider.dart';
-import '../../theme/ritu_colors.dart';
+import '../../theme/ritu_palette.dart';
 import 'journal_all_entries_screen.dart';
 import 'journal_entry_card.dart';
 import 'journal_entry_modal.dart';
@@ -32,38 +32,40 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
   var _saving = false;
   var _syncingController = false;
   JournalEntry? _loadedTodayEntry;
+
   /// Immediate post-save value so the UI doesn’t wait on the Drift stream.
   JournalEntry? _optimisticToday;
 
   static const _heroBackground = Color(0xFFFDF2ED);
-  static const _heroBorder = Color(0xFFE2DDD8);
 
-  static const _helpItems = [
+  static List<(IconData, Color, Color, String, String)> _helpItems(
+    BuildContext context,
+  ) => [
     (
       LucideIcons.smile,
-      RituColors.fillCriticalSecondary,
-      RituColors.iconCritical,
+      context.ritu.fillCriticalSecondary,
+      context.ritu.iconCritical,
       'Reduce stress',
       'Writing helps you release your thoughts',
     ),
     (
       LucideIcons.sparkle,
-      RituColors.fillPositiveSecondary,
-      RituColors.textPositive,
+      context.ritu.fillPositiveSecondary,
+      context.ritu.textPositive,
       'Increase clarity',
       'Journaling helps you think more clearly',
     ),
     (
       LucideIcons.orbit,
-      RituColors.fillInfoSecondary,
-      RituColors.iconInfo,
+      context.ritu.fillInfoSecondary,
+      context.ritu.iconInfo,
       'Improve well-being',
       'Boost your mood and support daily balance',
     ),
     (
       LucideIcons.brain,
-      RituColors.fillAttentionSecondary,
-      RituColors.iconAttention,
+      context.ritu.fillAttentionSecondary,
+      context.ritu.iconAttention,
       'Build self awareness',
       'Learn from your thoughts and experiences',
     ),
@@ -84,7 +86,10 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
     super.dispose();
   }
 
-  void _syncControllerFromRepo(JournalEntry? todayEntry, {required bool showInput}) {
+  void _syncControllerFromRepo(
+    JournalEntry? todayEntry, {
+    required bool showInput,
+  }) {
     if (!showInput) return;
     if (todayEntry?.id == _loadedTodayEntry?.id &&
         todayEntry?.body == _loadedTodayEntry?.body) {
@@ -113,10 +118,9 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
     FocusScope.of(context).unfocus();
 
     try {
-      final saved = await ref.read(journalEntryRepositoryProvider).upsert(
-            loggedOn: ref.read(simulatedTodayProvider),
-            body: text,
-          );
+      final saved = await ref
+          .read(journalEntryRepositoryProvider)
+          .upsert(loggedOn: ref.read(simulatedTodayProvider), body: text);
       if (!mounted) return;
       setState(() {
         _optimisticToday = saved;
@@ -126,18 +130,15 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
     } catch (error) {
       if (!mounted) return;
       setState(() => _saving = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Couldn’t save entry: $error')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Couldn’t save entry: $error')));
     }
   }
 
   Future<void> _editTodayViaModal(JournalEntry entry) async {
     final periods = ref.read(allPeriodsProvider).valueOrNull ?? const [];
-    final contextLine = formatJournalEntryContextLine(
-      entry.loggedOn,
-      periods,
-    );
+    final contextLine = formatJournalEntryContextLine(entry.loggedOn, periods);
 
     final updatedBody = await showJournalEntryModal(
       context,
@@ -147,10 +148,9 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
     );
     if (updatedBody == null || !mounted) return;
 
-    await ref.read(journalEntryRepositoryProvider).upsert(
-          loggedOn: entry.loggedOn,
-          body: updatedBody,
-        );
+    await ref
+        .read(journalEntryRepositoryProvider)
+        .upsert(loggedOn: entry.loggedOn, body: updatedBody);
   }
 
   void _openAllEntries() {
@@ -186,8 +186,7 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
     final todayEntry = todayAsync.valueOrNull ?? _optimisticToday;
     final pastEntries = pastAsync.valueOrNull ?? const [];
     final hasPastEntries = pastEntries.isNotEmpty;
-    final entryCount =
-        (todayEntry != null ? 1 : 0) + pastEntries.length;
+    final entryCount = (todayEntry != null ? 1 : 0) + pastEntries.length;
     // Composer only until today’s entry exists; then show the saved card.
     final showInput = todayEntry == null;
     final showSavedCard = todayEntry != null;
@@ -208,7 +207,7 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
             fontSize: 28,
             fontWeight: FontWeight.w400,
             height: 34 / 28,
-            color: RituColors.textPrimary,
+            color: context.ritu.textPrimary,
           ),
         ),
         const SizedBox(height: 4),
@@ -218,14 +217,11 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
             fontSize: 13,
             fontWeight: FontWeight.w500,
             height: 20 / 13,
-            color: RituColors.textSecondary,
+            color: context.ritu.textSecondary,
           ),
         ),
         const SizedBox(height: 20),
-        if (showHero) ...[
-          const _HeroCard(),
-          const SizedBox(height: 20),
-        ],
+        if (showHero) ...[const _HeroCard(), const SizedBox(height: 20)],
         if (showInput)
           _ReflectionCard(
             saveButtonKey: _saveButtonKey,
@@ -256,18 +252,18 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
               fontSize: 15,
               fontWeight: FontWeight.w600,
               height: 24 / 15,
-              color: RituColors.textPrimary,
+              color: context.ritu.textPrimary,
             ),
           ),
           const SizedBox(height: 16),
-          for (var i = 0; i < _helpItems.length; i++) ...[
+          for (var i = 0; i < _helpItems(context).length; i++) ...[
             if (i > 0) const SizedBox(height: 16),
             _HelpRow(
-              icon: _helpItems[i].$1,
-              iconBackground: _helpItems[i].$2,
-              iconColor: _helpItems[i].$3,
-              title: _helpItems[i].$4,
-              subtitle: _helpItems[i].$5,
+              icon: _helpItems(context)[i].$1,
+              iconBackground: _helpItems(context)[i].$2,
+              iconColor: _helpItems(context)[i].$3,
+              title: _helpItems(context)[i].$4,
+              subtitle: _helpItems(context)[i].$5,
             ),
           ],
         ],
@@ -287,10 +283,7 @@ class _HeroCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: _JournalScreenState._heroBackground,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: _JournalScreenState._heroBorder,
-          width: 0.5,
-        ),
+        border: Border.all(color: context.ritu.borderDefault, width: 0.5),
       ),
       child: Column(
         children: [
@@ -323,7 +316,7 @@ class _HeroCard extends StatelessWidget {
               fontSize: 18,
               fontWeight: FontWeight.w600,
               height: 24 / 18,
-              color: RituColors.textPrimary,
+              color: context.ritu.textPrimary,
             ),
           ),
           Text(
@@ -333,15 +326,11 @@ class _HeroCard extends StatelessWidget {
               fontSize: 13,
               fontWeight: FontWeight.w400,
               height: 20 / 13,
-              color: RituColors.textSecondary,
+              color: context.ritu.textSecondary,
             ),
           ),
           const SizedBox(height: 12),
-          const Divider(
-            height: 1,
-            thickness: 0.5,
-            color: RituColors.divider,
-          ),
+          Divider(height: 1, thickness: 0.5, color: context.ritu.divider),
           const SizedBox(height: 12),
           Text(
             'Every small note you write brings meaningful insights',
@@ -350,7 +339,7 @@ class _HeroCard extends StatelessWidget {
               fontSize: 11,
               fontWeight: FontWeight.w500,
               height: 18 / 11,
-              color: RituColors.textTertiary,
+              color: context.ritu.textTertiary,
             ),
           ),
         ],
@@ -380,9 +369,9 @@ class _ReflectionCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: RituColors.fillSubtle,
+        color: context.ritu.fillSubtle,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: RituColors.textDisabled),
+        border: Border.all(color: context.ritu.textDisabled),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -393,7 +382,7 @@ class _ReflectionCard extends StatelessWidget {
               fontSize: 15,
               fontWeight: FontWeight.w600,
               height: 24 / 15,
-              color: RituColors.textPrimary,
+              color: context.ritu.textPrimary,
             ),
           ),
           Text(
@@ -402,7 +391,7 @@ class _ReflectionCard extends StatelessWidget {
               fontSize: 13,
               fontWeight: FontWeight.w400,
               height: 20 / 13,
-              color: RituColors.textSecondary,
+              color: context.ritu.textSecondary,
             ),
           ),
           const SizedBox(height: 12),
@@ -411,9 +400,9 @@ class _ReflectionCard extends StatelessWidget {
             height: 177,
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: RituColors.fillElevated,
+              color: context.ritu.fillElevated,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: RituColors.borderSubtle),
+              border: Border.all(color: context.ritu.borderSubtle),
             ),
             child: TextField(
               controller: controller,
@@ -426,7 +415,7 @@ class _ReflectionCard extends StatelessWidget {
                 fontSize: 13,
                 fontWeight: FontWeight.w400,
                 height: 20 / 13,
-                color: RituColors.textPrimary,
+                color: context.ritu.textPrimary,
               ),
               decoration: InputDecoration(
                 isCollapsed: true,
@@ -443,7 +432,7 @@ class _ReflectionCard extends StatelessWidget {
                   fontSize: 13,
                   fontWeight: FontWeight.w400,
                   height: 20 / 13,
-                  color: RituColors.textDisabled,
+                  color: context.ritu.textDisabled,
                 ),
               ),
             ),
@@ -456,11 +445,12 @@ class _ReflectionCard extends StatelessWidget {
             child: FilledButton(
               onPressed: canSave ? onSave : null,
               style: FilledButton.styleFrom(
-                backgroundColor: RituColors.sage500,
-                disabledBackgroundColor:
-                    RituColors.sage500.withValues(alpha: 0.5),
-                foregroundColor: RituColors.white,
-                disabledForegroundColor: RituColors.white,
+                backgroundColor: context.ritu.sage500,
+                disabledBackgroundColor: context.ritu.sage500.withValues(
+                  alpha: 0.5,
+                ),
+                foregroundColor: context.ritu.white,
+                disabledForegroundColor: context.ritu.white,
                 elevation: 0,
                 padding: EdgeInsets.zero,
                 shape: const StadiumBorder(),
@@ -480,10 +470,7 @@ class _ReflectionCard extends StatelessWidget {
 }
 
 class _SavedReflectionCard extends StatelessWidget {
-  const _SavedReflectionCard({
-    required this.entry,
-    required this.onEdit,
-  });
+  const _SavedReflectionCard({required this.entry, required this.onEdit});
 
   final JournalEntry entry;
   final VoidCallback onEdit;
@@ -494,19 +481,19 @@ class _SavedReflectionCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: RituColors.fillSecondary,
+        color: context.ritu.fillSecondary,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: RituColors.borderSubtle),
+        border: Border.all(color: context.ritu.borderSubtle),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(
+              Icon(
                 LucideIcons.circleCheck,
                 size: 24,
-                color: RituColors.sage600,
+                color: context.ritu.sage600,
               ),
               const SizedBox(width: 4),
               Expanded(
@@ -516,7 +503,7 @@ class _SavedReflectionCard extends StatelessWidget {
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
                     height: 24 / 15,
-                    color: RituColors.textPrimary,
+                    color: context.ritu.textPrimary,
                   ),
                 ),
               ),
@@ -526,7 +513,7 @@ class _SavedReflectionCard extends StatelessWidget {
                   padding: EdgeInsets.zero,
                   minimumSize: Size.zero,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  foregroundColor: RituColors.sage600,
+                  foregroundColor: context.ritu.sage600,
                 ),
                 child: Text(
                   'Edit',
@@ -546,7 +533,7 @@ class _SavedReflectionCard extends StatelessWidget {
               fontSize: 13,
               fontWeight: FontWeight.w400,
               height: 20 / 13,
-              color: RituColors.textPrimary,
+              color: context.ritu.textPrimary,
             ),
           ),
         ],
@@ -571,27 +558,27 @@ class _PastEntriesHeader extends StatelessWidget {
               fontSize: 15,
               fontWeight: FontWeight.w600,
               height: 24 / 15,
-              color: RituColors.textPrimary,
+              color: context.ritu.textPrimary,
             ),
           ),
         ),
         TextButton(
           onPressed: onViewAll,
-            style: TextButton.styleFrom(
-              padding: EdgeInsets.zero,
-              minimumSize: Size.zero,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              foregroundColor: RituColors.sage600,
-            ),
-            child: Text(
-              'View all',
-              style: GoogleFonts.dmSans(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                height: 20 / 13,
-              ),
+          style: TextButton.styleFrom(
+            padding: EdgeInsets.zero,
+            minimumSize: Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            foregroundColor: context.ritu.sage600,
+          ),
+          child: Text(
+            'View all',
+            style: GoogleFonts.dmSans(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              height: 20 / 13,
             ),
           ),
+        ),
       ],
     );
   }
@@ -618,9 +605,9 @@ class _HelpRow extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: RituColors.fillElevated,
+        color: context.ritu.fillElevated,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: RituColors.borderSubtle),
+        border: Border.all(color: context.ritu.borderSubtle),
       ),
       child: Row(
         children: [
@@ -645,7 +632,7 @@ class _HelpRow extends StatelessWidget {
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                     height: 20 / 13,
-                    color: RituColors.textPrimary,
+                    color: context.ritu.textPrimary,
                   ),
                 ),
                 Text(
@@ -654,7 +641,7 @@ class _HelpRow extends StatelessWidget {
                     fontSize: 11,
                     fontWeight: FontWeight.w500,
                     height: 18 / 11,
-                    color: RituColors.textTertiary,
+                    color: context.ritu.textTertiary,
                   ),
                 ),
               ],

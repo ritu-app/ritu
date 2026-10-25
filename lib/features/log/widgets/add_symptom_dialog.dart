@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '../../../theme/ritu_colors.dart';
+import '../../../theme/ritu_palette.dart';
 
 /// Small "+ Add your own" body signal dialog shown from the daily log flow.
 /// Returns the trimmed symptom name, or null if cancelled.
 Future<String?> showAddSymptomDialog(BuildContext context) {
   return showDialog<String>(
     context: context,
-    barrierColor: const Color(0xB3000000),
+    barrierColor: context.ritu.barrier,
     builder: (_) => const _AddSymptomDialog(),
   );
 }
@@ -55,7 +55,7 @@ class _AddSymptomDialogState extends State<_AddSymptomDialog> {
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: 16),
       child: Material(
-        color: RituColors.backgroundPage,
+        color: context.ritu.backgroundPage,
         borderRadius: BorderRadius.circular(16),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
@@ -73,7 +73,7 @@ class _AddSymptomDialogState extends State<_AddSymptomDialog> {
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
                         height: 24 / 18,
-                        color: RituColors.textPrimary,
+                        color: context.ritu.textPrimary,
                       ),
                     ),
                   ),
@@ -81,10 +81,10 @@ class _AddSymptomDialogState extends State<_AddSymptomDialog> {
                   GestureDetector(
                     onTap: () => Navigator.of(context).pop(),
                     behavior: HitTestBehavior.opaque,
-                    child: const Icon(
+                    child: Icon(
                       LucideIcons.x,
                       size: 24,
-                      color: RituColors.textPrimary,
+                      color: context.ritu.textPrimary,
                     ),
                   ),
                 ],
@@ -100,32 +100,30 @@ class _AddSymptomDialogState extends State<_AddSymptomDialog> {
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
                   height: 20 / 13,
-                  color: RituColors.textPrimary,
+                  color: context.ritu.textPrimary,
                 ),
-                cursorColor: RituColors.sage500,
+                cursorColor: context.ritu.sage500,
                 decoration: InputDecoration(
                   hintText: 'Name your signal',
                   hintStyle: GoogleFonts.dmSans(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
                     height: 20 / 13,
-                    color: RituColors.textDisabled,
+                    color: context.ritu.textDisabled,
                   ),
                   filled: true,
-                  fillColor: RituColors.fillElevated,
+                  fillColor: context.ritu.fillElevated,
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 12,
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(
-                      color: RituColors.borderSubtle,
-                    ),
+                    borderSide: BorderSide(color: context.ritu.borderSubtle),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: RituColors.sage500),
+                    borderSide: BorderSide(color: context.ritu.sage500),
                   ),
                 ),
               ),
@@ -136,12 +134,12 @@ class _AddSymptomDialogState extends State<_AddSymptomDialog> {
                 child: FilledButton(
                   onPressed: _canAdd ? _submit : null,
                   style: FilledButton.styleFrom(
-                    backgroundColor: RituColors.sage500,
-                    disabledBackgroundColor: RituColors.sage500.withValues(
+                    backgroundColor: context.ritu.sage500,
+                    disabledBackgroundColor: context.ritu.sage500.withValues(
                       alpha: 0.4,
                     ),
-                    foregroundColor: RituColors.white,
-                    disabledForegroundColor: RituColors.white,
+                    foregroundColor: context.ritu.white,
+                    disabledForegroundColor: context.ritu.white,
                     elevation: 0,
                     padding: EdgeInsets.zero,
                     shape: const StadiumBorder(),

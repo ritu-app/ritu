@@ -9,7 +9,7 @@ import '../../providers/daily_log_providers.dart';
 import '../../providers/journal_entry_providers.dart';
 import '../../providers/period_providers.dart';
 import '../../providers/simulated_today_provider.dart';
-import '../../theme/ritu_colors.dart';
+import '../../theme/ritu_palette.dart';
 import '../journal/journal_entry_card.dart';
 import '../setup/widgets/ritu_calendar.dart';
 import 'preparing_summary_screen.dart';
@@ -25,7 +25,7 @@ Future<void> showGenerateSummarySheet(BuildContext context) {
   return showModalBottomSheet<void>(
     context: context,
     backgroundColor: Colors.transparent,
-    barrierColor: const Color(0xB3000000),
+    barrierColor: context.ritu.barrier,
     isScrollControlled: true,
     builder: (sheetContext) => const _GenerateSummarySheet(),
   );
@@ -140,10 +140,10 @@ class _GenerateSummarySheetState extends ConsumerState<_GenerateSummarySheet> {
       child: ConstrainedBox(
         constraints: BoxConstraints(maxHeight: maxHeight),
         child: Material(
-          color: RituColors.backgroundPage,
-          shape: const RoundedRectangleBorder(
+          color: context.ritu.backgroundPage,
+          shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-            side: BorderSide(color: RituColors.borderSubtle),
+            side: BorderSide(color: context.ritu.borderSubtle),
           ),
           clipBehavior: Clip.antiAlias,
           child: SafeArea(
@@ -408,13 +408,13 @@ class _OptionsPage extends StatelessWidget {
                       label: 'Journal entries',
                       subtitle: journalSubtitle,
                       subtitleColor: journalCount == 0
-                          ? RituColors.textTertiary
-                          : RituColors.sage600,
+                          ? context.ritu.textTertiary
+                          : context.ritu.sage600,
                       selected: journalEntries,
-                      trailing: const Icon(
+                      trailing: Icon(
                         LucideIcons.chevronRight,
                         size: 16,
-                        color: RituColors.textPrimary,
+                        color: context.ritu.textPrimary,
                       ),
                       onTap: onChooseJournals,
                       onMarkTap: onToggleJournal,
@@ -478,13 +478,13 @@ class _DateRangePage extends StatelessWidget {
             GestureDetector(
               onTap: onBack,
               behavior: HitTestBehavior.opaque,
-              child: const SizedBox(
+              child: SizedBox(
                 width: 24,
                 height: 24,
                 child: Icon(
                   LucideIcons.chevronLeft,
                   size: 24,
-                  color: RituColors.textPrimary,
+                  color: context.ritu.textPrimary,
                 ),
               ),
             ),
@@ -496,7 +496,7 @@ class _DateRangePage extends StatelessWidget {
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
                   height: 24 / 18,
-                  color: RituColors.textPrimary,
+                  color: context.ritu.textPrimary,
                 ),
               ),
             ),
@@ -533,10 +533,10 @@ class _DateRangePage extends StatelessWidget {
         FilledButton(
           onPressed: onConfirm,
           style: FilledButton.styleFrom(
-            backgroundColor: RituColors.sage500,
-            disabledBackgroundColor: RituColors.fillSecondaryHover,
-            foregroundColor: RituColors.white,
-            disabledForegroundColor: RituColors.white,
+            backgroundColor: context.ritu.sage500,
+            disabledBackgroundColor: context.ritu.fillSecondaryHover,
+            foregroundColor: context.ritu.white,
+            disabledForegroundColor: context.ritu.white,
             elevation: 0,
             minimumSize: const Size(double.infinity, 48),
             shape: const StadiumBorder(),
@@ -576,10 +576,10 @@ class _DateField extends StatelessWidget {
         height: 55,
         padding: const EdgeInsets.fromLTRB(8, 8, 8, 7),
         decoration: BoxDecoration(
-          color: active ? RituColors.fillSecondary : Colors.transparent,
+          color: active ? context.ritu.fillSecondary : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: active ? RituColors.sage600 : RituColors.borderDisabled,
+            color: active ? context.ritu.sage600 : context.ritu.borderDisabled,
           ),
         ),
         child: Column(
@@ -591,7 +591,7 @@ class _DateField extends StatelessWidget {
                 fontSize: 11,
                 fontWeight: FontWeight.w400,
                 height: 18 / 11,
-                color: RituColors.textSecondary,
+                color: context.ritu.textSecondary,
               ),
             ),
             Text(
@@ -603,10 +603,10 @@ class _DateField extends StatelessWidget {
                 fontWeight: FontWeight.w600,
                 height: 20 / 13,
                 color: value == null
-                    ? RituColors.textTertiary
+                    ? context.ritu.textTertiary
                     : active
-                    ? RituColors.sage600
-                    : RituColors.textPrimary,
+                    ? context.ritu.sage600
+                    : context.ritu.textPrimary,
               ),
             ),
           ],
@@ -657,7 +657,7 @@ class _JournalPickerPage extends StatelessWidget {
                     fontSize: 13,
                     fontWeight: FontWeight.w400,
                     height: 20 / 13,
-                    color: RituColors.textSecondary,
+                    color: context.ritu.textSecondary,
                   ),
                 )
               else
@@ -669,7 +669,7 @@ class _JournalPickerPage extends StatelessWidget {
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
                       height: 24 / 15,
-                      color: RituColors.textPrimary,
+                      color: context.ritu.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -782,7 +782,7 @@ class _SheetHeader extends StatelessWidget {
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
                   height: 24 / 18,
-                  color: RituColors.textPrimary,
+                  color: context.ritu.textPrimary,
                 ),
               ),
               Text(
@@ -791,7 +791,7 @@ class _SheetHeader extends StatelessWidget {
                   fontSize: 13,
                   fontWeight: FontWeight.w400,
                   height: 20 / 13,
-                  color: RituColors.textSecondary,
+                  color: context.ritu.textSecondary,
                 ),
               ),
             ],
@@ -800,10 +800,14 @@ class _SheetHeader extends StatelessWidget {
         GestureDetector(
           onTap: onClose,
           behavior: HitTestBehavior.opaque,
-          child: const SizedBox(
+          child: SizedBox(
             width: 24,
             height: 24,
-            child: Icon(LucideIcons.x, size: 24, color: RituColors.textPrimary),
+            child: Icon(
+              LucideIcons.x,
+              size: 24,
+              color: context.ritu.textPrimary,
+            ),
           ),
         ),
       ],
@@ -824,7 +828,7 @@ class _SectionLabel extends StatelessWidget {
         fontSize: 15,
         fontWeight: FontWeight.w600,
         height: 24 / 15,
-        color: RituColors.textPrimary,
+        color: context.ritu.textPrimary,
       ),
     );
   }
@@ -841,9 +845,9 @@ class _OptionCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: RituColors.fillElevated,
+        color: context.ritu.fillElevated,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: RituColors.borderSubtle),
+        border: Border.all(color: context.ritu.borderSubtle),
       ),
       child: Column(children: children),
     );
@@ -856,7 +860,7 @@ class _ChoiceRow extends StatelessWidget {
     required this.selected,
     required this.onTap,
     this.subtitle,
-    this.subtitleColor = RituColors.textTertiary,
+    this.subtitleColor,
     this.radio = false,
     this.showDivider = false,
     this.trailing,
@@ -865,7 +869,7 @@ class _ChoiceRow extends StatelessWidget {
 
   final String label;
   final String? subtitle;
-  final Color subtitleColor;
+  final Color? subtitleColor;
   final bool selected;
   final bool radio;
   final bool showDivider;
@@ -883,10 +887,10 @@ class _ChoiceRow extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: showDivider
-              ? const BoxDecoration(
+              ? BoxDecoration(
                   border: Border(
                     bottom: BorderSide(
-                      color: RituColors.borderSubtle,
+                      color: context.ritu.borderSubtle,
                       width: 0.5,
                     ),
                   ),
@@ -912,7 +916,7 @@ class _ChoiceRow extends StatelessWidget {
                         fontSize: 13,
                         fontWeight: FontWeight.w400,
                         height: 20 / 13,
-                        color: RituColors.textPrimary,
+                        color: context.ritu.textPrimary,
                       ),
                     ),
                     if (subtitle != null)
@@ -922,7 +926,7 @@ class _ChoiceRow extends StatelessWidget {
                           fontSize: 11,
                           fontWeight: FontWeight.w500,
                           height: 18 / 11,
-                          color: subtitleColor,
+                          color: subtitleColor ?? context.ritu.textTertiary,
                         ),
                       ),
                   ],
@@ -951,13 +955,13 @@ class _RadioMark extends StatelessWidget {
         alignment: Alignment.center,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          border: Border.all(color: RituColors.sage600),
+          border: Border.all(color: context.ritu.sage600),
         ),
         child: Container(
           width: 12,
           height: 12,
-          decoration: const BoxDecoration(
-            color: RituColors.fillBrandPressed,
+          decoration: BoxDecoration(
+            color: context.ritu.fillBrandPressed,
             shape: BoxShape.circle,
           ),
         ),
@@ -969,7 +973,7 @@ class _RadioMark extends StatelessWidget {
       height: 16,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        border: Border.all(color: RituColors.textDisabled),
+        border: Border.all(color: context.ritu.textDisabled),
       ),
     );
   }
@@ -987,7 +991,7 @@ class _CheckMark extends StatelessWidget {
       return Icon(
         LucideIcons.circleCheck,
         size: size,
-        color: RituColors.sage500,
+        color: context.ritu.sage500,
       );
     }
 
@@ -996,7 +1000,7 @@ class _CheckMark extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        border: Border.all(color: RituColors.textDisabled),
+        border: Border.all(color: context.ritu.textDisabled),
       ),
     );
   }

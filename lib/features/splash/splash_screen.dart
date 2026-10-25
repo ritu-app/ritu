@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../theme/ritu_colors.dart';
+import '../../theme/ritu_palette.dart';
 
 class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key, this.onGetStarted, this.onRestoreFromBackup});
@@ -12,7 +12,7 @@ class SplashScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: RituColors.backgroundPage,
+      backgroundColor: context.ritu.backgroundPage,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -33,7 +33,7 @@ class SplashScreen extends StatelessWidget {
               TextButton(
                 onPressed: onRestoreFromBackup ?? () {},
                 style: TextButton.styleFrom(
-                  foregroundColor: RituColors.textTertiary,
+                  foregroundColor: context.ritu.textTertiary,
                   padding: EdgeInsets.zero,
                   minimumSize: const Size(double.infinity, 24),
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -75,7 +75,7 @@ class _BrandBlock extends StatelessWidget {
           style: GoogleFonts.dmSerifDisplay(
             fontSize: 56,
             fontWeight: FontWeight.w400,
-            color: RituColors.sage600,
+            color: context.ritu.sage600,
             height: 1,
           ),
         ),
@@ -86,13 +86,13 @@ class _BrandBlock extends StatelessWidget {
           style: GoogleFonts.dmSans(
             fontSize: 12,
             fontWeight: FontWeight.w500,
-            color: RituColors.neutral600,
+            color: context.ritu.neutral600,
             letterSpacing: 0.96,
             height: 1,
           ),
         ),
         const SizedBox(height: 4),
-        Container(width: 114, height: 1, color: RituColors.divider),
+        Container(width: 114, height: 1, color: context.ritu.divider),
         const SizedBox(height: 4),
         SizedBox(
           width: 113,
@@ -102,7 +102,7 @@ class _BrandBlock extends StatelessWidget {
             style: GoogleFonts.dmSans(
               fontSize: 12,
               fontWeight: FontWeight.w400,
-              color: RituColors.neutral500,
+              color: context.ritu.neutral500,
               height: 1.25,
             ),
           ),

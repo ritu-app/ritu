@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/home_greeting.dart';
-import '../../theme/ritu_colors.dart';
+import '../../theme/ritu_palette.dart';
 
 /// Home header: dynamic greeting, streak flame, settings.
 ///
@@ -37,18 +37,19 @@ class HomeGreetingHeader extends StatelessWidget {
             fontSize: 28,
             fontWeight: FontWeight.w400,
             height: 34 / 28,
-            color: RituColors.textPrimary,
+            color: context.ritu.textPrimary,
           )
         : GoogleFonts.dmSerifDisplay(
             fontSize: 18,
             fontWeight: FontWeight.w400,
             height: 25 / 18,
-            color: RituColors.textPrimary,
+            color: context.ritu.textPrimary,
           );
 
     final streakActive = streak > 0;
-    final streakColor =
-        streakActive ? RituColors.iconAttention : RituColors.textDisabled;
+    final streakColor = streakActive
+        ? context.ritu.iconAttention
+        : context.ritu.textDisabled;
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -63,14 +64,11 @@ class HomeGreetingHeader extends StatelessWidget {
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
                   height: 20 / 13,
-                  color: RituColors.textSecondary,
+                  color: context.ritu.textSecondary,
                 ),
               ),
               const SizedBox(height: _lineGap),
-              Text(
-                line2,
-                style: line2Style,
-              ),
+              Text(line2, style: line2Style),
             ],
           ),
         ),
@@ -82,11 +80,7 @@ class HomeGreetingHeader extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Icon(
-                  LucideIcons.flame,
-                  size: _iconSize,
-                  color: streakColor,
-                ),
+                Icon(LucideIcons.flame, size: _iconSize, color: streakColor),
                 Text(
                   '$streak',
                   style: GoogleFonts.dmSans(
@@ -102,13 +96,13 @@ class HomeGreetingHeader extends StatelessWidget {
             GestureDetector(
               onTap: onSettingsTap,
               behavior: HitTestBehavior.opaque,
-              child: const SizedBox(
+              child: SizedBox(
                 width: _iconSize,
                 height: _iconSize,
                 child: Icon(
                   LucideIcons.settings,
                   size: _iconSize,
-                  color: RituColors.textPrimary,
+                  color: context.ritu.textPrimary,
                 ),
               ),
             ),

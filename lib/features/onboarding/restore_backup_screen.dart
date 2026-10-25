@@ -4,9 +4,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../data/backup/restore_backup_file.dart';
 import '../../data/backup/ritu_backup.dart';
-import '../../theme/ritu_colors.dart';
-
-const _borderDefault = Color(0xFFE2DDD8);
+import '../../theme/ritu_palette.dart';
 
 /// Figma 1242:5261, 1244:5972, and 1244:5904 — import an exported Ritu backup.
 class RestoreBackupScreen extends StatefulWidget {
@@ -92,7 +90,7 @@ class _RestoreBackupScreenState extends State<RestoreBackupScreen> {
         : 'Want to start fresh? Sign in';
 
     return Scaffold(
-      backgroundColor: RituColors.backgroundPage,
+      backgroundColor: context.ritu.backgroundPage,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -123,7 +121,7 @@ class _RestoreBackupScreenState extends State<RestoreBackupScreen> {
                                 fontSize: 22,
                                 fontWeight: FontWeight.w600,
                                 height: 26 / 22,
-                                color: RituColors.textPrimary,
+                                color: context.ritu.textPrimary,
                               ),
                             ),
                             const SizedBox(height: 8),
@@ -134,7 +132,7 @@ class _RestoreBackupScreenState extends State<RestoreBackupScreen> {
                                 fontSize: 15,
                                 fontWeight: FontWeight.w400,
                                 height: 24 / 15,
-                                color: RituColors.textSecondary,
+                                color: context.ritu.textSecondary,
                               ),
                             ),
                             const SizedBox(height: 16),
@@ -155,7 +153,7 @@ class _RestoreBackupScreenState extends State<RestoreBackupScreen> {
                                   fontSize: 13,
                                   fontWeight: FontWeight.w500,
                                   height: 20 / 13,
-                                  color: RituColors.textTertiary,
+                                  color: context.ritu.textTertiary,
                                 ),
                               ),
                             ],
@@ -183,8 +181,8 @@ class _RestoreBackupScreenState extends State<RestoreBackupScreen> {
               TextButton(
                 onPressed: _busy ? null : widget.onStartFresh ?? () {},
                 style: TextButton.styleFrom(
-                  foregroundColor: RituColors.textTertiary,
-                  disabledForegroundColor: RituColors.textTertiary,
+                  foregroundColor: context.ritu.textTertiary,
+                  disabledForegroundColor: context.ritu.textTertiary,
                   padding: EdgeInsets.zero,
                   minimumSize: const Size(double.infinity, 24),
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -223,7 +221,7 @@ class _UploadZone extends StatelessWidget {
     final selected = file != null;
     const radius = BorderRadius.all(Radius.circular(8));
     final body = Material(
-      color: selected ? RituColors.fillSecondary : RituColors.fillElevated,
+      color: selected ? context.ritu.fillSecondary : context.ritu.fillElevated,
       borderRadius: radius,
       child: InkWell(
         onTap: enabled ? onTap : null,
@@ -236,7 +234,7 @@ class _UploadZone extends StatelessWidget {
           decoration: selected
               ? BoxDecoration(
                   borderRadius: radius,
-                  border: Border.all(color: RituColors.sage600, width: 0.5),
+                  border: Border.all(color: context.ritu.sage600, width: 0.5),
                 )
               : null,
           child: selected
@@ -249,8 +247,8 @@ class _UploadZone extends StatelessWidget {
     if (selected) return body;
 
     return CustomPaint(
-      foregroundPainter: const _DashedRRectPainter(
-        color: _borderDefault,
+      foregroundPainter: _DashedRRectPainter(
+        color: context.ritu.borderDefault,
         radius: 8,
         strokeWidth: 2,
       ),
@@ -269,7 +267,7 @@ class _EmptyFilePrompt extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Icon(LucideIcons.import, size: 24, color: RituColors.neutral500),
+        Icon(LucideIcons.import, size: 24, color: context.ritu.neutral500),
         Text(
           prompt,
           textAlign: TextAlign.center,
@@ -277,7 +275,7 @@ class _EmptyFilePrompt extends StatelessWidget {
             fontSize: 15,
             fontWeight: FontWeight.w500,
             height: 24 / 15,
-            color: RituColors.textDisabled,
+            color: context.ritu.textDisabled,
           ),
         ),
         Text(
@@ -287,7 +285,7 @@ class _EmptyFilePrompt extends StatelessWidget {
             fontSize: 13,
             fontWeight: FontWeight.w500,
             height: 20 / 13,
-            color: RituColors.textDisabled,
+            color: context.ritu.textDisabled,
           ),
         ),
       ],
@@ -305,10 +303,10 @@ class _SelectedFile extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Icon(
+        Icon(
           LucideIcons.fileCheckCorner,
           size: 24,
-          color: RituColors.sage500,
+          color: context.ritu.sage500,
         ),
         SizedBox(
           width: double.infinity,
@@ -321,7 +319,7 @@ class _SelectedFile extends StatelessWidget {
               fontSize: 15,
               fontWeight: FontWeight.w500,
               height: 24 / 15,
-              color: RituColors.textPrimary,
+              color: context.ritu.textPrimary,
             ),
           ),
         ),
@@ -332,7 +330,7 @@ class _SelectedFile extends StatelessWidget {
             fontSize: 13,
             fontWeight: FontWeight.w500,
             height: 20 / 13,
-            color: RituColors.textSecondary,
+            color: context.ritu.textSecondary,
           ),
         ),
       ],
@@ -349,19 +347,19 @@ class _ImportErrorBanner extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: RituColors.fillCritical,
+        color: context.ritu.fillCritical,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(
+          SizedBox(
             width: 20,
             height: 20,
             child: Icon(
               LucideIcons.info,
               size: 16,
-              color: RituColors.textCritical,
+              color: context.ritu.textCritical,
             ),
           ),
           const SizedBox(width: 4),
@@ -375,7 +373,7 @@ class _ImportErrorBanner extends StatelessWidget {
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                     height: 20 / 13,
-                    color: RituColors.textPrimary,
+                    color: context.ritu.textPrimary,
                   ),
                 ),
                 Text(
@@ -384,7 +382,7 @@ class _ImportErrorBanner extends StatelessWidget {
                     fontSize: 11,
                     fontWeight: FontWeight.w500,
                     height: 18 / 11,
-                    color: RituColors.textSecondary,
+                    color: context.ritu.textSecondary,
                   ),
                 ),
               ],

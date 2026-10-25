@@ -6,13 +6,11 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../core/cycle/cycle_classification.dart';
 import '../../core/cycle/cycle_snapshot.dart';
 import '../../providers/cycle_snapshot_provider.dart';
-import '../../theme/ritu_colors.dart';
+import '../../theme/ritu_palette.dart';
 
 /// Figma 447:1037 / 1249:6524 / 1270:6085 / 1270:6180 —
 /// Settings → Cycle Learning.
 const _learningBanner = Color(0xFFE7E9DE);
-const _borderDefault = Color(0xFFE2DDD8);
-const _cycleOvulation = Color(0xFFF2D38B);
 
 class CycleLearningScreen extends ConsumerWidget {
   const CycleLearningScreen({super.key});
@@ -22,15 +20,15 @@ class CycleLearningScreen extends ConsumerWidget {
     final snapshot = ref.watch(cycleSnapshotProvider);
 
     return Scaffold(
-      backgroundColor: RituColors.backgroundPage,
+      backgroundColor: context.ritu.backgroundPage,
       body: SafeArea(
         child: Column(
           children: [
             const _Header(),
             Expanded(
               child: snapshot.when(
-                loading: () => const Center(
-                  child: CircularProgressIndicator(color: RituColors.sage500),
+                loading: () => Center(
+                  child: CircularProgressIndicator(color: context.ritu.sage500),
                 ),
                 error: (error, _) => Center(child: Text('$error')),
                 data: (value) {
@@ -82,13 +80,13 @@ class _Header extends StatelessWidget {
           GestureDetector(
             onTap: () => Navigator.of(context).pop(),
             behavior: HitTestBehavior.opaque,
-            child: const SizedBox(
+            child: SizedBox(
               width: 24,
               height: 24,
               child: Icon(
                 LucideIcons.chevronLeft,
                 size: 24,
-                color: RituColors.textPrimary,
+                color: context.ritu.textPrimary,
               ),
             ),
           ),
@@ -100,7 +98,7 @@ class _Header extends StatelessWidget {
                 fontSize: 18,
                 fontWeight: FontWeight.w400,
                 height: 25 / 18,
-                color: RituColors.textPrimary,
+                color: context.ritu.textPrimary,
               ),
             ),
           ),
@@ -127,7 +125,7 @@ class _LearningCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: _learningBanner,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _borderDefault, width: 0.5),
+        border: Border.all(color: context.ritu.borderDefault, width: 0.5),
       ),
       child: Column(
         children: [
@@ -160,7 +158,7 @@ class _LearningCard extends StatelessWidget {
               fontSize: 18,
               fontWeight: FontWeight.w600,
               height: 24 / 18,
-              color: RituColors.textPrimary,
+              color: context.ritu.textPrimary,
             ),
           ),
           Text(
@@ -170,7 +168,7 @@ class _LearningCard extends StatelessWidget {
               fontSize: 13,
               fontWeight: FontWeight.w400,
               height: 20 / 13,
-              color: RituColors.textSecondary,
+              color: context.ritu.textSecondary,
             ),
           ),
           const SizedBox(height: 12),
@@ -185,7 +183,7 @@ class _LearningCard extends StatelessWidget {
                   Container(
                     height: 5,
                     decoration: BoxDecoration(
-                      color: RituColors.white,
+                      color: context.ritu.white,
                       borderRadius: BorderRadius.circular(999),
                     ),
                   ),
@@ -193,7 +191,7 @@ class _LearningCard extends StatelessWidget {
                     width: fill,
                     height: 5,
                     decoration: BoxDecoration(
-                      color: RituColors.meadow600,
+                      color: context.ritu.meadow600,
                       borderRadius: BorderRadius.circular(999),
                     ),
                   ),
@@ -209,7 +207,7 @@ class _LearningCard extends StatelessWidget {
               fontSize: 11,
               fontWeight: FontWeight.w400,
               height: 18 / 11,
-              color: RituColors.textSecondary,
+              color: context.ritu.textSecondary,
             ),
           ),
         ],
@@ -228,18 +226,21 @@ class _StatusCard extends StatelessWidget {
     final classification = snapshot.classification;
     final (background, border) = switch (classification) {
       CycleClassification.regular => (
-        RituColors.fillPositiveSecondary,
-        RituColors.borderPositive,
+        context.ritu.fillPositiveSecondary,
+        context.ritu.borderPositive,
       ),
       CycleClassification.variable => (
-        RituColors.fillAttentionSecondary,
-        _cycleOvulation,
+        context.ritu.fillAttentionSecondary,
+        context.ritu.cycleOvulation,
       ),
       CycleClassification.unpredictable => (
-        RituColors.fillCriticalSecondary,
-        RituColors.borderCritical,
+        context.ritu.fillCriticalSecondary,
+        context.ritu.borderCritical,
       ),
-      CycleClassification.unclassified => (_learningBanner, _borderDefault),
+      CycleClassification.unclassified => (
+        _learningBanner,
+        context.ritu.borderDefault,
+      ),
     };
 
     return Container(
@@ -259,7 +260,7 @@ class _StatusCard extends StatelessWidget {
               fontSize: 11,
               fontWeight: FontWeight.w400,
               height: 18 / 11,
-              color: RituColors.textTertiary,
+              color: context.ritu.textTertiary,
             ),
           ),
           const SizedBox(height: 4),
@@ -269,7 +270,7 @@ class _StatusCard extends StatelessWidget {
               fontSize: 22,
               fontWeight: FontWeight.w700,
               height: 26 / 22,
-              color: RituColors.textPrimary,
+              color: context.ritu.textPrimary,
             ),
           ),
           const SizedBox(height: 4),
@@ -279,7 +280,7 @@ class _StatusCard extends StatelessWidget {
               fontSize: 13,
               fontWeight: FontWeight.w500,
               height: 20 / 13,
-              color: RituColors.textSecondary,
+              color: context.ritu.textSecondary,
             ),
           ),
         ],
@@ -336,9 +337,9 @@ class _StatCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: RituColors.fillElevated,
+        color: context.ritu.fillElevated,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: _borderDefault, width: 0.5),
+        border: Border.all(color: context.ritu.borderDefault, width: 0.5),
       ),
       child: Column(
         children: [
@@ -349,7 +350,7 @@ class _StatCard extends StatelessWidget {
               fontSize: 15,
               fontWeight: FontWeight.w700,
               height: 24 / 15,
-              color: RituColors.textPrimary,
+              color: context.ritu.textPrimary,
             ),
           ),
           Text(
@@ -359,7 +360,7 @@ class _StatCard extends StatelessWidget {
               fontSize: 11,
               fontWeight: FontWeight.w400,
               height: 18 / 11,
-              color: RituColors.textTertiary,
+              color: context.ritu.textTertiary,
             ),
           ),
         ],
@@ -379,9 +380,9 @@ class _SpectrumCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: RituColors.fillElevated,
+        color: context.ritu.fillElevated,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: RituColors.borderSubtle),
+        border: Border.all(color: context.ritu.borderSubtle),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -392,7 +393,7 @@ class _SpectrumCard extends StatelessWidget {
               fontSize: 15,
               fontWeight: FontWeight.w600,
               height: 24 / 15,
-              color: RituColors.textPrimary,
+              color: context.ritu.textPrimary,
             ),
           ),
           const SizedBox(height: 8),
@@ -410,7 +411,7 @@ class _SpectrumCard extends StatelessWidget {
                 child: Stack(
                   clipBehavior: Clip.none,
                   children: [
-                    const Positioned(
+                    Positioned(
                       left: 0,
                       right: 0,
                       top: 7,
@@ -423,7 +424,7 @@ class _SpectrumCard extends StatelessWidget {
                             flex: 109,
                             child: DecoratedBox(
                               decoration: BoxDecoration(
-                                color: RituColors.borderPositive,
+                                color: context.ritu.borderPositive,
                                 borderRadius: BorderRadius.horizontal(
                                   left: Radius.circular(999),
                                 ),
@@ -432,13 +433,15 @@ class _SpectrumCard extends StatelessWidget {
                           ),
                           Expanded(
                             flex: 108,
-                            child: ColoredBox(color: _cycleOvulation),
+                            child: ColoredBox(
+                              color: context.ritu.cycleOvulation,
+                            ),
                           ),
                           Expanded(
                             flex: 109,
                             child: DecoratedBox(
                               decoration: BoxDecoration(
-                                color: RituColors.cycleMenstrual,
+                                color: context.ritu.cycleMenstrual,
                                 borderRadius: BorderRadius.horizontal(
                                   right: Radius.circular(999),
                                 ),
@@ -460,19 +463,19 @@ class _SpectrumCard extends StatelessWidget {
           ),
           Row(
             children: [
-              Expanded(child: Text('Regular', style: _spectrumLabel)),
+              Expanded(child: Text('Regular', style: _spectrumLabel(context))),
               Expanded(
                 child: Text(
                   'Variable',
                   textAlign: TextAlign.center,
-                  style: _spectrumLabel,
+                  style: _spectrumLabel(context),
                 ),
               ),
               Expanded(
                 child: Text(
                   'Unpredictable',
                   textAlign: TextAlign.right,
-                  style: _spectrumLabel,
+                  style: _spectrumLabel(context),
                 ),
               ),
             ],
@@ -493,8 +496,8 @@ class _SpectrumMarker extends StatelessWidget {
       height: 20,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: RituColors.sage500,
-        border: Border.all(color: RituColors.white, width: 3),
+        color: context.ritu.sage500,
+        border: Border.all(color: context.ritu.white, width: 3),
         boxShadow: const [
           BoxShadow(
             color: Color(0x14000000),
@@ -515,10 +518,10 @@ class _HowCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = switch (snapshot.classification) {
-      CycleClassification.regular => RituColors.textPositive,
-      CycleClassification.variable => RituColors.gradientGh2,
-      CycleClassification.unpredictable => RituColors.textCritical,
-      CycleClassification.unclassified => RituColors.textPositive,
+      CycleClassification.regular => context.ritu.textPositive,
+      CycleClassification.variable => context.ritu.textAttention,
+      CycleClassification.unpredictable => context.ritu.textCritical,
+      CycleClassification.unclassified => context.ritu.textPositive,
     };
     final lines = _howLines(snapshot);
 
@@ -526,9 +529,9 @@ class _HowCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: RituColors.fillElevated,
+        color: context.ritu.fillElevated,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: RituColors.borderSubtle),
+        border: Border.all(color: context.ritu.borderSubtle),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -539,7 +542,7 @@ class _HowCard extends StatelessWidget {
               fontSize: 15,
               fontWeight: FontWeight.w600,
               height: 24 / 15,
-              color: RituColors.textPrimary,
+              color: context.ritu.textPrimary,
             ),
           ),
           const SizedBox(height: 8),
@@ -576,7 +579,7 @@ class _HowLine extends StatelessWidget {
               fontSize: 13,
               fontWeight: FontWeight.w500,
               height: 20 / 13,
-              color: RituColors.textSecondary,
+              color: context.ritu.textSecondary,
             ),
           ),
         ),
@@ -594,7 +597,7 @@ class _ChangeNote extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: RituColors.fillInfo,
+        color: context.ritu.fillInfo,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Text(
@@ -603,18 +606,18 @@ class _ChangeNote extends StatelessWidget {
           fontSize: 13,
           fontWeight: FontWeight.w500,
           height: 20 / 13,
-          color: RituColors.gradientLilac2,
+          color: context.ritu.textInfo,
         ),
       ),
     );
   }
 }
 
-TextStyle get _spectrumLabel => GoogleFonts.dmSans(
+TextStyle _spectrumLabel(BuildContext context) => GoogleFonts.dmSans(
   fontSize: 10,
   fontWeight: FontWeight.w500,
   height: 14 / 10,
-  color: RituColors.textTertiary,
+  color: context.ritu.textTertiary,
 );
 
 String _statusTitle(CycleClassification classification) {

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '../../../theme/ritu_colors.dart';
+import '../../../theme/ritu_palette.dart';
 
 class RituChoiceChip extends StatelessWidget {
   const RituChoiceChip({
@@ -27,7 +27,7 @@ class RituChoiceChip extends StatelessWidget {
         fontSize: 13,
         fontWeight: selected ? FontWeight.w500 : FontWeight.w400,
         height: 20 / 13,
-        color: selected ? RituColors.textPrimary : RituColors.textMuted,
+        color: selected ? context.ritu.textPrimary : context.ritu.textMuted,
       ),
     );
 
@@ -39,10 +39,12 @@ class RituChoiceChip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12),
         alignment: width == null ? null : Alignment.center,
         decoration: BoxDecoration(
-          color: selected ? RituColors.fillSecondary : RituColors.fillMuted,
+          color: selected ? context.ritu.fillSecondary : context.ritu.fillMuted,
           borderRadius: BorderRadius.circular(999),
           border: Border.all(
-            color: selected ? RituColors.sage600 : RituColors.borderDisabled,
+            color: selected
+                ? context.ritu.sage600
+                : context.ritu.borderDisabled,
           ),
         ),
         child: width == null
@@ -54,11 +56,7 @@ class RituChoiceChip extends StatelessWidget {
 }
 
 class RituDateChip extends StatelessWidget {
-  const RituDateChip({
-    super.key,
-    required this.label,
-    required this.onRemove,
-  });
+  const RituDateChip({super.key, required this.label, required this.onRemove});
 
   final String label;
   final VoidCallback onRemove;
@@ -69,9 +67,9 @@ class RituDateChip extends StatelessWidget {
       height: 34,
       padding: const EdgeInsets.fromLTRB(12, 8, 8, 8),
       decoration: BoxDecoration(
-        color: RituColors.fillSecondary,
+        color: context.ritu.fillSecondary,
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: RituColors.sage600),
+        border: Border.all(color: context.ritu.sage600),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -82,20 +80,16 @@ class RituDateChip extends StatelessWidget {
               fontSize: 13,
               fontWeight: FontWeight.w500,
               height: 20 / 13,
-              color: RituColors.textPrimary,
+              color: context.ritu.textPrimary,
             ),
           ),
           const SizedBox(width: 8),
           GestureDetector(
             onTap: onRemove,
             behavior: HitTestBehavior.opaque,
-            child: const Padding(
+            child: Padding(
               padding: EdgeInsets.all(2),
-              child: Icon(
-                LucideIcons.x,
-                size: 16,
-                color: RituColors.sage600,
-              ),
+              child: Icon(LucideIcons.x, size: 16, color: context.ritu.sage600),
             ),
           ),
         ],

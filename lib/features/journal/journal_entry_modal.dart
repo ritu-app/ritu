@@ -4,7 +4,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/cycle_context.dart';
 import '../../data/repositories/journal_entry_repository.dart';
-import '../../theme/ritu_colors.dart';
+import '../../theme/ritu_palette.dart';
 
 enum JournalEntryModalMode { edit, view }
 
@@ -16,7 +16,7 @@ Future<String?> showJournalEntryModal(
 }) {
   return showDialog<String>(
     context: context,
-    barrierColor: const Color(0xB3000000),
+    barrierColor: context.ritu.barrier,
     builder: (dialogContext) {
       return _JournalEntryModal(
         entry: entry,
@@ -93,10 +93,10 @@ class _JournalEntryModalState extends State<_JournalEntryModal> {
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: 16),
       child: Material(
-        color: RituColors.backgroundPage,
+        color: context.ritu.backgroundPage,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: RituColors.textDisabled),
+          side: BorderSide(color: context.ritu.textDisabled),
         ),
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -117,7 +117,7 @@ class _JournalEntryModalState extends State<_JournalEntryModal> {
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
                             height: 24 / 15,
-                            color: RituColors.textPrimary,
+                            color: context.ritu.textPrimary,
                           ),
                         ),
                         Text(
@@ -126,7 +126,7 @@ class _JournalEntryModalState extends State<_JournalEntryModal> {
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
                             height: 20 / 13,
-                            color: RituColors.textTertiary,
+                            color: context.ritu.textTertiary,
                           ),
                         ),
                       ],
@@ -135,10 +135,10 @@ class _JournalEntryModalState extends State<_JournalEntryModal> {
                   GestureDetector(
                     onTap: _discard,
                     behavior: HitTestBehavior.opaque,
-                    child: const Icon(
+                    child: Icon(
                       LucideIcons.x,
                       size: 24,
-                      color: RituColors.textPrimary,
+                      color: context.ritu.textPrimary,
                     ),
                   ),
                 ],
@@ -149,9 +149,9 @@ class _JournalEntryModalState extends State<_JournalEntryModal> {
                 height: 177,
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: RituColors.fillElevated,
+                  color: context.ritu.fillElevated,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: RituColors.borderSubtle),
+                  border: Border.all(color: context.ritu.borderSubtle),
                 ),
                 child: _isEdit
                     ? TextField(
@@ -164,7 +164,7 @@ class _JournalEntryModalState extends State<_JournalEntryModal> {
                           fontSize: 13,
                           fontWeight: FontWeight.w400,
                           height: 20 / 13,
-                          color: RituColors.textPrimary,
+                          color: context.ritu.textPrimary,
                         ),
                         decoration: const InputDecoration(
                           isCollapsed: true,
@@ -182,7 +182,7 @@ class _JournalEntryModalState extends State<_JournalEntryModal> {
                             fontSize: 13,
                             fontWeight: FontWeight.w400,
                             height: 20 / 13,
-                            color: RituColors.textPrimary,
+                            color: context.ritu.textPrimary,
                           ),
                         ),
                       ),
@@ -195,11 +195,12 @@ class _JournalEntryModalState extends State<_JournalEntryModal> {
                   child: FilledButton(
                     onPressed: _canSave ? _save : null,
                     style: FilledButton.styleFrom(
-                      backgroundColor: RituColors.sage500,
-                      disabledBackgroundColor:
-                          RituColors.sage500.withValues(alpha: 0.5),
-                      foregroundColor: RituColors.white,
-                      disabledForegroundColor: RituColors.white,
+                      backgroundColor: context.ritu.sage500,
+                      disabledBackgroundColor: context.ritu.sage500.withValues(
+                        alpha: 0.5,
+                      ),
+                      foregroundColor: context.ritu.white,
+                      disabledForegroundColor: context.ritu.white,
                       elevation: 0,
                       padding: EdgeInsets.zero,
                       shape: const StadiumBorder(),
@@ -220,7 +221,7 @@ class _JournalEntryModalState extends State<_JournalEntryModal> {
                     onPressed: _discard,
                     style: TextButton.styleFrom(
                       padding: EdgeInsets.zero,
-                      foregroundColor: RituColors.textTertiary,
+                      foregroundColor: context.ritu.textTertiary,
                     ),
                     child: Text(
                       'Discard changes',

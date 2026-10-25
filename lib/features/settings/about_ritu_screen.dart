@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '../../theme/ritu_colors.dart';
+import '../../theme/ritu_palette.dart';
 
 const _sageBanner = Color(0xFF708B7D);
-const _borderDefault = Color(0xFFE2DDD8);
 
 /// Figma 501:1422 — Settings → About Ritu.
 class AboutRituScreen extends StatelessWidget {
@@ -29,7 +28,7 @@ class AboutRituScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: RituColors.backgroundPage,
+      backgroundColor: context.ritu.backgroundPage,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -41,13 +40,13 @@ class AboutRituScreen extends StatelessWidget {
                   GestureDetector(
                     onTap: () => Navigator.of(context).pop(),
                     behavior: HitTestBehavior.opaque,
-                    child: const SizedBox(
+                    child: SizedBox(
                       width: 24,
                       height: 24,
                       child: Icon(
                         LucideIcons.chevronLeft,
                         size: 24,
-                        color: RituColors.textPrimary,
+                        color: context.ritu.textPrimary,
                       ),
                     ),
                   ),
@@ -59,7 +58,7 @@ class AboutRituScreen extends StatelessWidget {
                         fontSize: 18,
                         fontWeight: FontWeight.w400,
                         height: 25 / 18,
-                        color: RituColors.textPrimary,
+                        color: context.ritu.textPrimary,
                       ),
                     ),
                   ),
@@ -80,7 +79,7 @@ class AboutRituScreen extends StatelessWidget {
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                       height: 20 / 13,
-                      color: RituColors.textPrimary,
+                      color: context.ritu.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -106,10 +105,7 @@ class _HeroBanner extends StatelessWidget {
       decoration: BoxDecoration(
         color: _sageBanner,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: _borderDefault,
-          width: 0.5,
-        ),
+        border: Border.all(color: context.ritu.borderDefault, width: 0.5),
       ),
       child: Column(
         children: [
@@ -140,7 +136,7 @@ class _HeroBanner extends StatelessWidget {
               fontSize: 28,
               fontWeight: FontWeight.w400,
               height: 34 / 28,
-              color: RituColors.textInverse,
+              color: context.ritu.textInverse,
             ),
           ),
           Text(
@@ -150,7 +146,7 @@ class _HeroBanner extends StatelessWidget {
               fontSize: 13,
               fontWeight: FontWeight.w400,
               height: 20 / 13,
-              color: RituColors.textInverse,
+              color: context.ritu.textInverse,
             ),
           ),
         ],
@@ -168,9 +164,9 @@ class _MissionCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: RituColors.fillElevated,
+        color: context.ritu.fillElevated,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: RituColors.borderSubtle),
+        border: Border.all(color: context.ritu.borderSubtle),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -181,7 +177,7 @@ class _MissionCard extends StatelessWidget {
               fontSize: 13,
               fontWeight: FontWeight.w600,
               height: 20 / 13,
-              color: RituColors.textPrimary,
+              color: context.ritu.textPrimary,
             ),
           ),
           Text(
@@ -192,7 +188,7 @@ class _MissionCard extends StatelessWidget {
               fontSize: 11,
               fontWeight: FontWeight.w500,
               height: 18 / 11,
-              color: RituColors.textSecondary,
+              color: context.ritu.textSecondary,
             ),
           ),
         ],
@@ -212,9 +208,9 @@ class _HelpsCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: RituColors.fillElevated,
+        color: context.ritu.fillElevated,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: RituColors.borderSubtle),
+        border: Border.all(color: context.ritu.borderSubtle),
       ),
       child: Column(
         children: [
@@ -248,10 +244,10 @@ class _HelpRow extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 8),
       decoration: showDivider
-          ? const BoxDecoration(
+          ? BoxDecoration(
               border: Border(
                 bottom: BorderSide(
-                  color: RituColors.borderSubtle,
+                  color: context.ritu.borderSubtle,
                   width: 0.5,
                 ),
               ),
@@ -266,7 +262,7 @@ class _HelpRow extends StatelessWidget {
               fontSize: 13,
               fontWeight: FontWeight.w600,
               height: 20 / 13,
-              color: RituColors.textPrimary,
+              color: context.ritu.textPrimary,
             ),
           ),
           Text(
@@ -275,7 +271,7 @@ class _HelpRow extends StatelessWidget {
               fontSize: 11,
               fontWeight: FontWeight.w500,
               height: 18 / 11,
-              color: RituColors.textTertiary,
+              color: context.ritu.textTertiary,
             ),
           ),
         ],

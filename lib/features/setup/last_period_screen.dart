@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/date_format.dart';
-import '../../theme/ritu_colors.dart';
+import '../../theme/ritu_palette.dart';
 import 'widgets/period_episode_form_fields.dart';
 import 'widgets/progress_dots.dart';
 import 'widgets/ritu_calendar.dart';
@@ -26,11 +26,7 @@ class LastPeriodInput {
 }
 
 class LastPeriodScreen extends StatefulWidget {
-  const LastPeriodScreen({
-    super.key,
-    this.onContinue,
-    this.onSkip,
-  });
+  const LastPeriodScreen({super.key, this.onContinue, this.onSkip});
 
   final void Function(LastPeriodInput input)? onContinue;
   final VoidCallback? onSkip;
@@ -100,7 +96,7 @@ class _LastPeriodScreenState extends State<LastPeriodScreen> {
     );
 
     return Scaffold(
-      backgroundColor: RituColors.backgroundPage,
+      backgroundColor: context.ritu.backgroundPage,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -121,7 +117,7 @@ class _LastPeriodScreenState extends State<LastPeriodScreen> {
                           fontSize: 22,
                           fontWeight: FontWeight.w600,
                           height: 26 / 22,
-                          color: RituColors.textPrimary,
+                          color: context.ritu.textPrimary,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -132,7 +128,7 @@ class _LastPeriodScreenState extends State<LastPeriodScreen> {
                           fontSize: 15,
                           fontWeight: FontWeight.w400,
                           height: 24 / 15,
-                          color: RituColors.textSecondary,
+                          color: context.ritu.textSecondary,
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -204,16 +200,16 @@ enum PeriodDuration { twoToThree, fourToFive, sixToSeven, varies }
 
 extension PeriodDurationX on PeriodDuration {
   String get label => switch (this) {
-        PeriodDuration.twoToThree => '2-3 days',
-        PeriodDuration.fourToFive => '4-5 days',
-        PeriodDuration.sixToSeven => '6-7 days',
-        PeriodDuration.varies => 'Varies',
-      };
+    PeriodDuration.twoToThree => '2-3 days',
+    PeriodDuration.fourToFive => '4-5 days',
+    PeriodDuration.sixToSeven => '6-7 days',
+    PeriodDuration.varies => 'Varies',
+  };
 
   int? get typicalDays => switch (this) {
-        PeriodDuration.twoToThree => 3,
-        PeriodDuration.fourToFive => 5,
-        PeriodDuration.sixToSeven => 7,
-        PeriodDuration.varies => null,
-      };
+    PeriodDuration.twoToThree => 3,
+    PeriodDuration.fourToFive => 5,
+    PeriodDuration.sixToSeven => 7,
+    PeriodDuration.varies => null,
+  };
 }

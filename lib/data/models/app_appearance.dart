@@ -1,5 +1,4 @@
-/// User preference for app chrome. Dark mode is not applied yet — the value
-/// is persisted so a future theme implementation can honor it.
+/// Saved appearance. The app applies it as the theme mode.
 enum AppAppearance {
   system,
   light,

@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/date_format.dart';
 import '../../../data/models/period_log.dart';
-import '../../../theme/ritu_colors.dart';
+import '../../../theme/ritu_palette.dart';
 import 'choice_chips.dart';
 import 'period_end_date_sheet.dart';
 
@@ -72,7 +72,7 @@ class PeriodEpisodeFormFields extends StatelessWidget {
             fontSize: 18,
             fontWeight: FontWeight.w600,
             height: 24 / 18,
-            color: RituColors.textPrimary,
+            color: context.ritu.textPrimary,
           ),
         ),
         const SizedBox(height: 16),
@@ -83,7 +83,8 @@ class PeriodEpisodeFormFields extends StatelessWidget {
             RituChoiceChip(
               label: 'Still going',
               selected: ongoingStatus == PeriodOngoingStatus.stillGoing,
-              onTap: () => onOngoingStatusChanged(PeriodOngoingStatus.stillGoing),
+              onTap: () =>
+                  onOngoingStatusChanged(PeriodOngoingStatus.stillGoing),
             ),
             RituChoiceChip(
               label: "It's ended",
@@ -100,7 +101,7 @@ class PeriodEpisodeFormFields extends StatelessWidget {
               fontSize: 18,
               fontWeight: FontWeight.w600,
               height: 24 / 18,
-              color: RituColors.textPrimary,
+              color: context.ritu.textPrimary,
             ),
           ),
           const SizedBox(height: 16),
@@ -128,7 +129,7 @@ class PeriodEpisodeFormFields extends StatelessWidget {
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
                 height: 24 / 18,
-                color: RituColors.textPrimary,
+                color: context.ritu.textPrimary,
               ),
             ),
             const SizedBox(height: 16),
@@ -139,12 +140,12 @@ class PeriodEpisodeFormFields extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 alignment: Alignment.centerLeft,
                 decoration: BoxDecoration(
-                  color: RituColors.fillElevated,
+                  color: context.ritu.fillElevated,
                   borderRadius: BorderRadius.circular(999),
                   border: Border.all(
                     color: selectedEndDate == null
-                        ? RituColors.borderDisabled
-                        : RituColors.sage600,
+                        ? context.ritu.borderDisabled
+                        : context.ritu.sage600,
                   ),
                 ),
                 child: Text(
@@ -156,8 +157,8 @@ class PeriodEpisodeFormFields extends StatelessWidget {
                     fontWeight: FontWeight.w400,
                     height: 24 / 15,
                     color: selectedEndDate == null
-                        ? RituColors.textMuted
-                        : RituColors.textPrimary,
+                        ? context.ritu.textMuted
+                        : context.ritu.textPrimary,
                   ),
                 ),
               ),
@@ -171,7 +172,7 @@ class PeriodEpisodeFormFields extends StatelessWidget {
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
                 height: 24 / 18,
-                color: RituColors.textPrimary,
+                color: context.ritu.textPrimary,
               ),
             ),
             const SizedBox(height: 16),
@@ -223,9 +224,7 @@ int? typicalPeriodDaysFromEpisodeForm({
   if (endConfidence == EndConfidenceChoice.exact &&
       startDate != null &&
       selectedEndDate != null) {
-    return dateOnly(selectedEndDate!)
-            .difference(dateOnly(startDate))
-            .inDays +
+    return dateOnly(selectedEndDate!).difference(dateOnly(startDate)).inDays +
         1;
   }
   if (endConfidence == EndConfidenceChoice.rough &&

@@ -9,7 +9,7 @@ import '../../providers/daily_reminder_provider.dart';
 import '../../providers/profile_providers.dart';
 import '../../providers/repository_providers.dart';
 import '../../services/home_greeting_prefs.dart';
-import '../../theme/ritu_colors.dart';
+import '../../theme/ritu_palette.dart';
 
 /// Figma 471:2102 — Settings → Delete Data confirmation screen.
 class DeleteDataScreen extends ConsumerStatefulWidget {
@@ -33,7 +33,7 @@ class _DeleteDataScreenState extends ConsumerState<DeleteDataScreen> {
   Future<void> _confirmDelete() async {
     final confirmed = await showDialog<bool>(
       context: context,
-      barrierColor: const Color(0xB3000000),
+      barrierColor: context.ritu.barrier,
       builder: (_) => const _DeleteDataDialog(),
     );
     if (confirmed != true || !mounted) return;
@@ -58,9 +58,9 @@ class _DeleteDataScreenState extends ConsumerState<DeleteDataScreen> {
       ref.read(appRestartProvider.notifier).state++;
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Couldn’t delete data: $error')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Couldn’t delete data: $error')));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -69,7 +69,7 @@ class _DeleteDataScreenState extends ConsumerState<DeleteDataScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: RituColors.backgroundPage,
+      backgroundColor: context.ritu.backgroundPage,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -81,13 +81,13 @@ class _DeleteDataScreenState extends ConsumerState<DeleteDataScreen> {
                 child: GestureDetector(
                   onTap: _busy ? null : () => Navigator.of(context).pop(),
                   behavior: HitTestBehavior.opaque,
-                  child: const SizedBox(
+                  child: SizedBox(
                     width: 24,
                     height: 24,
                     child: Icon(
                       LucideIcons.chevronLeft,
                       size: 24,
-                      color: RituColors.textPrimary,
+                      color: context.ritu.textPrimary,
                     ),
                   ),
                 ),
@@ -103,7 +103,7 @@ class _DeleteDataScreenState extends ConsumerState<DeleteDataScreen> {
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
                       height: 24 / 18,
-                      color: RituColors.textPrimary,
+                      color: context.ritu.textPrimary,
                     ),
                   ),
                   Text(
@@ -112,7 +112,7 @@ class _DeleteDataScreenState extends ConsumerState<DeleteDataScreen> {
                       fontSize: 13,
                       fontWeight: FontWeight.w400,
                       height: 20 / 13,
-                      color: RituColors.textSecondary,
+                      color: context.ritu.textSecondary,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -120,18 +120,18 @@ class _DeleteDataScreenState extends ConsumerState<DeleteDataScreen> {
                     width: double.infinity,
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: RituColors.fillCritical,
+                      color: context.ritu.fillCritical,
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Padding(
+                        Padding(
                           padding: EdgeInsets.only(top: 2),
                           child: Icon(
                             LucideIcons.octagonX,
                             size: 16,
-                            color: RituColors.textCritical,
+                            color: context.ritu.textCritical,
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -148,7 +148,7 @@ class _DeleteDataScreenState extends ConsumerState<DeleteDataScreen> {
                                         fontSize: 13,
                                         fontWeight: FontWeight.w600,
                                         height: 20 / 13,
-                                        color: RituColors.textCritical,
+                                        color: context.ritu.textCritical,
                                       ),
                                     ),
                                     TextSpan(
@@ -158,14 +158,18 @@ class _DeleteDataScreenState extends ConsumerState<DeleteDataScreen> {
                                         fontSize: 13,
                                         fontWeight: FontWeight.w500,
                                         height: 20 / 13,
-                                        color: RituColors.textSecondary,
+                                        color: context.ritu.textSecondary,
                                       ),
                                     ),
                                   ],
                                 ),
                               ),
                               const SizedBox(height: 8),
-                              for (var i = 0; i < _deletedItems.length; i++) ...[
+                              for (
+                                var i = 0;
+                                i < _deletedItems.length;
+                                i++
+                              ) ...[
                                 if (i > 0) const SizedBox(height: 8),
                                 Text(
                                   _deletedItems[i],
@@ -173,7 +177,7 @@ class _DeleteDataScreenState extends ConsumerState<DeleteDataScreen> {
                                     fontSize: 13,
                                     fontWeight: FontWeight.w400,
                                     height: 20 / 13,
-                                    color: RituColors.textPrimary,
+                                    color: context.ritu.textPrimary,
                                   ),
                                 ),
                               ],
@@ -190,11 +194,11 @@ class _DeleteDataScreenState extends ConsumerState<DeleteDataScreen> {
                     child: FilledButton(
                       onPressed: _busy ? null : _confirmDelete,
                       style: FilledButton.styleFrom(
-                        backgroundColor: RituColors.textCritical,
-                        disabledBackgroundColor:
-                            RituColors.textCritical.withValues(alpha: 0.4),
-                        foregroundColor: RituColors.textInverse,
-                        disabledForegroundColor: RituColors.textInverse,
+                        backgroundColor: context.ritu.textCritical,
+                        disabledBackgroundColor: context.ritu.textCritical
+                            .withValues(alpha: 0.4),
+                        foregroundColor: context.ritu.textInverse,
+                        disabledForegroundColor: context.ritu.textInverse,
                         elevation: 0,
                         padding: EdgeInsets.zero,
                         shape: const StadiumBorder(),
@@ -205,12 +209,12 @@ class _DeleteDataScreenState extends ConsumerState<DeleteDataScreen> {
                         ),
                       ),
                       child: _busy
-                          ? const SizedBox(
+                          ? SizedBox(
                               width: 20,
                               height: 20,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                color: RituColors.textInverse,
+                                color: context.ritu.textInverse,
                               ),
                             )
                           : const Text('Delete all data'),
@@ -238,14 +242,11 @@ class _DeleteDataDialog extends StatelessWidget {
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 358),
         child: Material(
-          color: RituColors.fillElevated,
+          color: context.ritu.fillElevated,
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
-            side: const BorderSide(
-              color: RituColors.borderSubtle,
-              width: 0.5,
-            ),
+            side: BorderSide(color: context.ritu.borderSubtle, width: 0.5),
           ),
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
@@ -259,7 +260,7 @@ class _DeleteDataDialog extends StatelessWidget {
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
                     height: 24 / 18,
-                    color: RituColors.textPrimary,
+                    color: context.ritu.textPrimary,
                   ),
                 ),
                 Text(
@@ -268,7 +269,7 @@ class _DeleteDataDialog extends StatelessWidget {
                     fontSize: 13,
                     fontWeight: FontWeight.w400,
                     height: 20 / 13,
-                    color: RituColors.textSecondary,
+                    color: context.ritu.textSecondary,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -276,13 +277,13 @@ class _DeleteDataDialog extends StatelessWidget {
                   children: [
                     _DialogAction(
                       label: 'Permanently delete',
-                      color: RituColors.textCritical,
+                      color: context.ritu.textCritical,
                       onPressed: () => Navigator.of(context).pop(true),
                     ),
                     const SizedBox(width: 32),
                     _DialogAction(
                       label: 'Cancel',
-                      color: RituColors.textTertiary,
+                      color: context.ritu.textTertiary,
                       onPressed: () => Navigator.of(context).pop(false),
                     ),
                   ],

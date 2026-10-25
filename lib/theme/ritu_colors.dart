@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+/// Light-mode constants for code that cannot read a [BuildContext], including
+/// the studio, Widgetbook, and tests.
+///
+/// Screens use `context.ritu` so the same call site follows light or dark.
 abstract final class RituColors {
   static const Color backgroundPage = Color(0xFFF9F7F4);
   static const Color sage500 = Color(0xFF5F8F7A);

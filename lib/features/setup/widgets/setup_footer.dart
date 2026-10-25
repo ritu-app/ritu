@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../theme/ritu_colors.dart';
+import '../../../theme/ritu_palette.dart';
 
 class SetupFooter extends StatelessWidget {
   const SetupFooter({
@@ -45,7 +45,7 @@ class SetupFooter extends StatelessWidget {
                 fontSize: 15,
                 fontWeight: FontWeight.w500,
                 height: 24 / 15,
-                color: RituColors.textTertiary,
+                color: context.ritu.textTertiary,
               ),
             ),
           ),
@@ -72,25 +72,26 @@ class OutlinedPillButton extends StatelessWidget {
       height: 48,
       child: OutlinedButton(
         onPressed: onPressed,
-        style: OutlinedButton.styleFrom(
-          foregroundColor: RituColors.sage600,
-          disabledForegroundColor: RituColors.textDisabled,
-          side: const BorderSide(color: RituColors.sage500),
-          disabledBackgroundColor: Colors.transparent,
-          shape: const StadiumBorder(),
-          textStyle: GoogleFonts.dmSans(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            height: 24 / 15,
-          ),
-        ).copyWith(
-          side: WidgetStateProperty.resolveWith((states) {
-            if (states.contains(WidgetState.disabled)) {
-              return const BorderSide(color: RituColors.borderDisabled);
-            }
-            return const BorderSide(color: RituColors.sage500);
-          }),
-        ),
+        style:
+            OutlinedButton.styleFrom(
+              foregroundColor: context.ritu.sage600,
+              disabledForegroundColor: context.ritu.textDisabled,
+              side: BorderSide(color: context.ritu.sage500),
+              disabledBackgroundColor: Colors.transparent,
+              shape: const StadiumBorder(),
+              textStyle: GoogleFonts.dmSans(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                height: 24 / 15,
+              ),
+            ).copyWith(
+              side: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.disabled)) {
+                  return BorderSide(color: context.ritu.borderDisabled);
+                }
+                return BorderSide(color: context.ritu.sage500);
+              }),
+            ),
         child: Text(label),
       ),
     );

@@ -2,36 +2,54 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import 'ritu_colors.dart';
+import '../data/models/app_appearance.dart';
+import 'ritu_palette.dart';
 
-ThemeData buildRituTheme() {
+ThemeMode themeModeFor(AppAppearance appearance) => switch (appearance) {
+  AppAppearance.system => ThemeMode.system,
+  AppAppearance.light => ThemeMode.light,
+  AppAppearance.dark => ThemeMode.dark,
+};
+
+ThemeData buildRituTheme([RituPalette palette = RituPalette.light]) {
   final textTheme = GoogleFonts.dmSansTextTheme().apply(
-    bodyColor: RituColors.neutral600,
-    displayColor: RituColors.sage600,
+    bodyColor: palette.neutral600,
+    displayColor: palette.sage600,
   );
+  final overlay = palette.brightness == Brightness.dark
+      ? SystemUiOverlayStyle.light
+      : SystemUiOverlayStyle.dark;
 
   return ThemeData(
     useMaterial3: true,
-    scaffoldBackgroundColor: RituColors.backgroundPage,
-    colorScheme: ColorScheme.light(
-      primary: RituColors.sage500,
-      onPrimary: RituColors.white,
-      surface: RituColors.backgroundPage,
-      onSurface: RituColors.sage600,
+    brightness: palette.brightness,
+    extensions: [palette],
+    scaffoldBackgroundColor: palette.backgroundPage,
+    colorScheme: ColorScheme(
+      brightness: palette.brightness,
+      primary: palette.sage500,
+      onPrimary: palette.white,
+      secondary: palette.sage600,
+      onSecondary: palette.white,
+      error: palette.textCritical,
+      onError: palette.textInverse,
+      surface: palette.backgroundPage,
+      onSurface: palette.sage600,
     ),
     textTheme: textTheme,
-    appBarTheme: const AppBarTheme(
-      systemOverlayStyle: SystemUiOverlayStyle.dark,
-      backgroundColor: RituColors.backgroundPage,
+    appBarTheme: AppBarTheme(
+      systemOverlayStyle: overlay,
+      backgroundColor: palette.backgroundPage,
+      foregroundColor: palette.textPrimary,
       elevation: 0,
       scrolledUnderElevation: 0,
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
-        backgroundColor: RituColors.sage500,
-        foregroundColor: RituColors.white,
-        disabledBackgroundColor: RituColors.sage500.withValues(alpha: 0.4),
-        disabledForegroundColor: RituColors.white,
+        backgroundColor: palette.sage500,
+        foregroundColor: palette.white,
+        disabledBackgroundColor: palette.sage500.withValues(alpha: 0.4),
+        disabledForegroundColor: palette.white,
         minimumSize: const Size(double.infinity, 48),
         padding: const EdgeInsets.symmetric(horizontal: 64, vertical: 12),
         shape: const StadiumBorder(),
@@ -44,21 +62,21 @@ ThemeData buildRituTheme() {
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: RituColors.fillElevated,
+      fillColor: palette.fillElevated,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       hintStyle: GoogleFonts.dmSans(
         fontSize: 15,
         fontWeight: FontWeight.w500,
         height: 24 / 15,
-        color: RituColors.textDisabled,
+        color: palette.textDisabled,
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: RituColors.borderSubtle),
+        borderSide: BorderSide(color: palette.borderSubtle),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: RituColors.sage500),
+        borderSide: BorderSide(color: palette.sage500),
       ),
     ),
   );

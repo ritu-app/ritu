@@ -15,7 +15,7 @@ import '../../providers/period_providers.dart';
 import '../../providers/profile_providers.dart';
 import '../../providers/repository_providers.dart';
 import '../../providers/symptom_providers.dart';
-import '../../theme/ritu_colors.dart';
+import '../../theme/ritu_palette.dart';
 import 'about_ritu_screen.dart';
 import 'app_appearance_screen.dart';
 import 'custom_symptoms_screen.dart';
@@ -37,9 +37,9 @@ class SettingsScreen extends ConsumerWidget {
     final symptomsAsync = ref.watch(customSymptomsProvider);
 
     return profileAsync.when(
-      loading: () => const Scaffold(
+      loading: () => Scaffold(
         body: Center(
-          child: CircularProgressIndicator(color: RituColors.sage500),
+          child: CircularProgressIndicator(color: context.ritu.sage500),
         ),
       ),
       error: (error, _) => Scaffold(body: Center(child: Text('$error'))),
@@ -195,7 +195,7 @@ class _SettingsBody extends ConsumerWidget {
         _popWithName(context);
       },
       child: Scaffold(
-        backgroundColor: RituColors.backgroundPage,
+        backgroundColor: context.ritu.backgroundPage,
         body: SafeArea(
           child: Column(
             children: [
@@ -217,24 +217,24 @@ class _SettingsBody extends ConsumerWidget {
                       children: [
                         _SettingsRow(
                           icon: LucideIcons.undo2,
-                          iconBackground: RituColors.fillPositiveSecondary,
-                          iconColor: RituColors.sage600,
+                          iconBackground: context.ritu.fillPositiveSecondary,
+                          iconColor: context.ritu.sage600,
                           title: 'Period History',
                           subtitle: _periodHistorySubtitle,
                           onTap: () => _editPeriodHistory(context),
                         ),
                         _SettingsRow(
                           icon: LucideIcons.clock,
-                          iconBackground: RituColors.fillPositiveSecondary,
-                          iconColor: RituColors.sage600,
+                          iconBackground: context.ritu.fillPositiveSecondary,
+                          iconColor: context.ritu.sage600,
                           title: 'Cycle Learning',
                           subtitle: cycleLearningSubtitle,
                           onTap: () => _openCycleLearning(context),
                         ),
                         _SettingsRow(
                           icon: LucideIcons.badgePlus,
-                          iconBackground: RituColors.fillPositiveSecondary,
-                          iconColor: RituColors.sage600,
+                          iconBackground: context.ritu.fillPositiveSecondary,
+                          iconColor: context.ritu.sage600,
                           title: 'Custom Symptoms',
                           subtitle: _customSymptomsSubtitle,
                           showDivider: false,
@@ -249,8 +249,8 @@ class _SettingsBody extends ConsumerWidget {
                       children: [
                         _SettingsRow(
                           icon: LucideIcons.bell,
-                          iconBackground: RituColors.fillAttentionSecondary,
-                          iconColor: RituColors.iconAttention,
+                          iconBackground: context.ritu.fillAttentionSecondary,
+                          iconColor: context.ritu.iconAttention,
                           title: 'Daily Reminder',
                           subtitle: reminderSubtitle,
                           showDivider: false,
@@ -265,8 +265,8 @@ class _SettingsBody extends ConsumerWidget {
                       children: [
                         _SettingsRow(
                           icon: LucideIcons.sunMoon,
-                          iconBackground: RituColors.fillPositiveSecondary,
-                          iconColor: RituColors.sage600,
+                          iconBackground: context.ritu.fillPositiveSecondary,
+                          iconColor: context.ritu.sage600,
                           title: 'App Appearance',
                           subtitle: appearanceLabel,
                           showDivider: false,
@@ -281,16 +281,16 @@ class _SettingsBody extends ConsumerWidget {
                       children: [
                         _SettingsRow(
                           icon: LucideIcons.stickyNoteCheck,
-                          iconBackground: RituColors.fillPositiveSecondary,
-                          iconColor: RituColors.sage600,
+                          iconBackground: context.ritu.fillPositiveSecondary,
+                          iconColor: context.ritu.sage600,
                           title: 'Export Data',
                           subtitle: 'Download a complete copy of everything',
                           onTap: () => _openExportData(context),
                         ),
                         _SettingsRow(
                           icon: LucideIcons.trash2,
-                          iconBackground: RituColors.fillCriticalSecondary,
-                          iconColor: RituColors.iconCritical,
+                          iconBackground: context.ritu.fillCriticalSecondary,
+                          iconColor: context.ritu.iconCritical,
                           title: 'Delete Data',
                           subtitle: 'Permanently removes everything',
                           showDivider: false,
@@ -305,15 +305,15 @@ class _SettingsBody extends ConsumerWidget {
                       children: [
                         _SettingsRow(
                           icon: LucideIcons.circleQuestionMark,
-                          iconBackground: RituColors.fillInfoSecondary,
-                          iconColor: RituColors.iconInfo,
+                          iconBackground: context.ritu.fillInfoSecondary,
+                          iconColor: context.ritu.iconInfo,
                           title: 'Help & Support',
                           onTap: () => _openHelpSupport(context),
                         ),
                         _SettingsRow(
                           icon: LucideIcons.lockKeyhole,
-                          iconBackground: RituColors.fillInfoSecondary,
-                          iconColor: RituColors.iconInfo,
+                          iconBackground: context.ritu.fillInfoSecondary,
+                          iconColor: context.ritu.iconInfo,
                           title: 'Privacy Policy',
                           onTap: () => _openWebPage(
                             context,
@@ -322,8 +322,8 @@ class _SettingsBody extends ConsumerWidget {
                         ),
                         _SettingsRow(
                           icon: LucideIcons.receiptText,
-                          iconBackground: RituColors.fillInfoSecondary,
-                          iconColor: RituColors.iconInfo,
+                          iconBackground: context.ritu.fillInfoSecondary,
+                          iconColor: context.ritu.iconInfo,
                           title: 'Terms of Service',
                           onTap: () => _openWebPage(
                             context,
@@ -332,8 +332,8 @@ class _SettingsBody extends ConsumerWidget {
                         ),
                         _SettingsRow(
                           icon: LucideIcons.info,
-                          iconBackground: RituColors.fillInfoSecondary,
-                          iconColor: RituColors.iconInfo,
+                          iconBackground: context.ritu.fillInfoSecondary,
+                          iconColor: context.ritu.iconInfo,
                           title: 'About Ritu',
                           showDivider: false,
                           onTap: () => _openAboutRitu(context),
@@ -366,10 +366,10 @@ class _SettingsAppBar extends StatelessWidget {
         children: [
           IconButton(
             onPressed: onBack,
-            icon: const Icon(
+            icon: Icon(
               LucideIcons.chevronLeft,
               size: 28,
-              color: RituColors.textPrimary,
+              color: context.ritu.textPrimary,
             ),
           ),
           Expanded(
@@ -380,7 +380,7 @@ class _SettingsAppBar extends StatelessWidget {
                 fontSize: 18,
                 fontWeight: FontWeight.w400,
                 height: 25 / 18,
-                color: RituColors.textPrimary,
+                color: context.ritu.textPrimary,
               ),
             ),
           ),
@@ -407,7 +407,7 @@ class _ProfileCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: RituColors.fillElevated,
+      color: context.ritu.fillElevated,
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
         onTap: onNameTap,
@@ -417,7 +417,7 @@ class _ProfileCard extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: RituColors.borderSubtle),
+            border: Border.all(color: context.ritu.borderSubtle),
           ),
           child: Row(
             children: [
@@ -425,15 +425,15 @@ class _ProfileCard extends StatelessWidget {
                 width: 48,
                 height: 48,
                 alignment: Alignment.center,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: LinearGradient(
                     begin: Alignment(-0.7, -0.5),
                     end: Alignment(0.8, 0.8),
                     colors: [
-                      RituColors.gradientVb1,
-                      RituColors.gradientVb2,
-                      RituColors.gradientVb3,
+                      context.ritu.gradientVb1,
+                      context.ritu.gradientVb2,
+                      context.ritu.gradientVb3,
                     ],
                     stops: [0.14, 0.59, 0.95],
                   ),
@@ -444,7 +444,7 @@ class _ProfileCard extends StatelessWidget {
                     fontSize: 22,
                     fontWeight: FontWeight.w700,
                     height: 26 / 22,
-                    color: RituColors.textInverse,
+                    color: context.ritu.textInverse,
                   ),
                 ),
               ),
@@ -459,7 +459,7 @@ class _ProfileCard extends StatelessWidget {
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
                         height: 24 / 18,
-                        color: RituColors.textPrimary,
+                        color: context.ritu.textPrimary,
                       ),
                     ),
                     Text(
@@ -468,7 +468,7 @@ class _ProfileCard extends StatelessWidget {
                         fontSize: 11,
                         fontWeight: FontWeight.w500,
                         height: 18 / 11,
-                        color: RituColors.textTertiary,
+                        color: context.ritu.textTertiary,
                       ),
                     ),
                   ],
@@ -495,7 +495,7 @@ class _SectionLabel extends StatelessWidget {
         fontSize: 13,
         fontWeight: FontWeight.w600,
         height: 20 / 13,
-        color: RituColors.textDisabled,
+        color: context.ritu.textDisabled,
       ),
     );
   }
@@ -512,9 +512,9 @@ class _SettingsGroup extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: RituColors.fillElevated,
+        color: context.ritu.fillElevated,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: RituColors.borderSubtle),
+        border: Border.all(color: context.ritu.borderSubtle),
       ),
       child: Column(children: children),
     );
@@ -571,7 +571,7 @@ class _SettingsRow extends StatelessWidget {
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
                           height: 20 / 13,
-                          color: RituColors.textPrimary,
+                          color: context.ritu.textPrimary,
                         ),
                       ),
                       if (subtitle != null)
@@ -581,27 +581,23 @@ class _SettingsRow extends StatelessWidget {
                             fontSize: 11,
                             fontWeight: FontWeight.w500,
                             height: 18 / 11,
-                            color: RituColors.textTertiary,
+                            color: context.ritu.textTertiary,
                           ),
                         ),
                     ],
                   ),
                 ),
-                const Icon(
+                Icon(
                   LucideIcons.chevronRight,
                   size: 16,
-                  color: RituColors.textDisabled,
+                  color: context.ritu.textDisabled,
                 ),
               ],
             ),
           ),
         ),
         if (showDivider)
-          const Divider(
-            height: 1,
-            thickness: 0.5,
-            color: RituColors.borderSubtle,
-          ),
+          Divider(height: 1, thickness: 0.5, color: context.ritu.borderSubtle),
       ],
     );
   }
@@ -619,7 +615,7 @@ class _Footer extends StatelessWidget {
           style: GoogleFonts.dmSerifDisplay(
             fontSize: 28,
             fontWeight: FontWeight.w400,
-            color: RituColors.sage600,
+            color: context.ritu.sage600,
           ),
         ),
         const SizedBox(height: 4),
@@ -629,7 +625,7 @@ class _Footer extends StatelessWidget {
             fontSize: 11,
             fontWeight: FontWeight.w500,
             height: 18 / 11,
-            color: RituColors.textTertiary,
+            color: context.ritu.textTertiary,
           ),
         ),
       ],

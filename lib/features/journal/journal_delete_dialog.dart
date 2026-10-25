@@ -1,19 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../theme/ritu_colors.dart';
+import '../../theme/ritu_palette.dart';
 
-Future<bool> showJournalDeleteDialog(
-  BuildContext context, {
-  int count = 1,
-}) {
+Future<bool> showJournalDeleteDialog(BuildContext context, {int count = 1}) {
   return showDialog<bool>(
-        context: context,
-        barrierColor: const Color(0xB3000000),
-        builder: (dialogContext) => _JournalDeleteDialog(count: count),
-      ).then(
-        (value) => value ?? false,
-      );
+    context: context,
+    barrierColor: context.ritu.barrier,
+    builder: (dialogContext) => _JournalDeleteDialog(count: count),
+  ).then((value) => value ?? false);
 }
 
 class _JournalDeleteDialog extends StatelessWidget {
@@ -23,9 +18,7 @@ class _JournalDeleteDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final title = count <= 1
-        ? 'Delete this entry?'
-        : 'Delete $count entries?';
+    final title = count <= 1 ? 'Delete this entry?' : 'Delete $count entries?';
     final body = count <= 1
         ? 'This can\'t be undone. Your entry will be permanently removed'
         : 'This can\'t be undone. These entries will be permanently removed';
@@ -34,13 +27,10 @@ class _JournalDeleteDialog extends StatelessWidget {
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: 16),
       child: Material(
-        color: RituColors.fillElevated,
+        color: context.ritu.fillElevated,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(
-            color: RituColors.borderSubtle,
-            width: 0.5,
-          ),
+          side: BorderSide(color: context.ritu.borderSubtle, width: 0.5),
         ),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
@@ -54,7 +44,7 @@ class _JournalDeleteDialog extends StatelessWidget {
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
                   height: 24 / 18,
-                  color: RituColors.textPrimary,
+                  color: context.ritu.textPrimary,
                 ),
               ),
               Text(
@@ -63,7 +53,7 @@ class _JournalDeleteDialog extends StatelessWidget {
                   fontSize: 13,
                   fontWeight: FontWeight.w400,
                   height: 20 / 13,
-                  color: RituColors.textSecondary,
+                  color: context.ritu.textSecondary,
                 ),
               ),
               const SizedBox(height: 16),
@@ -75,7 +65,7 @@ class _JournalDeleteDialog extends StatelessWidget {
                       padding: EdgeInsets.zero,
                       minimumSize: const Size(77, 36),
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      foregroundColor: RituColors.textCritical,
+                      foregroundColor: context.ritu.textCritical,
                     ),
                     child: Text(
                       'Delete',
@@ -92,7 +82,7 @@ class _JournalDeleteDialog extends StatelessWidget {
                       padding: EdgeInsets.zero,
                       minimumSize: const Size(77, 36),
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      foregroundColor: RituColors.textTertiary,
+                      foregroundColor: context.ritu.textTertiary,
                     ),
                     child: Text(
                       'Cancel',

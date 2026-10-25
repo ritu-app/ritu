@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/date_format.dart';
-import '../../theme/ritu_colors.dart';
+import '../../theme/ritu_palette.dart';
 import '../setup/widgets/ritu_calendar.dart';
 
 /// Figma 865:3405 — Calender bottom sheet for filtering All entries by day.
@@ -16,7 +16,7 @@ Future<DateTime?> showJournalCalendarSheet(
   return showModalBottomSheet<DateTime>(
     context: context,
     backgroundColor: Colors.transparent,
-    barrierColor: const Color(0xB3000000),
+    barrierColor: context.ritu.barrier,
     isScrollControlled: true,
     builder: (sheetContext) => _JournalCalendarSheet(
       selectedDate: selectedDate,
@@ -47,7 +47,8 @@ class _JournalCalendarSheetState extends State<_JournalCalendarSheet> {
   @override
   void initState() {
     super.initState();
-    final anchor = widget.selectedDate ??
+    final anchor =
+        widget.selectedDate ??
         widget.maxSelectableDate ??
         dateOnly(DateTime.now());
     _visibleMonth = DateTime(anchor.year, anchor.month);
@@ -56,10 +57,10 @@ class _JournalCalendarSheetState extends State<_JournalCalendarSheet> {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: RituColors.backgroundPage,
-      shape: const RoundedRectangleBorder(
+      color: context.ritu.backgroundPage,
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-        side: BorderSide(color: RituColors.borderSubtle),
+        side: BorderSide(color: context.ritu.borderSubtle),
       ),
       clipBehavior: Clip.antiAlias,
       child: SafeArea(
@@ -81,20 +82,20 @@ class _JournalCalendarSheetState extends State<_JournalCalendarSheet> {
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
                         height: 24 / 18,
-                        color: RituColors.textPrimary,
+                        color: context.ritu.textPrimary,
                       ),
                     ),
                   ),
                   GestureDetector(
                     onTap: () => Navigator.of(context).pop(),
                     behavior: HitTestBehavior.opaque,
-                    child: const SizedBox(
+                    child: SizedBox(
                       width: 24,
                       height: 24,
                       child: Icon(
                         LucideIcons.x,
                         size: 24,
-                        color: RituColors.textPrimary,
+                        color: context.ritu.textPrimary,
                       ),
                     ),
                   ),
@@ -106,7 +107,8 @@ class _JournalCalendarSheetState extends State<_JournalCalendarSheet> {
                 selectedDate: widget.selectedDate,
                 entryDates: widget.entryDates,
                 maxSelectableDate: widget.maxSelectableDate,
-                onMonthChanged: (month) => setState(() => _visibleMonth = month),
+                onMonthChanged: (month) =>
+                    setState(() => _visibleMonth = month),
                 onDateSelected: (date) =>
                     Navigator.of(context).pop(dateOnly(date)),
               ),

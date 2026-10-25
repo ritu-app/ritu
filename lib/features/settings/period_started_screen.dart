@@ -8,7 +8,7 @@ import '../../providers/period_providers.dart';
 import '../../providers/repository_providers.dart';
 import '../../core/date_format.dart';
 import '../../data/repositories/period_repository.dart';
-import '../../theme/ritu_colors.dart';
+import '../../theme/ritu_palette.dart';
 import '../setup/widgets/ritu_calendar.dart';
 
 /// Full-page period start date editor (Figma Settings → Period Started).
@@ -65,10 +65,12 @@ class _PeriodStartedScreenState extends ConsumerState<PeriodStartedScreen> {
     if (selected == null || _saving) return;
 
     setState(() => _saving = true);
-    await ref.read(periodRepositoryProvider).updateLatestStartedOn(
-      newStartedOn: selected,
-      typicalPeriodDays: _typicalPeriodDays,
-    );
+    await ref
+        .read(periodRepositoryProvider)
+        .updateLatestStartedOn(
+          newStartedOn: selected,
+          typicalPeriodDays: _typicalPeriodDays,
+        );
     if (!mounted) return;
     Navigator.of(context).pop(selected);
   }
@@ -82,7 +84,7 @@ class _PeriodStartedScreenState extends ConsumerState<PeriodStartedScreen> {
 
     if (latestAsync.isLoading || profileAsync.isLoading) {
       return Scaffold(
-        backgroundColor: RituColors.backgroundPage,
+        backgroundColor: context.ritu.backgroundPage,
         body: SafeArea(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -91,16 +93,16 @@ class _PeriodStartedScreenState extends ConsumerState<PeriodStartedScreen> {
                 padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
                 child: IconButton(
                   onPressed: _cancel,
-                  icon: const Icon(
+                  icon: Icon(
                     LucideIcons.chevronLeft,
                     size: 28,
-                    color: RituColors.textPrimary,
+                    color: context.ritu.textPrimary,
                   ),
                 ),
               ),
-              const Expanded(
+              Expanded(
                 child: Center(
-                  child: CircularProgressIndicator(color: RituColors.sage500),
+                  child: CircularProgressIndicator(color: context.ritu.sage500),
                 ),
               ),
             ],
@@ -115,7 +117,7 @@ class _PeriodStartedScreenState extends ConsumerState<PeriodStartedScreen> {
     );
 
     return Scaffold(
-      backgroundColor: RituColors.backgroundPage,
+      backgroundColor: context.ritu.backgroundPage,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -124,10 +126,10 @@ class _PeriodStartedScreenState extends ConsumerState<PeriodStartedScreen> {
               padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
               child: IconButton(
                 onPressed: _cancel,
-                icon: const Icon(
+                icon: Icon(
                   LucideIcons.chevronLeft,
                   size: 28,
-                  color: RituColors.textPrimary,
+                  color: context.ritu.textPrimary,
                 ),
               ),
             ),
@@ -143,7 +145,7 @@ class _PeriodStartedScreenState extends ConsumerState<PeriodStartedScreen> {
                         fontSize: 22,
                         fontWeight: FontWeight.w600,
                         height: 26 / 22,
-                        color: RituColors.textPrimary,
+                        color: context.ritu.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -166,11 +168,11 @@ class _PeriodStartedScreenState extends ConsumerState<PeriodStartedScreen> {
                       child: FilledButton(
                         onPressed: _saving ? null : _save,
                         style: FilledButton.styleFrom(
-                          backgroundColor: RituColors.sage500,
-                          disabledBackgroundColor: RituColors.sage500
+                          backgroundColor: context.ritu.sage500,
+                          disabledBackgroundColor: context.ritu.sage500
                               .withValues(alpha: 0.4),
-                          foregroundColor: RituColors.white,
-                          disabledForegroundColor: RituColors.white,
+                          foregroundColor: context.ritu.white,
+                          disabledForegroundColor: context.ritu.white,
                           elevation: 0,
                           padding: EdgeInsets.zero,
                           shape: const StadiumBorder(),

@@ -5,7 +5,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../data/models/app_appearance.dart';
 import '../../providers/app_appearance_provider.dart';
-import '../../theme/ritu_colors.dart';
+import '../../theme/ritu_palette.dart';
 
 /// Figma 893:3264 — Settings → App Appearance.
 class AppAppearanceScreen extends ConsumerWidget {
@@ -17,7 +17,7 @@ class AppAppearanceScreen extends ConsumerWidget {
         ref.watch(appAppearanceProvider).valueOrNull ?? AppAppearance.system;
 
     return Scaffold(
-      backgroundColor: RituColors.backgroundPage,
+      backgroundColor: context.ritu.backgroundPage,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -29,13 +29,13 @@ class AppAppearanceScreen extends ConsumerWidget {
                 child: GestureDetector(
                   onTap: () => Navigator.of(context).pop(),
                   behavior: HitTestBehavior.opaque,
-                  child: const SizedBox(
+                  child: SizedBox(
                     width: 24,
                     height: 24,
                     child: Icon(
                       LucideIcons.chevronLeft,
                       size: 24,
-                      color: RituColors.textPrimary,
+                      color: context.ritu.textPrimary,
                     ),
                   ),
                 ),
@@ -51,7 +51,7 @@ class AppAppearanceScreen extends ConsumerWidget {
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
                       height: 24 / 18,
-                      color: RituColors.textPrimary,
+                      color: context.ritu.textPrimary,
                     ),
                   ),
                   Text(
@@ -60,7 +60,7 @@ class AppAppearanceScreen extends ConsumerWidget {
                       fontSize: 13,
                       fontWeight: FontWeight.w400,
                       height: 20 / 13,
-                      color: RituColors.textSecondary,
+                      color: context.ritu.textSecondary,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -68,9 +68,9 @@ class AppAppearanceScreen extends ConsumerWidget {
                     width: double.infinity,
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: RituColors.fillElevated,
+                      color: context.ritu.fillElevated,
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: RituColors.borderSubtle),
+                      border: Border.all(color: context.ritu.borderSubtle),
                     ),
                     child: Column(
                       children: [
@@ -120,10 +120,10 @@ class _AppearanceOption extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: showDivider
-              ? const BoxDecoration(
+              ? BoxDecoration(
                   border: Border(
                     bottom: BorderSide(
-                      color: RituColors.borderSubtle,
+                      color: context.ritu.borderSubtle,
                       width: 0.5,
                     ),
                   ),
@@ -143,7 +143,7 @@ class _AppearanceOption extends StatelessWidget {
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                         height: 20 / 13,
-                        color: RituColors.textPrimary,
+                        color: context.ritu.textPrimary,
                       ),
                     ),
                     Text(
@@ -152,7 +152,7 @@ class _AppearanceOption extends StatelessWidget {
                         fontSize: 11,
                         fontWeight: FontWeight.w500,
                         height: 18 / 11,
-                        color: RituColors.textTertiary,
+                        color: context.ritu.textTertiary,
                       ),
                     ),
                   ],
@@ -179,7 +179,7 @@ class _RadioMark extends StatelessWidget {
         height: 16,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          border: Border.all(color: RituColors.textDisabled),
+          border: Border.all(color: context.ritu.textDisabled),
         ),
       );
     }
@@ -189,15 +189,15 @@ class _RadioMark extends StatelessWidget {
       height: 16,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        border: Border.all(color: RituColors.sage600),
+        border: Border.all(color: context.ritu.sage600),
       ),
       alignment: Alignment.center,
       child: Container(
         width: 12,
         height: 12,
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: RituColors.fillBrandPressed,
+          color: context.ritu.fillBrandPressed,
         ),
       ),
     );

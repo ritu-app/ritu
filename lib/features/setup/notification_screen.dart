@@ -2,16 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '../../theme/ritu_colors.dart';
+import '../../theme/ritu_palette.dart';
 import 'widgets/progress_dots.dart';
 import 'widgets/setup_footer.dart';
 
 class NotificationScreen extends StatefulWidget {
-  const NotificationScreen({
-    super.key,
-    this.onTurnOn,
-    this.onSkip,
-  });
+  const NotificationScreen({super.key, this.onTurnOn, this.onSkip});
 
   final Future<void> Function()? onTurnOn;
   final Future<void> Function()? onSkip;
@@ -36,7 +32,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: RituColors.backgroundPage,
+      backgroundColor: context.ritu.backgroundPage,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -45,11 +41,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
               const SizedBox(height: 16),
               const ProgressDots(currentStep: 3),
               const Spacer(),
-              const Icon(
-                LucideIcons.bell,
-                size: 64,
-                color: RituColors.sage500,
-              ),
+              Icon(LucideIcons.bell, size: 64, color: context.ritu.sage500),
               const SizedBox(height: 20),
               Text(
                 'A gentle nudge each morning',
@@ -58,7 +50,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                   fontSize: 22,
                   fontWeight: FontWeight.w600,
                   height: 26 / 22,
-                  color: RituColors.textPrimary,
+                  color: context.ritu.textPrimary,
                 ),
               ),
               const SizedBox(height: 8),
@@ -69,7 +61,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                   fontSize: 15,
                   fontWeight: FontWeight.w400,
                   height: 24 / 15,
-                  color: RituColors.textSecondary,
+                  color: context.ritu.textSecondary,
                 ),
               ),
               const Spacer(),

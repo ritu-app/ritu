@@ -6,7 +6,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../providers/repository_providers.dart';
 import '../../providers/symptom_providers.dart';
 import '../../data/repositories/symptom_repository.dart';
-import '../../theme/ritu_colors.dart';
+import '../../theme/ritu_palette.dart';
 import '../setup/widgets/choice_chips.dart';
 import '../setup/widgets/setup_footer.dart';
 
@@ -68,7 +68,7 @@ class _CustomSymptomsScreenState extends ConsumerState<CustomSymptomsScreen> {
         _pop(count);
       },
       child: Scaffold(
-        backgroundColor: RituColors.backgroundPage,
+        backgroundColor: context.ritu.backgroundPage,
         body: SafeArea(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -80,17 +80,19 @@ class _CustomSymptomsScreenState extends ConsumerState<CustomSymptomsScreen> {
                     final count = symptomsAsync.valueOrNull?.length ?? 0;
                     _pop(count);
                   },
-                  icon: const Icon(
+                  icon: Icon(
                     LucideIcons.chevronLeft,
                     size: 28,
-                    color: RituColors.textPrimary,
+                    color: context.ritu.textPrimary,
                   ),
                 ),
               ),
               Expanded(
                 child: symptomsAsync.when(
-                  loading: () => const Center(
-                    child: CircularProgressIndicator(color: RituColors.sage500),
+                  loading: () => Center(
+                    child: CircularProgressIndicator(
+                      color: context.ritu.sage500,
+                    ),
                   ),
                   error: (error, _) => Center(child: Text('$error')),
                   data: (symptoms) => SingleChildScrollView(
@@ -104,7 +106,7 @@ class _CustomSymptomsScreenState extends ConsumerState<CustomSymptomsScreen> {
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
                             height: 24 / 18,
-                            color: RituColors.textPrimary,
+                            color: context.ritu.textPrimary,
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -114,7 +116,7 @@ class _CustomSymptomsScreenState extends ConsumerState<CustomSymptomsScreen> {
                             fontSize: 13,
                             fontWeight: FontWeight.w400,
                             height: 20 / 13,
-                            color: RituColors.textSecondary,
+                            color: context.ritu.textSecondary,
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -141,7 +143,7 @@ class _CustomSymptomsScreenState extends ConsumerState<CustomSymptomsScreen> {
                             fontSize: 15,
                             fontWeight: FontWeight.w500,
                             height: 24 / 15,
-                            color: RituColors.textPrimary,
+                            color: context.ritu.textPrimary,
                           ),
                           decoration: InputDecoration(
                             hintText: 'Name your signal',
@@ -149,30 +151,30 @@ class _CustomSymptomsScreenState extends ConsumerState<CustomSymptomsScreen> {
                               fontSize: 15,
                               fontWeight: FontWeight.w500,
                               height: 24 / 15,
-                              color: RituColors.textDisabled,
+                              color: context.ritu.textDisabled,
                             ),
                             filled: true,
-                            fillColor: RituColors.fillElevated,
+                            fillColor: context.ritu.fillElevated,
                             contentPadding: const EdgeInsets.symmetric(
                               horizontal: 16,
                               vertical: 12,
                             ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(
-                                color: RituColors.borderSubtle,
+                              borderSide: BorderSide(
+                                color: context.ritu.borderSubtle,
                               ),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(
-                                color: RituColors.borderSubtle,
+                              borderSide: BorderSide(
+                                color: context.ritu.borderSubtle,
                               ),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(
-                                color: RituColors.sage500,
+                              borderSide: BorderSide(
+                                color: context.ritu.sage500,
                               ),
                             ),
                           ),

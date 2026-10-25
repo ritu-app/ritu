@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '../../theme/ritu_colors.dart';
+import '../../theme/ritu_palette.dart';
 import 'journal_time_range.dart';
 
 /// Figma 865:3625 — Time range bottom sheet.
@@ -13,7 +13,7 @@ Future<JournalTimeRange?> showJournalTimeRangeSheet(
   return showModalBottomSheet<JournalTimeRange>(
     context: context,
     backgroundColor: Colors.transparent,
-    barrierColor: const Color(0xB3000000),
+    barrierColor: context.ritu.barrier,
     isScrollControlled: true,
     builder: (sheetContext) => _JournalTimeRangeSheet(selected: selected),
   );
@@ -29,10 +29,10 @@ class _JournalTimeRangeSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: RituColors.backgroundPage,
-      shape: const RoundedRectangleBorder(
+      color: context.ritu.backgroundPage,
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-        side: BorderSide(color: RituColors.borderSubtle),
+        side: BorderSide(color: context.ritu.borderSubtle),
       ),
       clipBehavior: Clip.antiAlias,
       child: SafeArea(
@@ -53,20 +53,20 @@ class _JournalTimeRangeSheet extends StatelessWidget {
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
                         height: 24 / 18,
-                        color: RituColors.textPrimary,
+                        color: context.ritu.textPrimary,
                       ),
                     ),
                   ),
                   GestureDetector(
                     onTap: () => Navigator.of(context).pop(),
                     behavior: HitTestBehavior.opaque,
-                    child: const SizedBox(
+                    child: SizedBox(
                       width: 24,
                       height: 24,
                       child: Icon(
                         LucideIcons.x,
                         size: 24,
-                        color: RituColors.textPrimary,
+                        color: context.ritu.textPrimary,
                       ),
                     ),
                   ),
@@ -77,9 +77,9 @@ class _JournalTimeRangeSheet extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: RituColors.fillElevated,
+                  color: context.ritu.fillElevated,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: RituColors.borderSubtle),
+                  border: Border.all(color: context.ritu.borderSubtle),
                 ),
                 child: Column(
                   children: [
@@ -119,8 +119,9 @@ class _TimeRangeRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final enabled = onTap != null;
-    final labelColor =
-        enabled ? RituColors.textPrimary : RituColors.textDisabled;
+    final labelColor = enabled
+        ? context.ritu.textPrimary
+        : context.ritu.textDisabled;
 
     return Material(
       color: Colors.transparent,
@@ -130,10 +131,10 @@ class _TimeRangeRow extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: showDivider
-              ? const BoxDecoration(
+              ? BoxDecoration(
                   border: Border(
                     bottom: BorderSide(
-                      color: RituColors.borderSubtle,
+                      color: context.ritu.borderSubtle,
                       width: 0.5,
                     ),
                   ),
@@ -174,8 +175,8 @@ class _RadioMark extends StatelessWidget {
       return Container(
         width: 16,
         height: 16,
-        decoration: const BoxDecoration(
-          color: RituColors.fillBrandPressed,
+        decoration: BoxDecoration(
+          color: context.ritu.fillBrandPressed,
           shape: BoxShape.circle,
         ),
       );
@@ -187,7 +188,9 @@ class _RadioMark extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         border: Border.all(
-          color: enabled ? RituColors.textDisabled : RituColors.borderSubtle,
+          color: enabled
+              ? context.ritu.textDisabled
+              : context.ritu.borderSubtle,
         ),
       ),
     );

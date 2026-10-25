@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../theme/ritu_colors.dart';
+import '../../theme/ritu_palette.dart';
 
 class NameScreen extends StatefulWidget {
   const NameScreen({super.key, this.onContinue});
@@ -40,7 +40,7 @@ class _NameScreenState extends State<NameScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: RituColors.backgroundPage,
+      backgroundColor: context.ritu.backgroundPage,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -61,7 +61,7 @@ class _NameScreenState extends State<NameScreen> {
                   fontSize: 22,
                   fontWeight: FontWeight.w600,
                   height: 26 / 22,
-                  color: RituColors.textPrimary,
+                  color: context.ritu.textPrimary,
                 ),
               ),
               const SizedBox(height: 8),
@@ -72,7 +72,7 @@ class _NameScreenState extends State<NameScreen> {
                   fontSize: 15,
                   fontWeight: FontWeight.w400,
                   height: 24 / 15,
-                  color: RituColors.textSecondary,
+                  color: context.ritu.textSecondary,
                 ),
               ),
               const SizedBox(height: 24),
@@ -87,34 +87,30 @@ class _NameScreenState extends State<NameScreen> {
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
                   height: 24 / 15,
-                  color: RituColors.textPrimary,
+                  color: context.ritu.textPrimary,
                 ),
-                cursorColor: RituColors.sage500,
+                cursorColor: context.ritu.sage500,
                 decoration: InputDecoration(
                   hintText: 'Your first name',
                   hintStyle: GoogleFonts.dmSans(
                     fontSize: 15,
                     fontWeight: FontWeight.w500,
                     height: 24 / 15,
-                    color: RituColors.textDisabled,
+                    color: context.ritu.textDisabled,
                   ),
                   filled: true,
-                  fillColor: RituColors.fillElevated,
+                  fillColor: context.ritu.fillElevated,
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 12,
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(
-                      color: RituColors.borderSubtle,
-                    ),
+                    borderSide: BorderSide(color: context.ritu.borderSubtle),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(
-                      color: RituColors.sage500,
-                    ),
+                    borderSide: BorderSide(color: context.ritu.sage500),
                   ),
                 ),
               ),

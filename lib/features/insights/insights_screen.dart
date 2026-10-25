@@ -10,7 +10,7 @@ import '../../providers/cycle_snapshot_provider.dart';
 import '../../providers/daily_log_providers.dart';
 import '../../providers/period_providers.dart';
 import '../../providers/simulated_today_provider.dart';
-import '../../theme/ritu_colors.dart';
+import '../../theme/ritu_palette.dart';
 import 'consistent_cycle_copy.dart';
 import 'cycle_length_record.dart';
 import 'cycles_covered_by_logs.dart';
@@ -125,32 +125,34 @@ class _ProgressView extends StatelessWidget {
   /// After-logged banner (Figma pastel-green-banner).
   static const _heroBackgroundProgress = Color(0xFFE7E9DE);
 
-  static const _unlockItems = [
+  static List<(IconData, Color, Color, String, String)> _unlockItems(
+    BuildContext context,
+  ) => [
     (
       LucideIcons.trendingUp,
-      RituColors.fillPositiveSecondary,
-      RituColors.textPositive,
+      context.ritu.fillPositiveSecondary,
+      context.ritu.textPositive,
       'Energy trends',
       'See how your energy changes over time',
     ),
     (
       LucideIcons.audioWaveform,
-      RituColors.fillInfoSecondary,
-      RituColors.iconInfo,
+      context.ritu.fillInfoSecondary,
+      context.ritu.iconInfo,
       'Symptom patterns',
       'Discover what triggers and affects you',
     ),
     (
       LucideIcons.star,
-      RituColors.fillCriticalSecondary,
-      RituColors.iconCritical,
+      context.ritu.fillCriticalSecondary,
+      context.ritu.iconCritical,
       'Cycle insights',
       'Get personalised predictions and phase insights',
     ),
     (
       LucideIcons.notepadText,
-      RituColors.fillAttentionSecondary,
-      RituColors.iconAttention,
+      context.ritu.fillAttentionSecondary,
+      context.ritu.iconAttention,
       'Monthly summaries',
       'Summaries to reflect on your journey',
     ),
@@ -169,7 +171,7 @@ class _ProgressView extends StatelessWidget {
             fontSize: 28,
             fontWeight: FontWeight.w400,
             height: 34 / 28,
-            color: RituColors.textPrimary,
+            color: context.ritu.textPrimary,
           ),
         ),
         const SizedBox(height: 4),
@@ -179,7 +181,7 @@ class _ProgressView extends StatelessWidget {
             fontSize: 13,
             fontWeight: FontWeight.w500,
             height: 20 / 13,
-            color: RituColors.textSecondary,
+            color: context.ritu.textSecondary,
           ),
         ),
         const SizedBox(height: 20),
@@ -197,18 +199,18 @@ class _ProgressView extends StatelessWidget {
             fontSize: 15,
             fontWeight: FontWeight.w600,
             height: 24 / 15,
-            color: RituColors.textPrimary,
+            color: context.ritu.textPrimary,
           ),
         ),
         const SizedBox(height: 16),
-        for (var i = 0; i < _unlockItems.length; i++) ...[
+        for (var i = 0; i < _unlockItems(context).length; i++) ...[
           if (i > 0) const SizedBox(height: 16),
           _UnlockRow(
-            icon: _unlockItems[i].$1,
-            iconBackground: _unlockItems[i].$2,
-            iconColor: _unlockItems[i].$3,
-            title: _unlockItems[i].$4,
-            subtitle: _unlockItems[i].$5,
+            icon: _unlockItems(context)[i].$1,
+            iconBackground: _unlockItems(context)[i].$2,
+            iconColor: _unlockItems(context)[i].$3,
+            title: _unlockItems(context)[i].$4,
+            subtitle: _unlockItems(context)[i].$5,
           ),
         ],
       ],
@@ -268,7 +270,7 @@ class _HeroCard extends StatelessWidget {
               fontSize: 18,
               fontWeight: FontWeight.w600,
               height: 24 / 18,
-              color: RituColors.textPrimary,
+              color: context.ritu.textPrimary,
             ),
           ),
           Text(
@@ -280,7 +282,7 @@ class _HeroCard extends StatelessWidget {
               fontSize: 13,
               fontWeight: FontWeight.w400,
               height: 20 / 13,
-              color: RituColors.textSecondary,
+              color: context.ritu.textSecondary,
             ),
           ),
           if (hasStartedLogging) ...[
@@ -290,8 +292,8 @@ class _HeroCard extends StatelessWidget {
               child: LinearProgressIndicator(
                 value: progress,
                 minHeight: 5,
-                backgroundColor: RituColors.white,
-                color: RituColors.meadow600,
+                backgroundColor: context.ritu.white,
+                color: context.ritu.meadow600,
               ),
             ),
             const SizedBox(height: 4),
@@ -302,7 +304,7 @@ class _HeroCard extends StatelessWidget {
                 fontSize: 11,
                 fontWeight: FontWeight.w400,
                 height: 18 / 11,
-                color: RituColors.textSecondary,
+                color: context.ritu.textSecondary,
               ),
             ),
           ] else if (showLogToday) ...[
@@ -313,8 +315,8 @@ class _HeroCard extends StatelessWidget {
               child: FilledButton(
                 onPressed: onLogToday,
                 style: FilledButton.styleFrom(
-                  backgroundColor: RituColors.sage500,
-                  foregroundColor: RituColors.white,
+                  backgroundColor: context.ritu.sage500,
+                  foregroundColor: context.ritu.white,
                   elevation: 0,
                   padding: EdgeInsets.zero,
                   shape: const StadiumBorder(),
@@ -355,9 +357,9 @@ class _UnlockRow extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: RituColors.fillElevated,
+        color: context.ritu.fillElevated,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: RituColors.borderSubtle),
+        border: Border.all(color: context.ritu.borderSubtle),
       ),
       child: Row(
         children: [
@@ -382,7 +384,7 @@ class _UnlockRow extends StatelessWidget {
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                     height: 20 / 13,
-                    color: RituColors.textPrimary,
+                    color: context.ritu.textPrimary,
                   ),
                 ),
                 Text(
@@ -391,7 +393,7 @@ class _UnlockRow extends StatelessWidget {
                     fontSize: 11,
                     fontWeight: FontWeight.w500,
                     height: 18 / 11,
-                    color: RituColors.textTertiary,
+                    color: context.ritu.textTertiary,
                   ),
                 ),
               ],
@@ -402,8 +404,6 @@ class _UnlockRow extends StatelessWidget {
     );
   }
 }
-
-const _chipBorder = Color(0xFFE2DDD8);
 
 class _HistoryView extends StatelessWidget {
   const _HistoryView({
@@ -445,7 +445,7 @@ class _HistoryView extends StatelessWidget {
             fontSize: 28,
             fontWeight: FontWeight.w400,
             height: 34 / 28,
-            color: RituColors.textPrimary,
+            color: context.ritu.textPrimary,
           ),
         ),
         const SizedBox(height: 4),
@@ -458,7 +458,7 @@ class _HistoryView extends StatelessWidget {
             fontSize: 13,
             fontWeight: FontWeight.w500,
             height: 20 / 13,
-            color: RituColors.textSecondary,
+            color: context.ritu.textSecondary,
           ),
         ),
         const SizedBox(height: 16),
@@ -475,15 +475,15 @@ class _HistoryView extends StatelessWidget {
         ),
         const SizedBox(height: 20),
         if (variableCycle != null) ...[
-          const _HowInsightsWorkCard(
+          _HowInsightsWorkCard(
             body: _variableHowInsightsBody,
-            background: RituColors.fillAttention,
+            background: context.ritu.fillAttention,
           ),
           const SizedBox(height: 20),
         ] else if (unpredictableCycle != null) ...[
           _HowInsightsWorkCard(
             body: unpredictableCycle!.howInsightsBody,
-            background: RituColors.fillCritical,
+            background: context.ritu.fillCritical,
           ),
           const SizedBox(height: 20),
         ],
@@ -496,7 +496,7 @@ class _HistoryView extends StatelessWidget {
               fontSize: 15,
               fontWeight: FontWeight.w600,
               height: 24 / 15,
-              color: RituColors.textPrimary,
+              color: context.ritu.textPrimary,
             ),
           ),
           const SizedBox(height: 16),
@@ -514,7 +514,7 @@ class _HistoryView extends StatelessWidget {
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
                 height: 24 / 15,
-                color: RituColors.textPrimary,
+                color: context.ritu.textPrimary,
               ),
             ),
             if (consistentCycle != null) ...[
@@ -546,7 +546,7 @@ class _HistoryView extends StatelessWidget {
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
                   height: 24 / 15,
-                  color: RituColors.textPrimary,
+                  color: context.ritu.textPrimary,
                 ),
               ),
               const SizedBox(height: 16),
@@ -559,7 +559,7 @@ class _HistoryView extends StatelessWidget {
                   fontSize: 11,
                   fontWeight: FontWeight.w500,
                   height: 18 / 11,
-                  color: RituColors.textTertiary,
+                  color: context.ritu.textTertiary,
                 ),
               ),
             ],
@@ -571,7 +571,7 @@ class _HistoryView extends StatelessWidget {
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
                 height: 24 / 15,
-                color: RituColors.textPrimary,
+                color: context.ritu.textPrimary,
               ),
             ),
             const SizedBox(height: 16),
@@ -583,8 +583,8 @@ class _HistoryView extends StatelessWidget {
                   _MostLoggedChip(
                     label: label,
                     fill: lens == InsightLens.mood
-                        ? RituColors.fillSecondary
-                        : RituColors.fillPositiveSecondary,
+                        ? context.ritu.fillSecondary
+                        : context.ritu.fillPositiveSecondary,
                   ),
               ],
             ),
@@ -666,10 +666,12 @@ class _LensChip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16),
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: selected ? RituColors.fillBrandPressed : RituColors.fillSubtle,
+          color: selected
+              ? context.ritu.fillBrandPressed
+              : context.ritu.fillSubtle,
           borderRadius: BorderRadius.circular(999),
           border: Border.all(
-            color: selected ? Colors.transparent : _chipBorder,
+            color: selected ? Colors.transparent : context.ritu.borderDefault,
           ),
         ),
         child: Text(
@@ -678,7 +680,9 @@ class _LensChip extends StatelessWidget {
             fontSize: 13,
             fontWeight: FontWeight.w400,
             height: 20 / 13,
-            color: selected ? RituColors.textInverse : RituColors.textSecondary,
+            color: selected
+                ? context.ritu.textInverse
+                : context.ritu.textSecondary,
           ),
         ),
       ),
@@ -700,7 +704,7 @@ class _MostLoggedChip extends StatelessWidget {
       decoration: BoxDecoration(
         color: fill,
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: RituColors.sage600),
+        border: Border.all(color: context.ritu.sage600),
       ),
       child: Center(
         widthFactor: 1,
@@ -711,7 +715,7 @@ class _MostLoggedChip extends StatelessWidget {
             fontSize: 13,
             fontWeight: FontWeight.w500,
             height: 20 / 13,
-            color: RituColors.textPrimary,
+            color: context.ritu.textPrimary,
           ),
         ),
       ),
@@ -738,7 +742,7 @@ class _MonthStrip extends StatelessWidget {
                 fontSize: 13,
                 fontWeight: FontWeight.w400,
                 height: 20 / 13,
-                color: RituColors.textSecondary,
+                color: context.ritu.textSecondary,
               ),
             ),
           ),
@@ -754,7 +758,7 @@ class _MonthStrip extends StatelessWidget {
                       width: 12,
                       height: 15,
                       decoration: BoxDecoration(
-                        color: _levelColor(strip.levels[i]),
+                        color: _levelColor(context, strip.levels[i]),
                         borderRadius: BorderRadius.circular(4),
                       ),
                     ),
@@ -769,12 +773,12 @@ class _MonthStrip extends StatelessWidget {
   }
 }
 
-Color _levelColor(InsightLevel level) {
+Color _levelColor(BuildContext context, InsightLevel level) {
   return switch (level) {
-    InsightLevel.low => RituColors.heatmapLow,
-    InsightLevel.mid => RituColors.heatmapOkay,
-    InsightLevel.high => RituColors.heatmapHigh,
-    InsightLevel.none => RituColors.heatmapNoData,
+    InsightLevel.low => context.ritu.heatmapLow,
+    InsightLevel.mid => context.ritu.heatmapOkay,
+    InsightLevel.high => context.ritu.heatmapHigh,
+    InsightLevel.none => context.ritu.heatmapNoData,
   };
 }
 
@@ -783,11 +787,11 @@ class _Legend extends StatelessWidget {
 
   final List<String> labels;
 
-  static const _colors = [
-    RituColors.heatmapLow,
-    RituColors.heatmapOkay,
-    RituColors.heatmapHigh,
-    RituColors.heatmapNoData,
+  static List<Color> _colors(BuildContext context) => [
+    context.ritu.heatmapLow,
+    context.ritu.heatmapOkay,
+    context.ritu.heatmapHigh,
+    context.ritu.heatmapNoData,
   ];
 
   @override
@@ -796,7 +800,7 @@ class _Legend extends StatelessWidget {
       spacing: 12,
       runSpacing: 8,
       children: [
-        for (var i = 0; i < labels.length && i < _colors.length; i++)
+        for (var i = 0; i < labels.length && i < _colors(context).length; i++)
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -804,7 +808,7 @@ class _Legend extends StatelessWidget {
                 width: 10,
                 height: 10,
                 decoration: BoxDecoration(
-                  color: _colors[i],
+                  color: _colors(context)[i],
                   shape: BoxShape.circle,
                 ),
               ),
@@ -815,7 +819,7 @@ class _Legend extends StatelessWidget {
                   fontSize: 11,
                   fontWeight: FontWeight.w400,
                   height: 18 / 11,
-                  color: RituColors.textSecondary,
+                  color: context.ritu.textSecondary,
                 ),
               ),
             ],
@@ -836,20 +840,20 @@ class _KeepGoingCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: RituColors.fillInfo,
+        color: context.ritu.fillInfo,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(
+          SizedBox(
             width: 20,
             height: 20,
             child: Center(
               child: Icon(
                 LucideIcons.info,
                 size: 16,
-                color: RituColors.textPrimary,
+                color: context.ritu.textPrimary,
               ),
             ),
           ),
@@ -864,7 +868,7 @@ class _KeepGoingCard extends StatelessWidget {
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                     height: 20 / 13,
-                    color: RituColors.textPrimary,
+                    color: context.ritu.textPrimary,
                   ),
                 ),
                 Text(
@@ -873,7 +877,7 @@ class _KeepGoingCard extends StatelessWidget {
                     fontSize: 11,
                     fontWeight: FontWeight.w500,
                     height: 18 / 11,
-                    color: RituColors.textSecondary,
+                    color: context.ritu.textSecondary,
                   ),
                 ),
               ],
@@ -903,9 +907,9 @@ class _ConsistentCycleCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: RituColors.fillPositiveSecondary,
+        color: context.ritu.fillPositiveSecondary,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: RituColors.borderPositive),
+        border: Border.all(color: context.ritu.borderPositive),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -916,7 +920,7 @@ class _ConsistentCycleCard extends StatelessWidget {
               fontSize: 15,
               fontWeight: FontWeight.w600,
               height: 24 / 15,
-              color: RituColors.textPrimary,
+              color: context.ritu.textPrimary,
             ),
           ),
           Text(
@@ -925,7 +929,7 @@ class _ConsistentCycleCard extends StatelessWidget {
               fontSize: 13,
               fontWeight: FontWeight.w400,
               height: 20 / 13,
-              color: RituColors.textSecondary,
+              color: context.ritu.textSecondary,
             ),
           ),
           const SizedBox(height: 8),
@@ -935,7 +939,7 @@ class _ConsistentCycleCard extends StatelessWidget {
               fontSize: 11,
               fontWeight: FontWeight.w500,
               height: 18 / 11,
-              color: RituColors.textPositive,
+              color: context.ritu.textPositive,
             ),
           ),
         ],
@@ -975,14 +979,14 @@ class _HowInsightsWorkCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(
+          SizedBox(
             width: 20,
             height: 20,
             child: Center(
               child: Icon(
                 LucideIcons.info,
                 size: 16,
-                color: RituColors.textPrimary,
+                color: context.ritu.textPrimary,
               ),
             ),
           ),
@@ -997,7 +1001,7 @@ class _HowInsightsWorkCard extends StatelessWidget {
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                     height: 20 / 13,
-                    color: RituColors.textPrimary,
+                    color: context.ritu.textPrimary,
                   ),
                 ),
                 Text(
@@ -1006,7 +1010,7 @@ class _HowInsightsWorkCard extends StatelessWidget {
                     fontSize: 11,
                     fontWeight: FontWeight.w500,
                     height: 18 / 11,
-                    color: RituColors.textSecondary,
+                    color: context.ritu.textSecondary,
                   ),
                 ),
               ],
@@ -1035,9 +1039,9 @@ class _CycleVariationCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: RituColors.fillCriticalSecondary,
+        color: context.ritu.fillCriticalSecondary,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: RituColors.borderCritical),
+        border: Border.all(color: context.ritu.borderCritical),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1048,7 +1052,7 @@ class _CycleVariationCard extends StatelessWidget {
               fontSize: 15,
               fontWeight: FontWeight.w600,
               height: 24 / 15,
-              color: RituColors.textPrimary,
+              color: context.ritu.textPrimary,
             ),
           ),
           Text(
@@ -1057,7 +1061,7 @@ class _CycleVariationCard extends StatelessWidget {
               fontSize: 13,
               fontWeight: FontWeight.w400,
               height: 20 / 13,
-              color: RituColors.textSecondary,
+              color: context.ritu.textSecondary,
             ),
           ),
           const SizedBox(height: 8),
@@ -1067,7 +1071,7 @@ class _CycleVariationCard extends StatelessWidget {
               fontSize: 11,
               fontWeight: FontWeight.w500,
               height: 18 / 11,
-              color: RituColors.textCritical,
+              color: context.ritu.textCritical,
             ),
           ),
         ],
@@ -1087,27 +1091,27 @@ class _CycleLengthRecordTable extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: RituColors.fillElevated,
+        color: context.ritu.fillElevated,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: RituColors.borderSubtle),
+        border: Border.all(color: context.ritu.borderSubtle),
       ),
       child: Column(
         children: [
           _RecordRow(
             span: 'Cycle',
             length: 'Length',
-            spanStyle: _recordHeaderStyle,
-            lengthStyle: _recordHeaderStyle,
+            spanStyle: _recordHeaderStyle(context),
+            lengthStyle: _recordHeaderStyle(context),
             showDivider: true,
           ),
           for (var i = 0; i < rows.length; i++)
             _RecordRow(
               span: rows[i].span,
               length: rows[i].length,
-              spanStyle: _recordSpanStyle,
+              spanStyle: _recordSpanStyle(context),
               lengthStyle: rows[i].inProgress
-                  ? _recordProgressStyle
-                  : _recordLengthStyle,
+                  ? _recordProgressStyle(context)
+                  : _recordLengthStyle(context),
               showDivider: i < rows.length - 1,
             ),
         ],
@@ -1116,32 +1120,32 @@ class _CycleLengthRecordTable extends StatelessWidget {
   }
 }
 
-const _recordHeaderStyle = TextStyle(
+TextStyle _recordHeaderStyle(BuildContext context) => TextStyle(
   fontSize: 13,
   fontWeight: FontWeight.w400,
   height: 20 / 13,
-  color: RituColors.textTertiary,
+  color: context.ritu.textTertiary,
 );
 
-const _recordSpanStyle = TextStyle(
+TextStyle _recordSpanStyle(BuildContext context) => TextStyle(
   fontSize: 13,
   fontWeight: FontWeight.w500,
   height: 20 / 13,
-  color: RituColors.textPrimary,
+  color: context.ritu.textPrimary,
 );
 
-const _recordLengthStyle = TextStyle(
+TextStyle _recordLengthStyle(BuildContext context) => TextStyle(
   fontSize: 13,
   fontWeight: FontWeight.w600,
   height: 20 / 13,
-  color: RituColors.textPrimary,
+  color: context.ritu.textPrimary,
 );
 
-const _recordProgressStyle = TextStyle(
+TextStyle _recordProgressStyle(BuildContext context) => TextStyle(
   fontSize: 13,
   fontWeight: FontWeight.w600,
   height: 20 / 13,
-  color: RituColors.textSecondary,
+  color: context.ritu.textSecondary,
 );
 
 class _RecordRow extends StatelessWidget {
@@ -1165,8 +1169,11 @@ class _RecordRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
         border: showDivider
-            ? const Border(
-                bottom: BorderSide(color: RituColors.borderSubtle, width: 0.5),
+            ? Border(
+                bottom: BorderSide(
+                  color: context.ritu.borderSubtle,
+                  width: 0.5,
+                ),
               )
             : null,
       ),
@@ -1195,21 +1202,21 @@ class _ConsistencyCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: RituColors.fillInfo,
+        color: context.ritu.fillInfo,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: RituColors.borderSubtle),
+        border: Border.all(color: context.ritu.borderSubtle),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(
+          SizedBox(
             width: 20,
             height: 20,
             child: Center(
               child: Icon(
                 LucideIcons.info,
                 size: 16,
-                color: RituColors.textPrimary,
+                color: context.ritu.textPrimary,
               ),
             ),
           ),
@@ -1224,7 +1231,7 @@ class _ConsistencyCard extends StatelessWidget {
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                     height: 20 / 13,
-                    color: RituColors.textPrimary,
+                    color: context.ritu.textPrimary,
                   ),
                 ),
                 Text(
@@ -1233,7 +1240,7 @@ class _ConsistencyCard extends StatelessWidget {
                     fontSize: 11,
                     fontWeight: FontWeight.w500,
                     height: 18 / 11,
-                    color: RituColors.textSecondary,
+                    color: context.ritu.textSecondary,
                   ),
                 ),
               ],

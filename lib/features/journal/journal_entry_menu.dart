@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '../../theme/ritu_colors.dart';
+import '../../theme/ritu_palette.dart';
 
 class JournalEntryMenuButton extends StatelessWidget {
   const JournalEntryMenuButton({
@@ -15,8 +15,6 @@ class JournalEntryMenuButton extends StatelessWidget {
   final VoidCallback onEdit;
   final VoidCallback onView;
   final VoidCallback onDelete;
-
-  static const _borderDefault = Color(0xFFE2DDD8);
 
   Future<void> _open(BuildContext context) async {
     final button = context.findRenderObject() as RenderBox?;
@@ -52,9 +50,9 @@ class JournalEntryMenuButton extends StatelessWidget {
                     child: Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: RituColors.fillSubtle,
+                        color: context.ritu.fillSubtle,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: _borderDefault),
+                        border: Border.all(color: context.ritu.borderDefault),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -116,7 +114,7 @@ class JournalEntryMenuButton extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16, color: RituColors.textSecondary),
+          Icon(icon, size: 16, color: context.ritu.textSecondary),
           const SizedBox(width: 8),
           Text(
             label,
@@ -124,7 +122,7 @@ class JournalEntryMenuButton extends StatelessWidget {
               fontSize: 13,
               fontWeight: FontWeight.w500,
               height: 20 / 13,
-              color: RituColors.textSecondary,
+              color: context.ritu.textSecondary,
             ),
           ),
         ],
@@ -137,13 +135,13 @@ class JournalEntryMenuButton extends StatelessWidget {
     return GestureDetector(
       onTap: () => _open(context),
       behavior: HitTestBehavior.opaque,
-      child: const SizedBox(
+      child: SizedBox(
         width: 24,
         height: 24,
         child: Icon(
           LucideIcons.ellipsis,
           size: 24,
-          color: RituColors.textSecondary,
+          color: context.ritu.textSecondary,
         ),
       ),
     );

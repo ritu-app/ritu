@@ -8,7 +8,7 @@ import '../../data/repositories/journal_entry_repository.dart';
 import '../../providers/journal_entry_providers.dart';
 import '../../providers/repository_providers.dart';
 import '../../providers/simulated_today_provider.dart';
-import '../../theme/ritu_colors.dart';
+import '../../theme/ritu_palette.dart';
 import 'journal_calendar_sheet.dart';
 import 'journal_delete_dialog.dart';
 import 'journal_entry_card.dart';
@@ -36,8 +36,6 @@ class JournalAllEntriesScreen extends ConsumerStatefulWidget {
 
 class _JournalAllEntriesScreenState
     extends ConsumerState<JournalAllEntriesScreen> {
-  static const _borderDefault = Color(0xFFE2DDD8);
-
   final _searchController = TextEditingController();
   var _query = '';
   var _menuOpen = false;
@@ -220,7 +218,7 @@ class _JournalAllEntriesScreenState
     const headerHeight = 25.0;
 
     return ColoredBox(
-      color: RituColors.backgroundPage,
+      color: context.ritu.backgroundPage,
       child: Stack(
         clipBehavior: Clip.none,
         children: [
@@ -241,7 +239,7 @@ class _JournalAllEntriesScreenState
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: _SearchField(
                     controller: _searchController,
-                    borderColor: _borderDefault,
+                    borderColor: context.ritu.borderDefault,
                     showClear: query.isNotEmpty,
                     onChanged: (value) => setState(() => _query = value),
                     onClear: _clearSearch,
@@ -266,9 +264,9 @@ class _JournalAllEntriesScreenState
               const SizedBox(height: 20),
               Expanded(
                 child: pastAsync.isLoading && pastEntries.isEmpty
-                    ? const Center(
+                    ? Center(
                         child: CircularProgressIndicator(
-                          color: RituColors.sage500,
+                          color: context.ritu.sage500,
                         ),
                       )
                     : filtered.isEmpty
@@ -325,7 +323,7 @@ class _JournalAllEntriesScreenState
               top: headerTop + headerHeight,
               right: 16,
               child: _AllEntriesOverflowMenu(
-                borderColor: _borderDefault,
+                borderColor: context.ritu.borderDefault,
                 onFilter: _openTimeRangeFilter,
                 onCalendar: () => _openCalendarFilter(pastEntries),
                 onSelectEntries: _enterSelectMode,
@@ -358,13 +356,13 @@ class _AllEntriesHeader extends StatelessWidget {
           GestureDetector(
             onTap: onBack,
             behavior: HitTestBehavior.opaque,
-            child: const SizedBox(
+            child: SizedBox(
               width: 24,
               height: 24,
               child: Icon(
                 LucideIcons.chevronLeft,
                 size: 24,
-                color: RituColors.textPrimary,
+                color: context.ritu.textPrimary,
               ),
             ),
           ),
@@ -376,7 +374,7 @@ class _AllEntriesHeader extends StatelessWidget {
                 fontSize: 18,
                 fontWeight: FontWeight.w400,
                 height: 25 / 18,
-                color: RituColors.textPrimary,
+                color: context.ritu.textPrimary,
               ),
             ),
           ),
@@ -390,8 +388,8 @@ class _AllEntriesHeader extends StatelessWidget {
                 LucideIcons.ellipsis,
                 size: 24,
                 color: menuEnabled
-                    ? RituColors.textPrimary
-                    : RituColors.textDisabled,
+                    ? context.ritu.textPrimary
+                    : context.ritu.textDisabled,
               ),
             ),
           ),
@@ -427,7 +425,7 @@ class _AllEntriesOverflowMenu extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: RituColors.fillSubtle,
+              color: context.ritu.fillSubtle,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: borderColor),
             ),
@@ -435,12 +433,13 @@ class _AllEntriesOverflowMenu extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                _menuRow(LucideIcons.funnel, 'Filter', onFilter),
+                _menuRow(context, LucideIcons.funnel, 'Filter', onFilter),
                 const SizedBox(height: 12),
                 // Spelling matches Figma label.
-                _menuRow(LucideIcons.calendar, 'Calender', onCalendar),
+                _menuRow(context, LucideIcons.calendar, 'Calender', onCalendar),
                 const SizedBox(height: 12),
                 _menuRow(
+                  context,
                   LucideIcons.circleCheck,
                   'Select entries',
                   onSelectEntries,
@@ -453,14 +452,19 @@ class _AllEntriesOverflowMenu extends StatelessWidget {
     );
   }
 
-  Widget _menuRow(IconData icon, String label, VoidCallback onTap) {
+  Widget _menuRow(
+    BuildContext context,
+    IconData icon,
+    String label,
+    VoidCallback onTap,
+  ) {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16, color: RituColors.textSecondary),
+          Icon(icon, size: 16, color: context.ritu.textSecondary),
           const SizedBox(width: 8),
           Text(
             label,
@@ -468,7 +472,7 @@ class _AllEntriesOverflowMenu extends StatelessWidget {
               fontSize: 13,
               fontWeight: FontWeight.w500,
               height: 20 / 13,
-              color: RituColors.textSecondary,
+              color: context.ritu.textSecondary,
             ),
           ),
         ],
@@ -498,31 +502,27 @@ class _SearchField extends StatelessWidget {
       fontSize: 13,
       fontWeight: FontWeight.w500,
       height: 20 / 13,
-      color: RituColors.textPrimary,
+      color: context.ritu.textPrimary,
     );
     final hintStyle = GoogleFonts.dmSans(
       fontSize: 13,
       fontWeight: FontWeight.w500,
       height: 20 / 13,
-      color: RituColors.textTertiary,
+      color: context.ritu.textTertiary,
     );
 
     return Container(
       height: 36,
       padding: const EdgeInsets.symmetric(horizontal: 20),
       decoration: BoxDecoration(
-        color: RituColors.fillSubtle,
+        color: context.ritu.fillSubtle,
         borderRadius: BorderRadius.circular(9999),
         border: Border.all(color: borderColor),
       ),
       alignment: Alignment.centerLeft,
       child: Row(
         children: [
-          const Icon(
-            LucideIcons.search,
-            size: 16,
-            color: RituColors.textTertiary,
-          ),
+          Icon(LucideIcons.search, size: 16, color: context.ritu.textTertiary),
           const SizedBox(width: 8),
           Expanded(
             child: Theme(
@@ -542,7 +542,7 @@ class _SearchField extends StatelessWidget {
               child: TextField(
                 controller: controller,
                 onChanged: onChanged,
-                cursorColor: RituColors.sage500,
+                cursorColor: context.ritu.sage500,
                 style: textStyle,
                 decoration: InputDecoration(
                   isDense: true,
@@ -566,10 +566,10 @@ class _SearchField extends StatelessWidget {
             GestureDetector(
               onTap: onClear,
               behavior: HitTestBehavior.opaque,
-              child: const Icon(
+              child: Icon(
                 LucideIcons.x,
                 size: 16,
-                color: RituColors.textPrimary,
+                color: context.ritu.textPrimary,
               ),
             ),
           ],
@@ -591,9 +591,9 @@ class _ActiveFilterChip extends StatelessWidget {
       height: 34,
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        color: RituColors.fillSecondary,
+        color: context.ritu.fillSecondary,
         borderRadius: BorderRadius.circular(9999),
-        border: Border.all(color: RituColors.sage600),
+        border: Border.all(color: context.ritu.sage600),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -604,17 +604,17 @@ class _ActiveFilterChip extends StatelessWidget {
               fontSize: 13,
               fontWeight: FontWeight.w500,
               height: 20 / 13,
-              color: RituColors.textPrimary,
+              color: context.ritu.textPrimary,
             ),
           ),
           const SizedBox(width: 8),
           GestureDetector(
             onTap: onClear,
             behavior: HitTestBehavior.opaque,
-            child: const Icon(
+            child: Icon(
               LucideIcons.x,
               size: 16,
-              color: RituColors.textPrimary,
+              color: context.ritu.textPrimary,
             ),
           ),
         ],
@@ -661,7 +661,7 @@ class _MonthSection extends StatelessWidget {
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
                     height: 24 / 15,
-                    color: RituColors.textPrimary,
+                    color: context.ritu.textPrimary,
                   ),
                 ),
               ),
@@ -671,7 +671,7 @@ class _MonthSection extends StatelessWidget {
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
                   height: 20 / 13,
-                  color: RituColors.textTertiary,
+                  color: context.ritu.textTertiary,
                 ),
               ),
             ],
@@ -742,10 +742,10 @@ class _SelectMark extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (selected) {
-      return const Icon(
+      return Icon(
         LucideIcons.circleCheck,
         size: 24,
-        color: RituColors.sage600,
+        color: context.ritu.sage600,
       );
     }
 
@@ -754,7 +754,7 @@ class _SelectMark extends StatelessWidget {
       height: 24,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        border: Border.all(color: RituColors.textDisabled),
+        border: Border.all(color: context.ritu.textDisabled),
       ),
     );
   }
@@ -780,7 +780,7 @@ class _SelectionActionBar extends StatelessWidget {
     final canDelete = selectedCount > 0;
 
     return ColoredBox(
-      color: RituColors.fillElevated,
+      color: context.ritu.fillElevated,
       child: SafeArea(
         top: false,
         child: SizedBox(
@@ -798,7 +798,7 @@ class _SelectionActionBar extends StatelessWidget {
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                       height: 20 / 13,
-                      color: RituColors.textTertiary,
+                      color: context.ritu.textTertiary,
                     ),
                   ),
                 ),
@@ -810,7 +810,7 @@ class _SelectionActionBar extends StatelessWidget {
                       fontSize: 11,
                       fontWeight: FontWeight.w400,
                       height: 18 / 11,
-                      color: RituColors.sage600,
+                      color: context.ritu.sage600,
                     ),
                   ),
                 ),
@@ -824,8 +824,8 @@ class _SelectionActionBar extends StatelessWidget {
                       fontWeight: FontWeight.w600,
                       height: 20 / 13,
                       color: canDelete
-                          ? RituColors.textCritical
-                          : RituColors.textDisabled,
+                          ? context.ritu.textCritical
+                          : context.ritu.textDisabled,
                     ),
                   ),
                 ),
@@ -862,7 +862,7 @@ class _EmptyEntries extends StatelessWidget {
             const TextSpan(text: 'No entry on\n'),
             TextSpan(
               text: formatJournalEntryDate(date).replaceAll(' • ', ', '),
-              style: const TextStyle(color: RituColors.gradientGh2),
+              style: TextStyle(color: context.ritu.textAttention),
             ),
           ],
         ),
@@ -878,12 +878,12 @@ class _EmptyEntries extends StatelessWidget {
             const TextSpan(text: 'No entries matching '),
             TextSpan(
               text: '"$query"',
-              style: const TextStyle(color: RituColors.gradientGh2),
+              style: TextStyle(color: context.ritu.textAttention),
             ),
             const TextSpan(text: '\nin '),
             TextSpan(
               text: timeRange!.label,
-              style: const TextStyle(color: RituColors.gradientGh2),
+              style: TextStyle(color: context.ritu.textAttention),
             ),
           ],
         ),
@@ -892,9 +892,9 @@ class _EmptyEntries extends StatelessWidget {
         action: OutlinedButton(
           onPressed: onClearFilter,
           style: OutlinedButton.styleFrom(
-            backgroundColor: RituColors.fillElevated,
-            foregroundColor: RituColors.sage600,
-            side: const BorderSide(color: RituColors.sage500),
+            backgroundColor: context.ritu.fillElevated,
+            foregroundColor: context.ritu.sage600,
+            side: BorderSide(color: context.ritu.sage500),
             minimumSize: const Size(double.infinity, 48),
             shape: const StadiumBorder(),
             textStyle: GoogleFonts.dmSans(
@@ -916,7 +916,7 @@ class _EmptyEntries extends StatelessWidget {
         style: GoogleFonts.dmSans(
           fontSize: 13,
           fontWeight: FontWeight.w500,
-          color: RituColors.textSecondary,
+          color: context.ritu.textSecondary,
         ),
       ),
     );
@@ -942,7 +942,7 @@ class _FilterEmptyMessage extends StatelessWidget {
       fontSize: 18,
       fontWeight: FontWeight.w600,
       height: 24 / 18,
-      color: RituColors.textPrimary,
+      color: context.ritu.textPrimary,
     );
 
     return Padding(
@@ -950,7 +950,7 @@ class _FilterEmptyMessage extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 32, color: RituColors.gradientGh2),
+          Icon(icon, size: 32, color: context.ritu.textAttention),
           const SizedBox(height: 16),
           Text.rich(
             TextSpan(style: titleStyle, children: title.children),
@@ -964,7 +964,7 @@ class _FilterEmptyMessage extends StatelessWidget {
               fontSize: 13,
               fontWeight: FontWeight.w400,
               height: 20 / 13,
-              color: RituColors.textSecondary,
+              color: context.ritu.textSecondary,
             ),
           ),
           if (action != null) ...[const SizedBox(height: 24), action!],

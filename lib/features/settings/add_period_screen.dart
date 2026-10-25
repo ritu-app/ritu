@@ -7,7 +7,7 @@ import '../../core/date_format.dart';
 import '../../data/repositories/period_repository.dart';
 import '../../providers/period_providers.dart';
 import '../../providers/repository_providers.dart';
-import '../../theme/ritu_colors.dart';
+import '../../theme/ritu_palette.dart';
 import '../setup/widgets/period_episode_form_fields.dart';
 import '../setup/widgets/ritu_calendar.dart';
 
@@ -236,7 +236,7 @@ class _AddPeriodScreenState extends ConsumerState<AddPeriodScreen> {
         startValid;
 
     return Scaffold(
-      backgroundColor: RituColors.backgroundPage,
+      backgroundColor: context.ritu.backgroundPage,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -248,13 +248,13 @@ class _AddPeriodScreenState extends ConsumerState<AddPeriodScreen> {
                 child: GestureDetector(
                   onTap: _saving ? null : () => Navigator.of(context).pop(),
                   behavior: HitTestBehavior.opaque,
-                  child: const SizedBox(
+                  child: SizedBox(
                     width: 24,
                     height: 24,
                     child: Icon(
                       LucideIcons.chevronLeft,
                       size: 24,
-                      color: RituColors.textPrimary,
+                      color: context.ritu.textPrimary,
                     ),
                   ),
                 ),
@@ -270,7 +270,7 @@ class _AddPeriodScreenState extends ConsumerState<AddPeriodScreen> {
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
                       height: 24 / 18,
-                      color: RituColors.textPrimary,
+                      color: context.ritu.textPrimary,
                     ),
                   ),
                   Text(
@@ -281,7 +281,7 @@ class _AddPeriodScreenState extends ConsumerState<AddPeriodScreen> {
                       fontSize: 13,
                       fontWeight: FontWeight.w400,
                       height: 20 / 13,
-                      color: RituColors.textSecondary,
+                      color: context.ritu.textSecondary,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -343,12 +343,11 @@ class _AddPeriodScreenState extends ConsumerState<AddPeriodScreen> {
                     child: FilledButton(
                       onPressed: canSave ? _save : null,
                       style: FilledButton.styleFrom(
-                        backgroundColor: RituColors.sage500,
-                        disabledBackgroundColor: RituColors.sage500.withValues(
-                          alpha: 0.4,
-                        ),
-                        foregroundColor: RituColors.white,
-                        disabledForegroundColor: RituColors.white,
+                        backgroundColor: context.ritu.sage500,
+                        disabledBackgroundColor: context.ritu.sage500
+                            .withValues(alpha: 0.4),
+                        foregroundColor: context.ritu.white,
+                        disabledForegroundColor: context.ritu.white,
                         elevation: 0,
                         shape: const StadiumBorder(),
                         textStyle: GoogleFonts.dmSans(
@@ -378,8 +377,8 @@ class _AddPeriodScreenState extends ConsumerState<AddPeriodScreen> {
                               ? null
                               : _delete,
                           style: TextButton.styleFrom(
-                            foregroundColor: RituColors.textCritical,
-                            disabledForegroundColor: RituColors.textCritical
+                            foregroundColor: context.ritu.textCritical,
+                            disabledForegroundColor: context.ritu.textCritical
                                 .withValues(alpha: 0.4),
                             shape: const StadiumBorder(),
                             textStyle: GoogleFonts.dmSans(
@@ -407,7 +406,7 @@ class _AddPeriodScreenState extends ConsumerState<AddPeriodScreen> {
                         fontSize: 11,
                         fontWeight: FontWeight.w500,
                         height: 18 / 11,
-                        color: RituColors.textTertiary,
+                        color: context.ritu.textTertiary,
                       ),
                     ),
                   ],
@@ -430,7 +429,7 @@ class _LastPeriodNotice extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: RituColors.fillAttention,
+        color: context.ritu.fillAttention,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Text(
@@ -439,7 +438,7 @@ class _LastPeriodNotice extends StatelessWidget {
           fontSize: 13,
           fontWeight: FontWeight.w500,
           height: 20 / 13,
-          color: RituColors.gradientGh2,
+          color: context.ritu.textAttention,
         ),
       ),
     );

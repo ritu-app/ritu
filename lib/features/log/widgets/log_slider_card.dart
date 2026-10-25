@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../theme/ritu_colors.dart';
+import '../../../theme/ritu_palette.dart';
 
 /// White card with a title, a "current/max" value, a 0-10 slider, and axis
 /// labels underneath (e.g. "Cramp intensity" / "Overall wellbeing").
@@ -29,9 +29,9 @@ class LogSliderCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: RituColors.fillElevated,
+        color: context.ritu.fillElevated,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: RituColors.borderSubtle),
+        border: Border.all(color: context.ritu.borderSubtle),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -45,7 +45,7 @@ class LogSliderCard extends StatelessWidget {
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
                     height: 24 / 15,
-                    color: RituColors.textPrimary,
+                    color: context.ritu.textPrimary,
                   ),
                 ),
               ),
@@ -55,7 +55,7 @@ class LogSliderCard extends StatelessWidget {
                   fontSize: 13,
                   fontWeight: FontWeight.w400,
                   height: 20 / 13,
-                  color: RituColors.sage600,
+                  color: context.ritu.sage600,
                 ),
               ),
             ],
@@ -64,10 +64,10 @@ class LogSliderCard extends StatelessWidget {
           SliderTheme(
             data: SliderTheme.of(context).copyWith(
               trackHeight: 5,
-              activeTrackColor: RituColors.meadow600,
-              inactiveTrackColor: RituColors.fillMuted,
-              thumbColor: RituColors.fillElevated,
-              overlayColor: RituColors.sage500.withValues(alpha: 0.1),
+              activeTrackColor: context.ritu.meadow600,
+              inactiveTrackColor: context.ritu.fillMuted,
+              thumbColor: context.ritu.fillElevated,
+              overlayColor: context.ritu.sage500.withValues(alpha: 0.1),
               thumbShape: const _ShadowedThumbShape(),
             ),
             child: Slider(
@@ -88,7 +88,7 @@ class LogSliderCard extends StatelessWidget {
                     fontSize: 10,
                     fontWeight: FontWeight.w500,
                     height: 14 / 10,
-                    color: RituColors.textTertiary,
+                    color: context.ritu.textTertiary,
                   ),
                 ),
             ],

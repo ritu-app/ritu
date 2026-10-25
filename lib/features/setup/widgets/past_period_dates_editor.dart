@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/date_format.dart';
-import '../../../theme/ritu_colors.dart';
+import '../../../theme/ritu_palette.dart';
 import 'choice_chips.dart';
 import 'ritu_calendar.dart';
 import 'setup_footer.dart';
@@ -65,8 +65,7 @@ class PastPeriodDatesEditorState extends State<PastPeriodDatesEditor> {
 
   List<DateTime> get dates => List.unmodifiable(_dates);
 
-  DateTime get _maxDate =>
-      dateOnly(widget.maxSelectableDate ?? DateTime.now());
+  DateTime get _maxDate => dateOnly(widget.maxSelectableDate ?? DateTime.now());
 
   @override
   void initState() {
@@ -88,7 +87,8 @@ class PastPeriodDatesEditorState extends State<PastPeriodDatesEditor> {
     if (_dates.any((d) => isSameCalendarDay(d, day))) return;
 
     setState(() {
-      _pendingDate = _pendingDate != null && isSameCalendarDay(_pendingDate!, day)
+      _pendingDate =
+          _pendingDate != null && isSameCalendarDay(_pendingDate!, day)
           ? null
           : day;
     });
@@ -173,7 +173,7 @@ class PastPeriodDatesEditorState extends State<PastPeriodDatesEditor> {
               fontSize: 13,
               fontWeight: FontWeight.w500,
               height: 18 / 13,
-              color: RituColors.textTertiary,
+              color: context.ritu.textTertiary,
             ),
           ),
         ],

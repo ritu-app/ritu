@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../theme/ritu_colors.dart';
+import '../../theme/ritu_palette.dart';
 
 /// Figma 490:1391 — Settings → Help & Support.
 class HelpSupportScreen extends StatefulWidget {
@@ -72,7 +72,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: RituColors.backgroundPage,
+      backgroundColor: context.ritu.backgroundPage,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -84,13 +84,13 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                 child: GestureDetector(
                   onTap: () => Navigator.of(context).pop(),
                   behavior: HitTestBehavior.opaque,
-                  child: const SizedBox(
+                  child: SizedBox(
                     width: 24,
                     height: 24,
                     child: Icon(
                       LucideIcons.chevronLeft,
                       size: 24,
-                      color: RituColors.textPrimary,
+                      color: context.ritu.textPrimary,
                     ),
                   ),
                 ),
@@ -106,7 +106,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
                       height: 24 / 15,
-                      color: RituColors.textPrimary,
+                      color: context.ritu.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -133,7 +133,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
                       height: 24 / 15,
-                      color: RituColors.textPrimary,
+                      color: context.ritu.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -150,14 +150,14 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                               width: 32,
                               height: 32,
                               decoration: BoxDecoration(
-                                color: RituColors.fillPositiveSecondary,
+                                color: context.ritu.fillPositiveSecondary,
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               alignment: Alignment.center,
-                              child: const Icon(
+                              child: Icon(
                                 LucideIcons.mail,
                                 size: 16,
-                                color: RituColors.sage600,
+                                color: context.ritu.sage600,
                               ),
                             ),
                             const SizedBox(width: 16),
@@ -171,7 +171,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                                       fontSize: 11,
                                       fontWeight: FontWeight.w500,
                                       height: 18 / 11,
-                                      color: RituColors.textTertiary,
+                                      color: context.ritu.textTertiary,
                                     ),
                                   ),
                                   Text(
@@ -180,16 +180,16 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                                       fontSize: 13,
                                       fontWeight: FontWeight.w600,
                                       height: 20 / 13,
-                                      color: RituColors.textPrimary,
+                                      color: context.ritu.textPrimary,
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                            const Icon(
+                            Icon(
                               LucideIcons.squareArrowOutUpRight,
                               size: 16,
-                              color: RituColors.textDisabled,
+                              color: context.ritu.textDisabled,
                             ),
                           ],
                         ),
@@ -218,9 +218,9 @@ class _Card extends StatelessWidget {
       width: double.infinity,
       padding: padding,
       decoration: BoxDecoration(
-        color: RituColors.fillElevated,
+        color: context.ritu.fillElevated,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: RituColors.borderSubtle),
+        border: Border.all(color: context.ritu.borderSubtle),
       ),
       child: child,
     );
@@ -252,10 +252,10 @@ class _FaqRow extends StatelessWidget {
           width: double.infinity,
           padding: EdgeInsets.symmetric(vertical: expanded ? 8 : 16),
           decoration: showDivider
-              ? const BoxDecoration(
+              ? BoxDecoration(
                   border: Border(
                     bottom: BorderSide(
-                      color: RituColors.borderSubtle,
+                      color: context.ritu.borderSubtle,
                       width: 0.5,
                     ),
                   ),
@@ -274,7 +274,7 @@ class _FaqRow extends StatelessWidget {
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                         height: 20 / 13,
-                        color: RituColors.textPrimary,
+                        color: context.ritu.textPrimary,
                       ),
                     ),
                   ),
@@ -284,7 +284,7 @@ class _FaqRow extends StatelessWidget {
                         ? LucideIcons.chevronDown
                         : LucideIcons.chevronRight,
                     size: 16,
-                    color: RituColors.textDisabled,
+                    color: context.ritu.textDisabled,
                   ),
                 ],
               ),
@@ -296,7 +296,7 @@ class _FaqRow extends StatelessWidget {
                     fontSize: 11,
                     fontWeight: FontWeight.w500,
                     height: 18 / 11,
-                    color: RituColors.textSecondary,
+                    color: context.ritu.textSecondary,
                   ),
                 ),
               ],

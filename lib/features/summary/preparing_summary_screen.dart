@@ -12,7 +12,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../data/models/daily_log_entry.dart';
 import '../../data/models/journal_entry.dart';
 import '../../data/models/period_log.dart';
-import '../../theme/ritu_colors.dart';
+import '../../theme/ritu_palette.dart';
 import 'summary_pdf.dart';
 import 'summary_report.dart';
 
@@ -115,7 +115,7 @@ class _PreparingSummaryScreenState extends State<PreparingSummaryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: RituColors.backgroundPage,
+      backgroundColor: context.ritu.backgroundPage,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 36, 16, 24),
@@ -128,7 +128,7 @@ class _PreparingSummaryScreenState extends State<PreparingSummaryScreen> {
                   fontSize: 28,
                   fontWeight: FontWeight.w400,
                   height: 34 / 28,
-                  color: RituColors.textPrimary,
+                  color: context.ritu.textPrimary,
                 ),
               ),
               const SizedBox(height: 38),
@@ -150,12 +150,12 @@ class _PreparingSummaryScreenState extends State<PreparingSummaryScreen> {
                       for (var i = 0; i < _steps.length; i++) ...[
                         _StepRow(label: _steps[i], done: i < _completed),
                         if (i < _steps.length - 1)
-                          const Padding(
+                          Padding(
                             padding: EdgeInsets.only(left: 11),
                             child: SizedBox(
                               width: 2,
                               height: 22,
-                              child: ColoredBox(color: RituColors.sage500),
+                              child: ColoredBox(color: context.ritu.sage500),
                             ),
                           ),
                       ],
@@ -172,7 +172,7 @@ class _PreparingSummaryScreenState extends State<PreparingSummaryScreen> {
                     fontSize: 13,
                     fontWeight: FontWeight.w400,
                     height: 20 / 13,
-                    color: RituColors.textSecondary,
+                    color: context.ritu.textSecondary,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -188,7 +188,7 @@ class _PreparingSummaryScreenState extends State<PreparingSummaryScreen> {
                     fontSize: 13,
                     fontWeight: FontWeight.w400,
                     height: 20 / 13,
-                    color: RituColors.textSecondary,
+                    color: context.ritu.textSecondary,
                   ),
                 ),
             ],
@@ -210,17 +210,17 @@ class _StepRow extends StatelessWidget {
     return Row(
       children: [
         done
-            ? const Icon(
+            ? Icon(
                 LucideIcons.circleCheck,
                 size: 24,
-                color: RituColors.sage500,
+                color: context.ritu.sage500,
               )
             : Container(
                 width: 24,
                 height: 24,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  border: Border.all(color: RituColors.sage600, width: 1.5),
+                  border: Border.all(color: context.ritu.sage600, width: 1.5),
                 ),
               ),
         const SizedBox(width: 12),
@@ -231,7 +231,7 @@ class _StepRow extends StatelessWidget {
               fontSize: 15,
               fontWeight: FontWeight.w600,
               height: 24 / 15,
-              color: RituColors.textPrimary,
+              color: context.ritu.textPrimary,
             ),
           ),
         ),

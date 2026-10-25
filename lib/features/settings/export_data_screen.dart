@@ -9,7 +9,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../providers/repository_providers.dart';
-import '../../theme/ritu_colors.dart';
+import '../../theme/ritu_palette.dart';
 import 'import_data_screen.dart';
 
 /// Figma 1249:5779 — Settings → Export & Import.
@@ -36,7 +36,7 @@ class _ExportDataScreenState extends ConsumerState<ExportDataScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: RituColors.backgroundPage,
+      backgroundColor: context.ritu.backgroundPage,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -52,7 +52,7 @@ class _ExportDataScreenState extends ConsumerState<ExportDataScreen> {
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
                       height: 24 / 18,
-                      color: RituColors.textPrimary,
+                      color: context.ritu.textPrimary,
                     ),
                   ),
                   Text(
@@ -61,7 +61,7 @@ class _ExportDataScreenState extends ConsumerState<ExportDataScreen> {
                       fontSize: 13,
                       fontWeight: FontWeight.w400,
                       height: 20 / 13,
-                      color: RituColors.textSecondary,
+                      color: context.ritu.textSecondary,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -157,7 +157,7 @@ class _ExportOptionsScreenState extends ConsumerState<_ExportOptionsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: RituColors.backgroundPage,
+      backgroundColor: context.ritu.backgroundPage,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -175,7 +175,7 @@ class _ExportOptionsScreenState extends ConsumerState<_ExportOptionsScreen> {
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
                       height: 24 / 18,
-                      color: RituColors.textPrimary,
+                      color: context.ritu.textPrimary,
                     ),
                   ),
                   Text(
@@ -184,7 +184,7 @@ class _ExportOptionsScreenState extends ConsumerState<_ExportOptionsScreen> {
                       fontSize: 13,
                       fontWeight: FontWeight.w400,
                       height: 20 / 13,
-                      color: RituColors.textSecondary,
+                      color: context.ritu.textSecondary,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -194,7 +194,7 @@ class _ExportOptionsScreenState extends ConsumerState<_ExportOptionsScreen> {
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
                       height: 24 / 15,
-                      color: RituColors.textPrimary,
+                      color: context.ritu.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -239,12 +239,11 @@ class _ExportOptionsScreenState extends ConsumerState<_ExportOptionsScreen> {
                     child: FilledButton(
                       onPressed: _canSave ? _export : null,
                       style: FilledButton.styleFrom(
-                        backgroundColor: RituColors.sage500,
-                        disabledBackgroundColor: RituColors.sage500.withValues(
-                          alpha: 0.5,
-                        ),
-                        foregroundColor: RituColors.white,
-                        disabledForegroundColor: RituColors.white,
+                        backgroundColor: context.ritu.sage500,
+                        disabledBackgroundColor: context.ritu.sage500
+                            .withValues(alpha: 0.5),
+                        foregroundColor: context.ritu.white,
+                        disabledForegroundColor: context.ritu.white,
                         elevation: 0,
                         shape: const StadiumBorder(),
                         textStyle: GoogleFonts.dmSans(
@@ -254,12 +253,12 @@ class _ExportOptionsScreenState extends ConsumerState<_ExportOptionsScreen> {
                         ),
                       ),
                       child: _busy
-                          ? const SizedBox(
+                          ? SizedBox(
                               width: 20,
                               height: 20,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                color: RituColors.white,
+                                color: context.ritu.white,
                               ),
                             )
                           : const Text('Save'),
@@ -289,13 +288,13 @@ class _BackChevron extends StatelessWidget {
         child: GestureDetector(
           onTap: onTap,
           behavior: HitTestBehavior.opaque,
-          child: const SizedBox(
+          child: SizedBox(
             width: 24,
             height: 24,
             child: Icon(
               LucideIcons.chevronLeft,
               size: 24,
-              color: RituColors.textPrimary,
+              color: context.ritu.textPrimary,
             ),
           ),
         ),
@@ -318,7 +317,7 @@ class _NavCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: RituColors.fillElevated,
+      color: context.ritu.fillElevated,
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
         onTap: onTap,
@@ -328,7 +327,7 @@ class _NavCard extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: RituColors.borderSubtle),
+            border: Border.all(color: context.ritu.borderSubtle),
           ),
           child: Row(
             children: [
@@ -342,7 +341,7 @@ class _NavCard extends StatelessWidget {
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                         height: 20 / 13,
-                        color: RituColors.textPrimary,
+                        color: context.ritu.textPrimary,
                       ),
                     ),
                     Text(
@@ -351,16 +350,16 @@ class _NavCard extends StatelessWidget {
                         fontSize: 11,
                         fontWeight: FontWeight.w500,
                         height: 18 / 11,
-                        color: RituColors.textTertiary,
+                        color: context.ritu.textTertiary,
                       ),
                     ),
                   ],
                 ),
               ),
-              const Icon(
+              Icon(
                 LucideIcons.chevronRight,
                 size: 16,
-                color: RituColors.textTertiary,
+                color: context.ritu.textTertiary,
               ),
             ],
           ),
@@ -381,9 +380,9 @@ class _Card extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: RituColors.fillElevated,
+        color: context.ritu.fillElevated,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: RituColors.borderSubtle),
+        border: Border.all(color: context.ritu.borderSubtle),
       ),
       child: Column(children: children),
     );
@@ -415,10 +414,10 @@ class _IncludeRow extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: showDivider
-              ? const BoxDecoration(
+              ? BoxDecoration(
                   border: Border(
                     bottom: BorderSide(
-                      color: RituColors.borderSubtle,
+                      color: context.ritu.borderSubtle,
                       width: 0.5,
                     ),
                   ),
@@ -436,8 +435,8 @@ class _IncludeRow extends StatelessWidget {
                     fontWeight: FontWeight.w400,
                     height: 20 / 13,
                     color: enabled
-                        ? RituColors.textPrimary
-                        : RituColors.textTertiary,
+                        ? context.ritu.textPrimary
+                        : context.ritu.textTertiary,
                   ),
                 ),
               ),
@@ -458,10 +457,10 @@ class _SelectionMark extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (selected && enabled) {
-      return const Icon(
+      return Icon(
         LucideIcons.circleCheck,
         size: 16,
-        color: RituColors.sage500,
+        color: context.ritu.sage500,
       );
     }
 
@@ -471,7 +470,9 @@ class _SelectionMark extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         border: Border.all(
-          color: enabled ? RituColors.textDisabled : RituColors.borderSubtle,
+          color: enabled
+              ? context.ritu.textDisabled
+              : context.ritu.borderSubtle,
         ),
       ),
     );

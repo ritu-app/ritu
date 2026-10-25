@@ -11,7 +11,7 @@ import '../../core/date_format.dart';
 import '../../data/models/custom_symptom.dart';
 import '../../data/models/daily_log_entry.dart';
 import '../../data/models/journal_entry.dart';
-import '../../theme/ritu_colors.dart';
+import '../../theme/ritu_palette.dart';
 import '../setup/widgets/choice_chips.dart';
 import '../setup/widgets/progress_dots.dart';
 import 'widgets/add_symptom_dialog.dart';
@@ -50,7 +50,6 @@ const _presetSymptoms = [
 ];
 
 const _totalSteps = 4;
-const _headerIcon = Color(0xFF4C4744);
 
 /// Home "Log today" daily check-in — a 4-step wizard (flow, mood, body
 /// signals, notes). Structured answers upsert a
@@ -205,16 +204,18 @@ class _DailyLogFlowState extends ConsumerState<DailyLogFlow> {
   }
 
   Future<void> _persistStructured() async {
-    await ref.read(dailyLogRepositoryProvider).upsert(
-      loggedOn: widget.date,
-      flowIntensity: _flowIntensity,
-      crampIntensity: _persistedCramp,
-      moods: _moods.toList(),
-      energyLevel: _energyLevel,
-      sleepQuality: _sleepQuality,
-      wellbeing: _persistedWellbeing,
-      symptoms: _symptoms.toList(),
-    );
+    await ref
+        .read(dailyLogRepositoryProvider)
+        .upsert(
+          loggedOn: widget.date,
+          flowIntensity: _flowIntensity,
+          crampIntensity: _persistedCramp,
+          moods: _moods.toList(),
+          energyLevel: _energyLevel,
+          sleepQuality: _sleepQuality,
+          wellbeing: _persistedWellbeing,
+          symptoms: _symptoms.toList(),
+        );
     _wroteStructured = true;
     _dbDiffersFromInitial = _structuredDiffersFromInitial;
   }
@@ -314,10 +315,9 @@ class _DailyLogFlowState extends ConsumerState<DailyLogFlow> {
       await _persistStructured();
     }
     if (notes.isNotEmpty) {
-      await ref.read(journalEntryRepositoryProvider).upsert(
-        loggedOn: widget.date,
-        body: notes,
-      );
+      await ref
+          .read(journalEntryRepositoryProvider)
+          .upsert(loggedOn: widget.date, body: notes);
     }
     _leave(true);
   }
@@ -336,20 +336,16 @@ class _DailyLogFlowState extends ConsumerState<DailyLogFlow> {
         _goBack();
       },
       child: Scaffold(
-        backgroundColor: RituColors.backgroundPage,
+        backgroundColor: context.ritu.backgroundPage,
         body: SafeArea(
           child: !_hydrated
-              ? const Center(
-                  child: CircularProgressIndicator(color: RituColors.sage500),
+              ? Center(
+                  child: CircularProgressIndicator(color: context.ritu.sage500),
                 )
               : Column(
                   children: [
                     const SizedBox(height: 8),
-                    _LogHeader(
-                      step: _step,
-                      onBack: _goBack,
-                      onClose: _close,
-                    ),
+                    _LogHeader(step: _step, onBack: _goBack, onClose: _close),
                     Expanded(
                       child: SingleChildScrollView(
                         padding: const EdgeInsets.fromLTRB(16, 24, 16, 24),
@@ -429,12 +425,12 @@ class _DailyLogFlowState extends ConsumerState<DailyLogFlow> {
           child: FilledButton(
             onPressed: _saving ? null : _advance,
             style: FilledButton.styleFrom(
-              backgroundColor: RituColors.sage500,
-              disabledBackgroundColor: RituColors.sage500.withValues(
+              backgroundColor: context.ritu.sage500,
+              disabledBackgroundColor: context.ritu.sage500.withValues(
                 alpha: 0.4,
               ),
-              foregroundColor: RituColors.white,
-              disabledForegroundColor: RituColors.white,
+              foregroundColor: context.ritu.white,
+              disabledForegroundColor: context.ritu.white,
               elevation: 0,
               padding: EdgeInsets.zero,
               shape: const StadiumBorder(),
@@ -479,10 +475,10 @@ class _LogHeader extends StatelessWidget {
                   : GestureDetector(
                       onTap: onBack,
                       behavior: HitTestBehavior.opaque,
-                      child: const Icon(
+                      child: Icon(
                         LucideIcons.chevronLeft,
                         size: 24,
-                        color: _headerIcon,
+                        color: context.ritu.iconPrimary,
                         semanticLabel: 'Back',
                       ),
                     ),
@@ -499,10 +495,10 @@ class _LogHeader extends StatelessWidget {
               child: GestureDetector(
                 onTap: onClose,
                 behavior: HitTestBehavior.opaque,
-                child: const Icon(
+                child: Icon(
                   LucideIcons.x,
                   size: 24,
-                  color: _headerIcon,
+                  color: context.ritu.iconPrimary,
                   semanticLabel: 'Close',
                 ),
               ),
@@ -531,7 +527,7 @@ class _StepHeader extends StatelessWidget {
             fontSize: 22,
             fontWeight: FontWeight.w600,
             height: 26 / 22,
-            color: RituColors.textPrimary,
+            color: context.ritu.textPrimary,
           ),
         ),
         const SizedBox(height: 8),
@@ -541,7 +537,7 @@ class _StepHeader extends StatelessWidget {
             fontSize: 15,
             fontWeight: FontWeight.w400,
             height: 24 / 15,
-            color: RituColors.textSecondary,
+            color: context.ritu.textSecondary,
           ),
         ),
       ],
@@ -696,7 +692,7 @@ class _SectionLabel extends StatelessWidget {
         fontSize: 15,
         fontWeight: FontWeight.w600,
         height: 24 / 15,
-        color: RituColors.textPrimary,
+        color: context.ritu.textPrimary,
       ),
     );
   }
@@ -745,10 +741,10 @@ class _BodySignalsStep extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
+              Icon(
                 LucideIcons.plus,
                 size: 16,
-                color: RituColors.textPositive,
+                color: context.ritu.textPositive,
               ),
               const SizedBox(width: 4),
               Text(
@@ -757,7 +753,7 @@ class _BodySignalsStep extends StatelessWidget {
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
                   height: 20 / 13,
-                  color: RituColors.textPositive,
+                  color: context.ritu.textPositive,
                 ),
               ),
             ],
@@ -789,9 +785,9 @@ class _NotesStep extends StatelessWidget {
         Container(
           height: 140,
           decoration: BoxDecoration(
-            color: RituColors.fillElevated,
+            color: context.ritu.fillElevated,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: RituColors.borderSubtle),
+            border: Border.all(color: context.ritu.borderSubtle),
           ),
           padding: const EdgeInsets.all(16),
           child: TextField(
@@ -803,7 +799,7 @@ class _NotesStep extends StatelessWidget {
               fontSize: 15,
               fontWeight: FontWeight.w400,
               height: 24 / 15,
-              color: RituColors.textPrimary,
+              color: context.ritu.textPrimary,
             ),
             decoration: InputDecoration(
               isCollapsed: true,
@@ -820,7 +816,7 @@ class _NotesStep extends StatelessWidget {
                 fontSize: 15,
                 fontWeight: FontWeight.w400,
                 height: 24 / 15,
-                color: RituColors.textDisabled,
+                color: context.ritu.textDisabled,
               ),
             ),
           ),
@@ -833,7 +829,7 @@ class _NotesStep extends StatelessWidget {
               fontSize: 13,
               fontWeight: FontWeight.w500,
               height: 20 / 13,
-              color: RituColors.textTertiary,
+              color: context.ritu.textTertiary,
             ),
           ),
         ),

@@ -7,7 +7,7 @@ import '../../core/date_format.dart';
 import '../../data/repositories/journal_entry_repository.dart';
 import '../../providers/period_providers.dart';
 import '../../providers/repository_providers.dart';
-import '../../theme/ritu_colors.dart';
+import '../../theme/ritu_palette.dart';
 import 'journal_delete_dialog.dart';
 import 'journal_entry_menu.dart';
 import 'journal_entry_modal.dart';
@@ -69,9 +69,9 @@ class JournalEntryCard extends ConsumerWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: RituColors.fillElevated,
+        color: context.ritu.fillElevated,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: RituColors.borderSubtle),
+        border: Border.all(color: context.ritu.borderSubtle),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -85,7 +85,7 @@ class JournalEntryCard extends ConsumerWidget {
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
                     height: 20 / 13,
-                    color: RituColors.textSecondary,
+                    color: context.ritu.textSecondary,
                   ),
                 ),
               ),
@@ -115,14 +115,14 @@ class _HighlightedBody extends StatelessWidget {
     fontSize: 13,
     fontWeight: FontWeight.w400,
     height: 20 / 13,
-    color: RituColors.textPrimary,
   );
 
   @override
   Widget build(BuildContext context) {
+    final style = _style.copyWith(color: context.ritu.textPrimary);
     final needle = query.trim();
     if (needle.isEmpty) {
-      return Text(text, style: _style);
+      return Text(text, style: style);
     }
 
     final lower = text.toLowerCase();
@@ -145,12 +145,12 @@ class _HighlightedBody extends StatelessWidget {
           baseline: TextBaseline.alphabetic,
           child: DecoratedBox(
             decoration: BoxDecoration(
-              color: RituColors.fillAttention,
+              color: context.ritu.fillAttention,
               borderRadius: BorderRadius.circular(4),
             ),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: Text(word, style: _style),
+              child: Text(word, style: style),
             ),
           ),
         ),
@@ -158,6 +158,6 @@ class _HighlightedBody extends StatelessWidget {
       start = index + match.length;
     }
 
-    return Text.rich(TextSpan(style: _style, children: spans));
+    return Text.rich(TextSpan(style: style, children: spans));
   }
 }

@@ -8,7 +8,7 @@ import '../../data/models/period_log.dart';
 import '../../providers/cycle_snapshot_provider.dart';
 import '../../providers/period_providers.dart';
 import '../../providers/repository_providers.dart';
-import '../../theme/ritu_colors.dart';
+import '../../theme/ritu_palette.dart';
 import 'add_period_screen.dart';
 
 /// Figma 1132:5946 / 1132:6069 — Settings → Period History.
@@ -75,7 +75,7 @@ class _PeriodHistoryScreenState extends ConsumerState<PeriodHistoryScreen> {
         _pop();
       },
       child: Scaffold(
-        backgroundColor: RituColors.backgroundPage,
+        backgroundColor: context.ritu.backgroundPage,
         body: SafeArea(
           child: Stack(
             children: [
@@ -88,13 +88,13 @@ class _PeriodHistoryScreenState extends ConsumerState<PeriodHistoryScreen> {
                         GestureDetector(
                           onTap: _pop,
                           behavior: HitTestBehavior.opaque,
-                          child: const SizedBox(
+                          child: SizedBox(
                             width: 24,
                             height: 24,
                             child: Icon(
                               LucideIcons.chevronLeft,
                               size: 24,
-                              color: RituColors.textPrimary,
+                              color: context.ritu.textPrimary,
                             ),
                           ),
                         ),
@@ -106,20 +106,20 @@ class _PeriodHistoryScreenState extends ConsumerState<PeriodHistoryScreen> {
                               fontSize: 18,
                               fontWeight: FontWeight.w400,
                               height: 25 / 18,
-                              color: RituColors.textPrimary,
+                              color: context.ritu.textPrimary,
                             ),
                           ),
                         ),
                         GestureDetector(
                           onTap: _openAddPeriod,
                           behavior: HitTestBehavior.opaque,
-                          child: const SizedBox(
+                          child: SizedBox(
                             width: 24,
                             height: 24,
                             child: Icon(
                               LucideIcons.circlePlus,
                               size: 24,
-                              color: RituColors.sage600,
+                              color: context.ritu.sage600,
                             ),
                           ),
                         ),
@@ -128,9 +128,9 @@ class _PeriodHistoryScreenState extends ConsumerState<PeriodHistoryScreen> {
                   ),
                   Expanded(
                     child: periodsAsync.when(
-                      loading: () => const Center(
+                      loading: () => Center(
                         child: CircularProgressIndicator(
-                          color: RituColors.sage500,
+                          color: context.ritu.sage500,
                         ),
                       ),
                       error: (error, _) => Center(child: Text('$error')),
@@ -168,7 +168,7 @@ class _PeriodHistoryScreenState extends ConsumerState<PeriodHistoryScreen> {
                                     fontSize: 13,
                                     fontWeight: FontWeight.w400,
                                     height: 20 / 13,
-                                    color: RituColors.textSecondary,
+                                    color: context.ritu.textSecondary,
                                   ),
                                 ),
                               )
@@ -207,7 +207,7 @@ class _PeriodRemovedBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: const Color(0xFFCFEFD5),
+      color: context.ritu.fillPositive,
       borderRadius: BorderRadius.circular(16),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -220,7 +220,7 @@ class _PeriodRemovedBanner extends StatelessWidget {
                   fontSize: 13,
                   fontWeight: FontWeight.w400,
                   height: 20 / 13,
-                  color: RituColors.textPrimary,
+                  color: context.ritu.textPrimary,
                 ),
               ),
             ),
@@ -234,7 +234,7 @@ class _PeriodRemovedBanner extends StatelessWidget {
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
                   height: 20 / 13,
-                  color: RituColors.sage600,
+                  color: context.ritu.sage600,
                 ),
               ),
             ),
@@ -269,7 +269,7 @@ class _StatsBanner extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
-        color: RituColors.fillSecondary,
+        color: context.ritu.fillSecondary,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -280,11 +280,11 @@ class _StatsBanner extends StatelessWidget {
               label: 'Periods logged',
             ),
           ),
-          Container(width: 0.5, height: 60, color: RituColors.divider),
+          Container(width: 0.5, height: 60, color: context.ritu.divider),
           Expanded(
             child: _StatCell(value: avgLabel, label: 'avg cycle (days)'),
           ),
-          Container(width: 0.5, height: 60, color: RituColors.divider),
+          Container(width: 0.5, height: 60, color: context.ritu.divider),
           Expanded(
             child: _StatCell(value: recentLabel, label: 'most recent'),
           ),
@@ -315,7 +315,7 @@ class _StatCell extends StatelessWidget {
               fontSize: 28,
               fontWeight: FontWeight.w400,
               height: 34 / 28,
-              color: RituColors.textPrimary,
+              color: context.ritu.textPrimary,
             ),
           ),
           Text(
@@ -325,7 +325,7 @@ class _StatCell extends StatelessWidget {
               fontSize: 11,
               fontWeight: FontWeight.w500,
               height: 18 / 11,
-              color: RituColors.textSecondary,
+              color: context.ritu.textSecondary,
             ),
           ),
         ],
@@ -346,9 +346,9 @@ class _PeriodListCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: RituColors.fillElevated,
+        color: context.ritu.fillElevated,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: RituColors.borderSubtle),
+        border: Border.all(color: context.ritu.borderSubtle),
       ),
       child: Column(
         children: [
@@ -417,10 +417,10 @@ class _PeriodRow extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: showDivider
-              ? const BoxDecoration(
+              ? BoxDecoration(
                   border: Border(
                     bottom: BorderSide(
-                      color: RituColors.borderSubtle,
+                      color: context.ritu.borderSubtle,
                       width: 0.5,
                     ),
                   ),
@@ -439,7 +439,7 @@ class _PeriodRow extends StatelessWidget {
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
                         height: 24 / 15,
-                        color: RituColors.textPrimary,
+                        color: context.ritu.textPrimary,
                       ),
                     ),
                     Text(
@@ -448,7 +448,7 @@ class _PeriodRow extends StatelessWidget {
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
                         height: 20 / 13,
-                        color: RituColors.textTertiary,
+                        color: context.ritu.textTertiary,
                       ),
                     ),
                   ],
@@ -465,7 +465,7 @@ class _PeriodRow extends StatelessWidget {
                         vertical: 2,
                       ),
                       decoration: BoxDecoration(
-                        color: RituColors.fillSecondaryHover,
+                        color: context.ritu.fillSecondaryHover,
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text(
@@ -474,7 +474,7 @@ class _PeriodRow extends StatelessWidget {
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
                           height: 18 / 11,
-                          color: RituColors.textPrimary,
+                          color: context.ritu.textPrimary,
                         ),
                       ),
                     ),
@@ -485,16 +485,16 @@ class _PeriodRow extends StatelessWidget {
                         fontSize: 11,
                         fontWeight: FontWeight.w500,
                         height: 18 / 11,
-                        color: RituColors.textSecondary,
+                        color: context.ritu.textSecondary,
                       ),
                     ),
                   ],
                 ),
               ),
-              const Icon(
+              Icon(
                 LucideIcons.chevronRight,
                 size: 16,
-                color: RituColors.textTertiary,
+                color: context.ritu.textTertiary,
               ),
             ],
           ),

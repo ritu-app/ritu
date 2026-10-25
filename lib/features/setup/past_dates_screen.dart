@@ -1,17 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../theme/ritu_colors.dart';
+import '../../theme/ritu_palette.dart';
 import 'widgets/past_period_dates_editor.dart';
 import 'widgets/progress_dots.dart';
 import 'widgets/setup_footer.dart';
 
 class PastDatesScreen extends StatefulWidget {
-  const PastDatesScreen({
-    super.key,
-    this.onContinue,
-    this.onSkip,
-  });
+  const PastDatesScreen({super.key, this.onContinue, this.onSkip});
 
   final void Function(List<DateTime> dates)? onContinue;
   final VoidCallback? onSkip;
@@ -27,7 +23,7 @@ class _PastDatesScreenState extends State<PastDatesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: RituColors.backgroundPage,
+      backgroundColor: context.ritu.backgroundPage,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -48,7 +44,7 @@ class _PastDatesScreenState extends State<PastDatesScreen> {
                           fontSize: 22,
                           fontWeight: FontWeight.w600,
                           height: 26 / 22,
-                          color: RituColors.textPrimary,
+                          color: context.ritu.textPrimary,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -59,7 +55,7 @@ class _PastDatesScreenState extends State<PastDatesScreen> {
                           fontSize: 15,
                           fontWeight: FontWeight.w400,
                           height: 24 / 15,
-                          color: RituColors.textSecondary,
+                          color: context.ritu.textSecondary,
                         ),
                       ),
                       const SizedBox(height: 24),

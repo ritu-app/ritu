@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../theme/ritu_colors.dart';
+import '../../../theme/ritu_palette.dart';
 
 /// Asks before leaving a daily log that already has answers.
 /// Returns true when the entry should be discarded.
@@ -11,7 +11,7 @@ Future<bool> showDiscardLogDialog(
 }) {
   return showDialog<bool>(
     context: context,
-    barrierColor: const Color(0xB3000000),
+    barrierColor: context.ritu.barrier,
     builder: (dialogContext) => _DiscardLogDialog(editing: editing),
   ).then((value) => value ?? false);
 }
@@ -36,14 +36,11 @@ class _DiscardLogDialog extends StatelessWidget {
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 358),
         child: Material(
-          color: RituColors.fillElevated,
+          color: context.ritu.fillElevated,
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
-            side: const BorderSide(
-              color: RituColors.borderSubtle,
-              width: 0.5,
-            ),
+            side: BorderSide(color: context.ritu.borderSubtle, width: 0.5),
           ),
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
@@ -57,7 +54,7 @@ class _DiscardLogDialog extends StatelessWidget {
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
                     height: 24 / 18,
-                    color: RituColors.textPrimary,
+                    color: context.ritu.textPrimary,
                   ),
                 ),
                 Text(
@@ -66,7 +63,7 @@ class _DiscardLogDialog extends StatelessWidget {
                     fontSize: 13,
                     fontWeight: FontWeight.w400,
                     height: 20 / 13,
-                    color: RituColors.textSecondary,
+                    color: context.ritu.textSecondary,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -74,13 +71,13 @@ class _DiscardLogDialog extends StatelessWidget {
                   children: [
                     _DialogAction(
                       label: keepLabel,
-                      color: RituColors.sage600,
+                      color: context.ritu.sage600,
                       onPressed: () => Navigator.of(context).pop(false),
                     ),
                     const SizedBox(width: 32),
                     _DialogAction(
                       label: discardLabel,
-                      color: RituColors.textTertiary,
+                      color: context.ritu.textTertiary,
                       onPressed: () => Navigator.of(context).pop(true),
                     ),
                   ],
