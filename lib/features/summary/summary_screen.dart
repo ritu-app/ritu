@@ -28,8 +28,15 @@ class SummaryScreen extends StatelessWidget {
   /// on the unlocked summary.
   final int completedCycles;
 
+  /// Lavender banner. Dark is Figma banners/lavender-banner.
   static const _heroBackground = Color(0xFFF5EFF6);
+  static const _heroBackgroundDark = Color(0xFF503C53);
   static const _progressColor = Color(0xFF9C8FB5);
+
+  static Color heroBackground(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return dark ? _heroBackgroundDark : _heroBackground;
+  }
 
   static List<(IconData, Color, Color, String, String)> _valueItems(
     BuildContext context,
@@ -276,7 +283,7 @@ class _HeroCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: SummaryScreen._heroBackground,
+        color: SummaryScreen.heroBackground(context),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: context.ritu.borderDefault, width: 0.5),
       ),
@@ -318,7 +325,7 @@ class _HeroCard extends StatelessWidget {
               child: LinearProgressIndicator(
                 value: progress,
                 minHeight: 5,
-                backgroundColor: context.ritu.white,
+                backgroundColor: context.ritu.fillElevated,
                 color: SummaryScreen._progressColor,
               ),
             ),

@@ -121,9 +121,19 @@ class _ProgressView extends StatelessWidget {
 
   /// Empty-state banner (Figma pastel-green-banner-2).
   static const _heroBackgroundEmpty = Color(0xFFEDF0EC);
+  static const _heroBackgroundEmptyDark = Color(0xFF40443F);
 
   /// After-logged banner (Figma pastel-green-banner).
   static const _heroBackgroundProgress = Color(0xFFE7E9DE);
+  static const _heroBackgroundProgressDark = Color(0xFF454836);
+
+  static Color heroBackground(BuildContext context, {required bool progress}) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    if (progress) {
+      return dark ? _heroBackgroundProgressDark : _heroBackgroundProgress;
+    }
+    return dark ? _heroBackgroundEmptyDark : _heroBackgroundEmpty;
+  }
 
   static List<(IconData, Color, Color, String, String)> _unlockItems(
     BuildContext context,
@@ -243,9 +253,10 @@ class _HeroCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: hasStartedLogging
-            ? _ProgressView._heroBackgroundProgress
-            : _ProgressView._heroBackgroundEmpty,
+        color: _ProgressView.heroBackground(
+          context,
+          progress: hasStartedLogging,
+        ),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -292,7 +303,7 @@ class _HeroCard extends StatelessWidget {
               child: LinearProgressIndicator(
                 value: progress,
                 minHeight: 5,
-                backgroundColor: context.ritu.white,
+                backgroundColor: context.ritu.fillElevated,
                 color: context.ritu.meadow600,
               ),
             ),

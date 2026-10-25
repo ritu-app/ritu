@@ -36,7 +36,14 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
   /// Immediate post-save value so the UI doesn’t wait on the Drift stream.
   JournalEntry? _optimisticToday;
 
+  /// Peach banner. Dark is Figma banners/peach-banner.
   static const _heroBackground = Color(0xFFFDF2ED);
+  static const _heroBackgroundDark = Color(0xFF564741);
+
+  static Color heroBackground(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return dark ? _heroBackgroundDark : _heroBackground;
+  }
 
   static List<(IconData, Color, Color, String, String)> _helpItems(
     BuildContext context,
@@ -281,7 +288,7 @@ class _HeroCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: _JournalScreenState._heroBackground,
+        color: _JournalScreenState.heroBackground(context),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: context.ritu.borderDefault, width: 0.5),
       ),
@@ -371,7 +378,7 @@ class _ReflectionCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: context.ritu.fillSubtle,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.ritu.textDisabled),
+        border: Border.all(color: context.ritu.borderStrong),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
