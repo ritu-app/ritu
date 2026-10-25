@@ -1,7 +1,5 @@
-import 'dart:convert';
 import 'dart:io';
 
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -10,10 +8,9 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../../providers/app_restart_provider.dart';
-import '../../providers/profile_providers.dart';
 import '../../providers/repository_providers.dart';
 import '../../theme/ritu_colors.dart';
+import 'import_data_screen.dart';
 
 /// Figma 1249:5779 — Settings → Export & Import.
 class ExportDataScreen extends ConsumerStatefulWidget {
@@ -24,102 +21,15 @@ class ExportDataScreen extends ConsumerStatefulWidget {
 }
 
 class _ExportDataScreenState extends ConsumerState<ExportDataScreen> {
-  var _busy = false;
-
   Future<void> _openExport() {
     return Navigator.of(context).push<void>(
-      MaterialPageRoute<void>(
-        builder: (_) => const _ExportOptionsScreen(),
-      ),
+      MaterialPageRoute<void>(builder: (_) => const _ExportOptionsScreen()),
     );
   }
 
-  Future<void> _import() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          backgroundColor: RituColors.fillElevated,
-          title: Text(
-            'Replace all data?',
-            style: GoogleFonts.dmSans(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: RituColors.textPrimary,
-            ),
-          ),
-          content: Text(
-            'Importing a backup replaces everything currently stored on this device. This can’t be undone.',
-            style: GoogleFonts.dmSans(
-              fontSize: 14,
-              fontWeight: FontWeight.w400,
-              height: 20 / 14,
-              color: RituColors.textSecondary,
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: Text(
-                'Cancel',
-                style: GoogleFonts.dmSans(
-                  fontWeight: FontWeight.w600,
-                  color: RituColors.textSecondary,
-                ),
-              ),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: Text(
-                'Import',
-                style: GoogleFonts.dmSans(
-                  fontWeight: FontWeight.w600,
-                  color: RituColors.sage600,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-    if (confirmed != true || !mounted) return;
-
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: const ['json'],
-      withData: true,
-    );
-    if (result == null || result.files.isEmpty || !mounted) return;
-
-    final file = result.files.single;
-    String? raw;
-    if (file.bytes != null) {
-      raw = utf8.decode(file.bytes!);
-    } else if (file.path != null) {
-      raw = await File(file.path!).readAsString();
-    }
-    if (raw == null || raw.trim().isEmpty) {
-      _showMessage('Could not read the selected file.');
-      return;
-    }
-
-    setState(() => _busy = true);
-    try {
-      await ref.read(rituBackupServiceProvider).importJson(raw);
-      if (!mounted) return;
-      ref.invalidate(profileProvider);
-      ref.read(appRestartProvider.notifier).state++;
-    } catch (error) {
-      if (!mounted) return;
-      _showMessage('Import failed: $error');
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
-  }
-
-  void _showMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
+  Future<void> _openImport() {
+    return Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(builder: (_) => const ImportDataScreen()),
     );
   }
 
@@ -131,9 +41,7 @@ class _ExportDataScreenState extends ConsumerState<ExportDataScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _BackChevron(
-              onTap: _busy ? null : () => Navigator.of(context).pop(),
-            ),
+            _BackChevron(onTap: () => Navigator.of(context).pop()),
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
@@ -160,13 +68,13 @@ class _ExportDataScreenState extends ConsumerState<ExportDataScreen> {
                   _NavCard(
                     title: 'Export Data',
                     subtitle: 'Download a copy of your data as a file',
-                    onTap: _busy ? null : _openExport,
+                    onTap: _openExport,
                   ),
                   const SizedBox(height: 16),
                   _NavCard(
                     title: 'Import Data',
                     subtitle: 'Restore from a previously exported file',
-                    onTap: _busy ? null : _import,
+                    onTap: _openImport,
                   ),
                 ],
               ),
@@ -218,7 +126,9 @@ class _ExportOptionsScreenState extends ConsumerState<_ExportOptionsScreen> {
     final shareOrigin = _sharePositionOrigin(context);
     setState(() => _busy = true);
     try {
-      final json = await ref.read(rituBackupServiceProvider).exportJson(
+      final json = await ref
+          .read(rituBackupServiceProvider)
+          .exportJson(
             includeLogs: _includeLogs,
             includeJournal: _includeJournal,
             includeSettings: _includeSettings,
@@ -236,9 +146,9 @@ class _ExportOptionsScreenState extends ConsumerState<_ExportOptionsScreen> {
       );
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Export failed: $error')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Export failed: $error')));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -302,9 +212,8 @@ class _ExportOptionsScreenState extends ConsumerState<_ExportOptionsScreen> {
                         title: 'Journal entries',
                         selected: _includeJournal,
                         enabled: !_busy,
-                        onTap: () => setState(
-                          () => _includeJournal = !_includeJournal,
-                        ),
+                        onTap: () =>
+                            setState(() => _includeJournal = !_includeJournal),
                         showDivider: true,
                       ),
                       const _IncludeRow(
@@ -331,8 +240,9 @@ class _ExportOptionsScreenState extends ConsumerState<_ExportOptionsScreen> {
                       onPressed: _canSave ? _export : null,
                       style: FilledButton.styleFrom(
                         backgroundColor: RituColors.sage500,
-                        disabledBackgroundColor:
-                            RituColors.sage500.withValues(alpha: 0.5),
+                        disabledBackgroundColor: RituColors.sage500.withValues(
+                          alpha: 0.5,
+                        ),
                         foregroundColor: RituColors.white,
                         disabledForegroundColor: RituColors.white,
                         elevation: 0,
@@ -540,10 +450,7 @@ class _IncludeRow extends StatelessWidget {
 }
 
 class _SelectionMark extends StatelessWidget {
-  const _SelectionMark({
-    required this.selected,
-    required this.enabled,
-  });
+  const _SelectionMark({required this.selected, required this.enabled});
 
   final bool selected;
   final bool enabled;

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -7,7 +8,10 @@ import 'package:url_launcher_platform_interface/url_launcher_platform_interface.
 
 import 'package:ritu/app/ritu_app.dart';
 import 'package:ritu/core/date_format.dart';
+import 'package:ritu/data/backup/restore_backup_file.dart';
+import 'package:ritu/data/backup/ritu_backup.dart';
 import 'package:ritu/data/local/app_database.dart';
+import 'package:ritu/data/models/profile.dart';
 import 'package:ritu/data/repositories/drift/drift_daily_log_repository.dart';
 import 'package:ritu/data/repositories/drift/drift_journal_entry_repository.dart';
 import 'package:ritu/data/repositories/drift/drift_period_repository.dart';
@@ -16,6 +20,7 @@ import 'package:ritu/data/repositories/drift/drift_symptom_repository.dart';
 import 'package:ritu/data/repositories/period_repository.dart';
 import 'package:ritu/features/log/daily_log_flow.dart';
 import 'package:ritu/features/setup/widgets/choice_chips.dart';
+import 'package:ritu/providers/repository_providers.dart';
 import 'package:ritu/theme/ritu_colors.dart';
 
 /// Widget tests that mount [createRituApp] must unmount before the test ends
@@ -589,6 +594,160 @@ void main() {
     expect(find.widgetWithText(FilledButton, 'Save'), findsOneWidget);
     expect(find.text('Import from file'), findsNothing);
     expect(find.text('Export format'), findsNothing);
+  });
+
+  rituTestWidgets('Import Data opens the file chooser before replacing data', (
+    tester,
+  ) async {
+    final profiles = DriftProfileRepository(database);
+    await profiles.upsertDisplayName('Maya');
+    await profiles.markOnboardingCompleted();
+
+    await tester.pumpWidget(createRituApp(database: database));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(LucideIcons.settings));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('Export Data'), 200);
+    await tester.tap(find.text('Export Data'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Import Data'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Import your data'), findsOneWidget);
+    expect(
+      find.text('Restore your data from a JSON file you exported before'),
+      findsOneWidget,
+    );
+    expect(find.text('Tap to choose a file'), findsOneWidget);
+    expect(find.text('Replace all data?'), findsNothing);
+    expect(
+      tester
+          .widget<FilledButton>(find.widgetWithText(FilledButton, 'Import'))
+          .onPressed,
+      isNull,
+    );
+  });
+
+  rituTestWidgets('Import Data rejects a file that is not a Ritu backup', (
+    tester,
+  ) async {
+    final profiles = DriftProfileRepository(database);
+    await profiles.upsertDisplayName('Maya');
+    await profiles.markOnboardingCompleted();
+
+    await tester.pumpWidget(
+      createRituApp(
+        database: database,
+        overrides: [
+          restoreBackupPickerProvider.overrideWithValue(
+            () async => const RestoreBackupFile(
+              name: 'notes.json',
+              sizeBytes: 12,
+              contents: 'not json',
+            ),
+          ),
+        ],
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(LucideIcons.settings));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('Export Data'), 200);
+    await tester.tap(find.text('Export Data'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Import Data'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Tap to choose a file'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Tap to choose a different file'), findsOneWidget);
+    expect(
+      find.text("This file doesn't look like a Ritu backup"),
+      findsOneWidget,
+    );
+    expect(
+      tester
+          .widget<FilledButton>(find.widgetWithText(FilledButton, 'Import'))
+          .onPressed,
+      isNull,
+    );
+  });
+
+  rituTestWidgets('Import Data asks before a valid file replaces everything', (
+    tester,
+  ) async {
+    final profiles = DriftProfileRepository(database);
+    await profiles.upsertDisplayName('Maya');
+    await profiles.markOnboardingCompleted();
+    final backup = RituBackup(
+      version: RituBackup.currentVersion,
+      exportedAt: DateTime.utc(2026, 10, 1),
+      profile: Profile(
+        displayName: 'Nora',
+        createdAt: DateTime.utc(2026, 1, 1),
+        onboardingCompletedAt: DateTime.utc(2026, 1, 2),
+        typicalPeriodDays: 5,
+      ),
+    );
+
+    await tester.pumpWidget(
+      createRituApp(
+        database: database,
+        overrides: [
+          restoreBackupPickerProvider.overrideWithValue(
+            () async => RestoreBackupFile(
+              name: 'ritu_export_2026.json',
+              sizeBytes: 184 * 1024,
+              contents: backup.encodePretty(),
+            ),
+          ),
+        ],
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(LucideIcons.settings));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('Export Data'), 200);
+    await tester.tap(find.text('Export Data'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Import Data'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Tap to choose a file'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('ritu_export_2026.json'), findsOneWidget);
+    expect(find.text('184 KB'), findsOneWidget);
+    expect(
+      find.text('Tap again if you want to select a different file'),
+      findsOneWidget,
+    );
+    expect(
+      tester
+          .widget<FilledButton>(find.widgetWithText(FilledButton, 'Import'))
+          .onPressed,
+      isNotNull,
+    );
+
+    await tester.tap(find.widgetWithText(FilledButton, 'Import'));
+    await tester.pumpAndSettle();
+    expect(find.text('This will replace your current data'), findsOneWidget);
+    expect(find.text('Overwrite and continue'), findsOneWidget);
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+    expect(find.text('This will replace your current data'), findsNothing);
+    expect(find.text('ritu_export_2026.json'), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(FilledButton, 'Import'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Overwrite and continue'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Import your data'), findsNothing);
+    expect(await profiles.getProfile(), isNotNull);
+    expect((await profiles.getProfile())!.displayName, 'Nora');
   });
 
   rituTestWidgets('FAQ opens in place without the feedback box', (
