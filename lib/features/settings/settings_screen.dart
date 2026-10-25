@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../data/models/app_appearance.dart';
 import '../../data/models/daily_reminder.dart';
@@ -152,6 +153,18 @@ class _SettingsBody extends ConsumerWidget {
     );
   }
 
+  Future<void> _openWebPage(BuildContext context, Uri uri) async {
+    final launched = await launchUrl(
+      uri,
+      mode: LaunchMode.externalApplication,
+    );
+    if (!launched && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Couldn’t open the link')),
+      );
+    }
+  }
+
   Future<void> _openAppAppearance(BuildContext context) async {
     await Navigator.of(context).push<void>(
       MaterialPageRoute<void>(
@@ -291,17 +304,25 @@ class _SettingsBody extends ConsumerWidget {
                           title: 'Help & Support',
                           onTap: () => _openHelpSupport(context),
                         ),
-                        const _SettingsRow(
+                        _SettingsRow(
                           icon: LucideIcons.lockKeyhole,
                           iconBackground: RituColors.fillInfoSecondary,
                           iconColor: RituColors.iconInfo,
                           title: 'Privacy Policy',
+                          onTap: () => _openWebPage(
+                            context,
+                            Uri.parse('https://www.ritu.care/privacy'),
+                          ),
                         ),
-                        const _SettingsRow(
+                        _SettingsRow(
                           icon: LucideIcons.receiptText,
                           iconBackground: RituColors.fillInfoSecondary,
                           iconColor: RituColors.iconInfo,
                           title: 'Terms of Service',
+                          onTap: () => _openWebPage(
+                            context,
+                            Uri.parse('https://www.ritu.care/terms'),
+                          ),
                         ),
                         _SettingsRow(
                           icon: LucideIcons.info,

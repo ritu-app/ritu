@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher_platform_interface/link.dart';
+import 'package:url_launcher_platform_interface/url_launcher_platform_interface.dart';
 
 import 'package:ritu/app/ritu_app.dart';
 import 'package:ritu/core/date_format.dart';
@@ -31,6 +33,19 @@ void rituTestWidgets(
       await tester.pump(const Duration(milliseconds: 10));
     }
   });
+}
+
+class _RecordingUrlLauncher extends UrlLauncherPlatform {
+  String? launched;
+
+  @override
+  LinkDelegate? get linkDelegate => null;
+
+  @override
+  Future<bool> launchUrl(String url, LaunchOptions options) async {
+    launched = url;
+    return true;
+  }
 }
 
 void main() {
@@ -588,6 +603,75 @@ void main() {
     await tester.drag(find.byType(ListView), const Offset(0, -500));
     await tester.pumpAndSettle();
     expect(find.text('support@ritu.care'), findsOneWidget);
+  });
+
+  rituTestWidgets('About Ritu shows the header, mission, and rate row', (
+    tester,
+  ) async {
+    final profiles = DriftProfileRepository(database);
+    await profiles.upsertDisplayName('Maya');
+    await profiles.markOnboardingCompleted();
+
+    await tester.pumpWidget(createRituApp(database: database));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(LucideIcons.settings));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.text('About Ritu'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.ensureVisible(find.text('About Ritu'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('About Ritu'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('About Ritu'), findsOneWidget);
+    expect(find.text('Ritu'), findsOneWidget);
+    expect(find.text('A private journal for your cycle'), findsOneWidget);
+    expect(find.text('Our mission'), findsOneWidget);
+    expect(find.text('How Ritu helps'), findsOneWidget);
+    expect(find.text('Capture your rhythm'), findsOneWidget);
+    expect(find.text('Recognize patterns'), findsOneWidget);
+    expect(find.text('Understand Yourself'), findsOneWidget);
+    expect(find.text('Rate Ritu on the App store'), findsNothing);
+  });
+
+  rituTestWidgets('Privacy Policy and Terms open the Ritu website', (
+    tester,
+  ) async {
+    final profiles = DriftProfileRepository(database);
+    await profiles.upsertDisplayName('Maya');
+    await profiles.markOnboardingCompleted();
+    final previousLauncher = UrlLauncherPlatform.instance;
+    final launcher = _RecordingUrlLauncher();
+    UrlLauncherPlatform.instance = launcher;
+
+    try {
+      await tester.pumpWidget(createRituApp(database: database));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(LucideIcons.settings));
+      await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(
+        find.text('Privacy Policy'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.ensureVisible(find.text('Privacy Policy'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Privacy Policy'));
+      await tester.pumpAndSettle();
+      expect(launcher.launched, 'https://www.ritu.care/privacy');
+
+      await tester.ensureVisible(find.text('Terms of Service'));
+      await tester.tap(find.text('Terms of Service'));
+      await tester.pumpAndSettle();
+      expect(launcher.launched, 'https://www.ritu.care/terms');
+    } finally {
+      UrlLauncherPlatform.instance = previousLauncher;
+    }
   });
 
   rituTestWidgets('Ended period history shows Last period', (tester) async {

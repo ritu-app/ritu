@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../theme/ritu_colors.dart';
 
@@ -11,9 +10,6 @@ const _borderDefault = Color(0xFFE2DDD8);
 /// Figma 501:1422 — Settings → About Ritu.
 class AboutRituScreen extends StatelessWidget {
   const AboutRituScreen({super.key});
-
-  /// Set once the App Store listing exists.
-  static final Uri? _appStoreUri = null;
 
   static const _helps = <({String title, String subtitle})>[
     (
@@ -30,22 +26,6 @@ class AboutRituScreen extends StatelessWidget {
     ),
   ];
 
-  Future<void> _rateOnAppStore(BuildContext context) async {
-    final uri = _appStoreUri;
-    if (uri == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('App Store listing coming soon')),
-      );
-      return;
-    }
-    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
-    if (!launched && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Couldn’t open the App Store')),
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -56,44 +36,55 @@ class AboutRituScreen extends StatelessWidget {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: GestureDetector(
-                  onTap: () => Navigator.of(context).pop(),
-                  behavior: HitTestBehavior.opaque,
-                  child: const SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: Icon(
-                      LucideIcons.chevronLeft,
-                      size: 24,
-                      color: RituColors.textPrimary,
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => Navigator.of(context).pop(),
+                    behavior: HitTestBehavior.opaque,
+                    child: const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: Icon(
+                        LucideIcons.chevronLeft,
+                        size: 24,
+                        color: RituColors.textPrimary,
+                      ),
                     ),
                   ),
-                ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Text(
+                      'About Ritu',
+                      style: GoogleFonts.dmSerifDisplay(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w400,
+                        height: 25 / 18,
+                        color: RituColors.textPrimary,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
                 children: [
                   const _HeroBanner(),
                   const SizedBox(height: 20),
                   const _MissionCard(),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 16),
                   Text(
                     'How Ritu helps',
                     style: GoogleFonts.dmSans(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                       height: 20 / 13,
-                      color: RituColors.textTertiary,
+                      color: RituColors.textPrimary,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
                   _HelpsCard(items: _helps),
-                  const SizedBox(height: 20),
-                  _RateCard(onTap: () => _rateOnAppStore(context)),
                 ],
               ),
             ),
@@ -288,79 +279,6 @@ class _HelpRow extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _RateCard extends StatelessWidget {
-  const _RateCard({required this.onTap});
-
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: RituColors.fillElevated,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: RituColors.borderSubtle),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Container(
-                width: 32,
-                height: 32,
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: RituColors.fillAttentionSecondary,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(
-                  LucideIcons.star,
-                  size: 16,
-                  color: RituColors.iconAttention,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Rate Ritu on the App store',
-                      style: GoogleFonts.dmSans(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        height: 20 / 13,
-                        color: RituColors.textPrimary,
-                      ),
-                    ),
-                    Text(
-                      'It helps more people find the app',
-                      style: GoogleFonts.dmSans(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                        height: 18 / 11,
-                        color: RituColors.textTertiary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Icon(
-                LucideIcons.squareArrowOutUpRight,
-                size: 16,
-                color: RituColors.textTertiary,
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
