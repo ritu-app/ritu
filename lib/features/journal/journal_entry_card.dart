@@ -17,17 +17,18 @@ class JournalEntryCard extends ConsumerWidget {
     super.key,
     required this.entry,
     this.showMenu = true,
+    this.highlightQuery,
   });
 
   final JournalEntry entry;
   final bool showMenu;
 
+  /// Case-insensitive match drawn on the body, when the list is searched.
+  final String? highlightQuery;
+
   Future<void> _editEntry(BuildContext context, WidgetRef ref) async {
     final periods = ref.read(allPeriodsProvider).valueOrNull ?? const [];
-    final contextLine = formatJournalEntryContextLine(
-      entry.loggedOn,
-      periods,
-    );
+    final contextLine = formatJournalEntryContextLine(entry.loggedOn, periods);
 
     final updatedBody = await showJournalEntryModal(
       context,
@@ -37,18 +38,14 @@ class JournalEntryCard extends ConsumerWidget {
     );
     if (updatedBody == null || !context.mounted) return;
 
-    await ref.read(journalEntryRepositoryProvider).upsert(
-          loggedOn: entry.loggedOn,
-          body: updatedBody,
-        );
+    await ref
+        .read(journalEntryRepositoryProvider)
+        .upsert(loggedOn: entry.loggedOn, body: updatedBody);
   }
 
   Future<void> _viewEntry(BuildContext context, WidgetRef ref) async {
     final periods = ref.read(allPeriodsProvider).valueOrNull ?? const [];
-    final contextLine = formatJournalEntryContextLine(
-      entry.loggedOn,
-      periods,
-    );
+    final contextLine = formatJournalEntryContextLine(entry.loggedOn, periods);
 
     await showJournalEntryModal(
       context,
@@ -101,17 +98,66 @@ class JournalEntryCard extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 12),
-          Text(
-            entry.body,
-            style: GoogleFonts.dmSans(
-              fontSize: 13,
-              fontWeight: FontWeight.w400,
-              height: 20 / 13,
-              color: RituColors.textPrimary,
-            ),
-          ),
+          _HighlightedBody(text: entry.body, query: highlightQuery ?? ''),
         ],
       ),
     );
+  }
+}
+
+class _HighlightedBody extends StatelessWidget {
+  const _HighlightedBody({required this.text, required this.query});
+
+  final String text;
+  final String query;
+
+  static final _style = GoogleFonts.dmSans(
+    fontSize: 13,
+    fontWeight: FontWeight.w400,
+    height: 20 / 13,
+    color: RituColors.textPrimary,
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    final needle = query.trim();
+    if (needle.isEmpty) {
+      return Text(text, style: _style);
+    }
+
+    final lower = text.toLowerCase();
+    final match = needle.toLowerCase();
+    final spans = <InlineSpan>[];
+    var start = 0;
+    while (start < text.length) {
+      final index = lower.indexOf(match, start);
+      if (index < 0) {
+        spans.add(TextSpan(text: text.substring(start)));
+        break;
+      }
+      if (index > start) {
+        spans.add(TextSpan(text: text.substring(start, index)));
+      }
+      final word = text.substring(index, index + match.length);
+      spans.add(
+        WidgetSpan(
+          alignment: PlaceholderAlignment.baseline,
+          baseline: TextBaseline.alphabetic,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: RituColors.fillAttention,
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Text(word, style: _style),
+            ),
+          ),
+        ),
+      );
+      start = index + match.length;
+    }
+
+    return Text.rich(TextSpan(style: _style, children: spans));
   }
 }

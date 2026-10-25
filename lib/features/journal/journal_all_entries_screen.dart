@@ -104,10 +104,7 @@ class _JournalAllEntriesScreenState
     final ids = _selectedIds.toList();
     if (ids.isEmpty) return;
 
-    final confirmed = await showJournalDeleteDialog(
-      context,
-      count: ids.length,
-    );
+    final confirmed = await showJournalDeleteDialog(context, count: ids.length);
     if (!confirmed || !mounted) return;
 
     final repo = ref.read(journalEntryRepositoryProvider);
@@ -186,11 +183,24 @@ class _JournalAllEntriesScreenState
             .toList();
       }
     }
+    if (selected != null) return result;
     final q = _query.trim().toLowerCase();
     if (q.isEmpty) return result;
     return result
         .where((entry) => entry.body.toLowerCase().contains(q))
         .toList();
+  }
+
+  void _clearSearch() {
+    _searchController.clear();
+    setState(() => _query = '');
+  }
+
+  void _clearActiveFilter() {
+    setState(() {
+      _selectedDate = null;
+      _timeRange = null;
+    });
   }
 
   @override
@@ -200,6 +210,10 @@ class _JournalAllEntriesScreenState
     final pastEntries = pastAsync.valueOrNull ?? const [];
     final filtered = _filtered(pastEntries, today: today);
     final groups = _groupByMonth(filtered);
+    final selectedDate = _selectedDate;
+    final timeRange = _timeRange;
+    final query = _query.trim();
+    final highlight = selectedDate == null ? query : '';
 
     // Figma 865:3175 — header top 8px in safe area; menu flush under icons.
     const headerTop = 8.0;
@@ -221,15 +235,34 @@ class _JournalAllEntriesScreenState
                   onMenuTap: () => setState(() => _menuOpen = !_menuOpen),
                 ),
               ),
-              const SizedBox(height: 16),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: _SearchField(
-                  controller: _searchController,
-                  borderColor: _borderDefault,
-                  onChanged: (value) => setState(() => _query = value),
+              if (selectedDate == null) ...[
+                const SizedBox(height: 16),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: _SearchField(
+                    controller: _searchController,
+                    borderColor: _borderDefault,
+                    showClear: query.isNotEmpty,
+                    onChanged: (value) => setState(() => _query = value),
+                    onClear: _clearSearch,
+                  ),
                 ),
-              ),
+              ],
+              if (_hasActiveFilter) ...[
+                SizedBox(height: selectedDate == null ? 20 : 16),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: _ActiveFilterChip(
+                      label: selectedDate == null
+                          ? timeRange!.label
+                          : formatShortMonthDayYear(selectedDate),
+                      onClear: _clearActiveFilter,
+                    ),
+                  ),
+                ),
+              ],
               const SizedBox(height: 20),
               Expanded(
                 child: pastAsync.isLoading && pastEntries.isEmpty
@@ -239,17 +272,11 @@ class _JournalAllEntriesScreenState
                         ),
                       )
                     : filtered.isEmpty
-                    ? Center(
-                        child: Text(
-                          _query.trim().isEmpty && !_hasActiveFilter
-                              ? 'No past entries yet'
-                              : 'No matching entries',
-                          style: GoogleFonts.dmSans(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                            color: RituColors.textSecondary,
-                          ),
-                        ),
+                    ? _EmptyEntries(
+                        selectedDate: selectedDate,
+                        timeRange: timeRange,
+                        query: query,
+                        onClearFilter: () => setState(() => _timeRange = null),
                       )
                     : ListView.builder(
                         padding: EdgeInsets.fromLTRB(
@@ -269,6 +296,9 @@ class _JournalAllEntriesScreenState
                               group: group,
                               selecting: _selecting,
                               selectedIds: _selectedIds,
+                              highlightQuery: highlight,
+                              showHeading: selectedDate == null,
+                              compact: _hasActiveFilter,
                               onToggle: _toggleSelected,
                             ),
                           );
@@ -451,25 +481,29 @@ class _SearchField extends StatelessWidget {
   const _SearchField({
     required this.controller,
     required this.borderColor,
+    required this.showClear,
     required this.onChanged,
+    required this.onClear,
   });
 
   final TextEditingController controller;
   final Color borderColor;
+  final bool showClear;
   final ValueChanged<String> onChanged;
+  final VoidCallback onClear;
 
   @override
   Widget build(BuildContext context) {
     final textStyle = GoogleFonts.dmSans(
-      fontSize: 11,
+      fontSize: 13,
       fontWeight: FontWeight.w500,
-      height: 18 / 11,
+      height: 20 / 13,
       color: RituColors.textPrimary,
     );
     final hintStyle = GoogleFonts.dmSans(
-      fontSize: 11,
+      fontSize: 13,
       fontWeight: FontWeight.w500,
-      height: 18 / 11,
+      height: 20 / 13,
       color: RituColors.textTertiary,
     );
 
@@ -527,6 +561,62 @@ class _SearchField extends StatelessWidget {
               ),
             ),
           ),
+          if (showClear) ...[
+            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: onClear,
+              behavior: HitTestBehavior.opaque,
+              child: const Icon(
+                LucideIcons.x,
+                size: 16,
+                color: RituColors.textPrimary,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _ActiveFilterChip extends StatelessWidget {
+  const _ActiveFilterChip({required this.label, required this.onClear});
+
+  final String label;
+  final VoidCallback onClear;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 34,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: RituColors.fillSecondary,
+        borderRadius: BorderRadius.circular(9999),
+        border: Border.all(color: RituColors.sage600),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: GoogleFonts.dmSans(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              height: 20 / 13,
+              color: RituColors.textPrimary,
+            ),
+          ),
+          const SizedBox(width: 8),
+          GestureDetector(
+            onTap: onClear,
+            behavior: HitTestBehavior.opaque,
+            child: const Icon(
+              LucideIcons.x,
+              size: 16,
+              color: RituColors.textPrimary,
+            ),
+          ),
         ],
       ),
     );
@@ -538,54 +628,63 @@ class _MonthSection extends StatelessWidget {
     required this.group,
     required this.selecting,
     required this.selectedIds,
+    required this.highlightQuery,
+    required this.showHeading,
+    required this.compact,
     required this.onToggle,
   });
 
   final _MonthGroup group;
   final bool selecting;
   final Set<int> selectedIds;
+  final String highlightQuery;
+  final bool showHeading;
+  final bool compact;
   final ValueChanged<int> onToggle;
 
   @override
   Widget build(BuildContext context) {
     final count = group.entries.length;
     final countLabel = count == 1 ? '1 entry' : '$count entries';
-    final entryGap = selecting ? 8.0 : 16.0;
+    final entryGap = selecting || compact ? 8.0 : 16.0;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                formatMonthYear(group.month),
-                style: GoogleFonts.dmSans(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  height: 24 / 15,
-                  color: RituColors.textPrimary,
+        if (showHeading) ...[
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  formatMonthYear(group.month),
+                  style: GoogleFonts.dmSans(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    height: 24 / 15,
+                    color: RituColors.textPrimary,
+                  ),
                 ),
               ),
-            ),
-            Text(
-              countLabel,
-              style: GoogleFonts.dmSans(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                height: 20 / 13,
-                color: RituColors.textTertiary,
+              Text(
+                countLabel,
+                style: GoogleFonts.dmSans(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  height: 20 / 13,
+                  color: RituColors.textTertiary,
+                ),
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
+            ],
+          ),
+          const SizedBox(height: 16),
+        ],
         for (var i = 0; i < group.entries.length; i++) ...[
           if (i > 0) SizedBox(height: entryGap),
           _SelectableEntryRow(
             entry: group.entries[i],
             selecting: selecting,
             selected: selectedIds.contains(group.entries[i].id),
+            highlightQuery: highlightQuery,
             onToggle: () => onToggle(group.entries[i].id),
           ),
         ],
@@ -600,17 +699,23 @@ class _SelectableEntryRow extends StatelessWidget {
     required this.entry,
     required this.selecting,
     required this.selected,
+    required this.highlightQuery,
     required this.onToggle,
   });
 
   final JournalEntry entry;
   final bool selecting;
   final bool selected;
+  final String highlightQuery;
   final VoidCallback onToggle;
 
   @override
   Widget build(BuildContext context) {
-    final card = JournalEntryCard(entry: entry, showMenu: !selecting);
+    final card = JournalEntryCard(
+      entry: entry,
+      showMenu: !selecting,
+      highlightQuery: highlightQuery,
+    );
 
     if (!selecting) return card;
 
@@ -728,6 +833,142 @@ class _SelectionActionBar extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _EmptyEntries extends StatelessWidget {
+  const _EmptyEntries({
+    required this.selectedDate,
+    required this.timeRange,
+    required this.query,
+    required this.onClearFilter,
+  });
+
+  final DateTime? selectedDate;
+  final JournalTimeRange? timeRange;
+  final String query;
+  final VoidCallback onClearFilter;
+
+  @override
+  Widget build(BuildContext context) {
+    final date = selectedDate;
+    if (date != null) {
+      return _FilterEmptyMessage(
+        icon: LucideIcons.calendarX,
+        title: TextSpan(
+          children: [
+            const TextSpan(text: 'No entry on\n'),
+            TextSpan(
+              text: formatJournalEntryDate(date).replaceAll(' • ', ', '),
+              style: const TextStyle(color: RituColors.gradientGh2),
+            ),
+          ],
+        ),
+        subtitle: 'Pick another date, or clear to see your full history',
+      );
+    }
+
+    if (timeRange != null && query.isNotEmpty) {
+      return _FilterEmptyMessage(
+        icon: LucideIcons.searchAlert,
+        title: TextSpan(
+          children: [
+            const TextSpan(text: 'No entries matching '),
+            TextSpan(
+              text: '"$query"',
+              style: const TextStyle(color: RituColors.gradientGh2),
+            ),
+            const TextSpan(text: '\nin '),
+            TextSpan(
+              text: timeRange!.label,
+              style: const TextStyle(color: RituColors.gradientGh2),
+            ),
+          ],
+        ),
+        subtitle:
+            'Try a different search term, or widen the time range to see more entries',
+        action: OutlinedButton(
+          onPressed: onClearFilter,
+          style: OutlinedButton.styleFrom(
+            backgroundColor: RituColors.fillElevated,
+            foregroundColor: RituColors.sage600,
+            side: const BorderSide(color: RituColors.sage500),
+            minimumSize: const Size(double.infinity, 48),
+            shape: const StadiumBorder(),
+            textStyle: GoogleFonts.dmSans(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              height: 24 / 15,
+            ),
+          ),
+          child: const Text('Clear filter'),
+        ),
+      );
+    }
+
+    return Center(
+      child: Text(
+        query.isEmpty && timeRange == null
+            ? 'No past entries yet'
+            : 'No matching entries',
+        style: GoogleFonts.dmSans(
+          fontSize: 13,
+          fontWeight: FontWeight.w500,
+          color: RituColors.textSecondary,
+        ),
+      ),
+    );
+  }
+}
+
+class _FilterEmptyMessage extends StatelessWidget {
+  const _FilterEmptyMessage({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    this.action,
+  });
+
+  final IconData icon;
+  final TextSpan title;
+  final String subtitle;
+  final Widget? action;
+
+  @override
+  Widget build(BuildContext context) {
+    final titleStyle = GoogleFonts.dmSans(
+      fontSize: 18,
+      fontWeight: FontWeight.w600,
+      height: 24 / 18,
+      color: RituColors.textPrimary,
+    );
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 32, color: RituColors.gradientGh2),
+          const SizedBox(height: 16),
+          Text.rich(
+            TextSpan(style: titleStyle, children: title.children),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            subtitle,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.dmSans(
+              fontSize: 13,
+              fontWeight: FontWeight.w400,
+              height: 20 / 13,
+              color: RituColors.textSecondary,
+            ),
+          ),
+          if (action != null) ...[const SizedBox(height: 24), action!],
+        ],
       ),
     );
   }
