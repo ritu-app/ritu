@@ -121,7 +121,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('4-5 days'));
     await tester.pump();
-    await tester.tap(find.text('This look right'));
+    await tester.tap(find.text('This looks right'));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Skip – I’ll build from today'));
@@ -195,7 +195,7 @@ void main() {
     await tester.scrollUntilVisible(find.text('4-5 days'), 120);
     await tester.tap(find.text('4-5 days'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('This look right'));
+    await tester.tap(find.text('This looks right'));
     await tester.pumpAndSettle();
 
     final periods = DriftPeriodRepository(database);
@@ -544,6 +544,118 @@ void main() {
     expect(all.last.source, PeriodSources.manual);
     expect(all.where((p) => p.isManual), hasLength(1));
     expect(all.where((p) => !p.isManual), hasLength(1));
+  });
+
+  rituTestWidgets('the only period cannot be deleted', (tester) async {
+    final profiles = DriftProfileRepository(database);
+    final periods = DriftPeriodRepository(database);
+    await profiles.upsertDisplayName('Maya');
+    await profiles.markOnboardingCompleted();
+
+    final today = dateOnly(DateTime.now());
+    final start = today.subtract(const Duration(days: 3));
+    await periods.upsertPeriod(
+      startedOn: start,
+      endedOn: start.add(const Duration(days: 4)),
+      source: PeriodSources.onboardingLast,
+    );
+
+    await tester.pumpWidget(createRituApp(database: database));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(LucideIcons.settings));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Period History'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Current period'));
+    await tester.pumpAndSettle();
+
+    final delete = find.text('Delete this period');
+    await tester.scrollUntilVisible(delete, 120);
+    expect(delete, findsOneWidget);
+    expect(
+      find.text(
+        'You need at least one period date - add a new one before removing this.',
+      ),
+      findsOneWidget,
+    );
+    expect(
+      tester
+          .widget<TextButton>(
+            find.widgetWithText(TextButton, 'Delete this period'),
+          )
+          .onPressed,
+      isNull,
+    );
+    expect(await periods.getAll(), hasLength(1));
+  });
+
+  rituTestWidgets('deleting a period can be undone from history', (
+    tester,
+  ) async {
+    final profiles = DriftProfileRepository(database);
+    final periods = DriftPeriodRepository(database);
+    await profiles.upsertDisplayName('Maya');
+    await profiles.markOnboardingCompleted();
+
+    final today = dateOnly(DateTime.now());
+    final latestStart = today.subtract(const Duration(days: 3));
+    final olderStart = today.subtract(const Duration(days: 40));
+    await periods.upsertPeriod(
+      startedOn: latestStart,
+      endedOn: latestStart.add(const Duration(days: 4)),
+      source: PeriodSources.onboardingLast,
+    );
+    await periods.upsertPeriod(
+      startedOn: olderStart,
+      endedOn: olderStart.add(const Duration(days: 4)),
+      source: PeriodSources.onboardingPast,
+    );
+
+    await tester.pumpWidget(createRituApp(database: database));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(LucideIcons.settings));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Period History'));
+    await tester.pumpAndSettle();
+
+    final olderLabel = formatShortMonthDay(olderStart);
+    expect(find.text(olderLabel), findsOneWidget);
+    await tester.tap(find.text('Oldest entry on record'));
+    await tester.pumpAndSettle();
+
+    final delete = find.text('Delete this period');
+    await tester.scrollUntilVisible(delete, 120);
+    expect(
+      find.text(
+        'You need at least one period date - add a new one before removing this.',
+      ),
+      findsNothing,
+    );
+    await tester.tap(delete);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Period removed'), findsOneWidget);
+    expect(find.text('Undo'), findsOneWidget);
+    expect(find.text(olderLabel), findsNothing);
+    expect(await periods.getAll(), hasLength(1));
+
+    await tester.tap(find.text('Undo'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Period removed'), findsNothing);
+    expect(find.text(olderLabel), findsOneWidget);
+    expect(find.text('Oldest entry on record'), findsOneWidget);
+    final restored = await periods.getAll();
+    expect(
+      restored.map((log) => dateOnly(log.startedOn)),
+      contains(olderStart),
+    );
+    expect(
+      restored
+          .firstWhere((log) => dateOnly(log.startedOn) == olderStart)
+          .source,
+      PeriodSources.onboardingPast,
+    );
   });
 
   rituTestWidgets('Export Data opens the export and import choices', (

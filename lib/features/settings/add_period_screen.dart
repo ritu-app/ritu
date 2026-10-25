@@ -66,13 +66,14 @@ class _AddPeriodScreenState extends ConsumerState<AddPeriodScreen> {
     }
 
     _endConfidence = EndConfidenceChoice.rough;
-    _roughDurationBucket = log.roughDurationBucket ??
+    _roughDurationBucket =
+        log.roughDurationBucket ??
         (log.endedOn == null
             ? null
             : RoughDurationBuckets.fromInclusiveDayCount(
-                dateOnly(log.endedOn!)
-                        .difference(dateOnly(log.startedOn))
-                        .inDays +
+                dateOnly(
+                      log.endedOn!,
+                    ).difference(dateOnly(log.startedOn)).inDays +
                     1,
               ));
   }
@@ -110,14 +111,11 @@ class _AddPeriodScreenState extends ConsumerState<AddPeriodScreen> {
       }
 
       final latest = await repo.getLatest();
-      if (latest != null &&
-          !startOnly.isBefore(dateOnly(latest.startedOn))) {
+      if (latest != null && !startOnly.isBefore(dateOnly(latest.startedOn))) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text(
-              'Pick a date before your most recent period start',
-            ),
+            content: Text('Pick a date before your most recent period start'),
           ),
         );
         return;
@@ -157,33 +155,8 @@ class _AddPeriodScreenState extends ConsumerState<AddPeriodScreen> {
     final editing = widget.editing;
     if (editing == null || _saving) return;
 
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          'Delete this period?',
-          style: GoogleFonts.dmSans(fontWeight: FontWeight.w600),
-        ),
-        content: Text(
-          'This removes ${formatMonthDay(editing.startedOn)} from your history.',
-          style: GoogleFonts.dmSans(),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text(
-              'Delete',
-              style: GoogleFonts.dmSans(color: RituColors.iconCritical),
-            ),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true || !mounted) return;
+    final periods = ref.read(allPeriodsProvider).valueOrNull;
+    if (periods == null || periods.length <= 1) return;
 
     setState(() => _saving = true);
     try {
@@ -191,7 +164,7 @@ class _AddPeriodScreenState extends ConsumerState<AddPeriodScreen> {
           .read(periodRepositoryProvider)
           .deleteByStartedOn(editing.startedOn);
       if (!mounted) return;
-      Navigator.of(context).pop(editing.startedOn);
+      Navigator.of(context).pop(editing);
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -201,14 +174,11 @@ class _AddPeriodScreenState extends ConsumerState<AddPeriodScreen> {
   Widget build(BuildContext context) {
     final periods = ref.watch(allPeriodsProvider).valueOrNull ?? const [];
     final editing = widget.editing;
-    final editingStart =
-        editing == null ? null : dateOnly(editing.startedOn);
+    final editingStart = editing == null ? null : dateOnly(editing.startedOn);
 
     final editingIndex = editingStart == null
         ? -1
-        : periods.indexWhere(
-            (p) => dateOnly(p.startedOn) == editingStart,
-          );
+        : periods.indexWhere((p) => dateOnly(p.startedOn) == editingStart);
 
     final DateTime? minSelectable;
     final DateTime maxSelectable;
@@ -221,8 +191,9 @@ class _AddPeriodScreenState extends ConsumerState<AddPeriodScreen> {
       if (editingIndex == 0) {
         maxSelectable = dateOnly(DateTime.now());
       } else {
-        maxSelectable = dateOnly(periods[editingIndex - 1].startedOn)
-            .subtract(const Duration(days: 1));
+        maxSelectable = dateOnly(
+          periods[editingIndex - 1].startedOn,
+        ).subtract(const Duration(days: 1));
       }
     } else {
       minSelectable = null;
@@ -244,14 +215,17 @@ class _AddPeriodScreenState extends ConsumerState<AddPeriodScreen> {
           ...log.bleedDays,
     };
 
-    final selectedStart =
-        _selectedStart == null ? null : dateOnly(_selectedStart!);
-    final startValid = selectedStart != null &&
+    final selectedStart = _selectedStart == null
+        ? null
+        : dateOnly(_selectedStart!);
+    final startValid =
+        selectedStart != null &&
         !blockedStarts.contains(selectedStart) &&
         !selectedStart.isAfter(maxSelectable) &&
         (minSelectable == null || !selectedStart.isBefore(minSelectable));
 
-    final canSave = !_saving &&
+    final canSave =
+        !_saving &&
         periodEpisodeFormIsComplete(
           startDate: selectedStart,
           ongoingStatus: _ongoingStatus,
@@ -370,8 +344,9 @@ class _AddPeriodScreenState extends ConsumerState<AddPeriodScreen> {
                       onPressed: canSave ? _save : null,
                       style: FilledButton.styleFrom(
                         backgroundColor: RituColors.sage500,
-                        disabledBackgroundColor:
-                            RituColors.sage500.withValues(alpha: 0.4),
+                        disabledBackgroundColor: RituColors.sage500.withValues(
+                          alpha: 0.4,
+                        ),
                         foregroundColor: RituColors.white,
                         disabledForegroundColor: RituColors.white,
                         elevation: 0,
@@ -386,8 +361,8 @@ class _AddPeriodScreenState extends ConsumerState<AddPeriodScreen> {
                         _saving
                             ? 'Saving…'
                             : _isEditing
-                                ? 'Save changes'
-                                : 'Save period',
+                            ? 'Save changes'
+                            : 'Save period',
                       ),
                     ),
                   ),
@@ -396,39 +371,75 @@ class _AddPeriodScreenState extends ConsumerState<AddPeriodScreen> {
                     SizedBox(
                       width: double.infinity,
                       height: 48,
-                      child: TextButton(
-                        onPressed: _saving ? null : _delete,
-                        style: TextButton.styleFrom(
-                          foregroundColor: RituColors.iconCritical,
-                          shape: const StadiumBorder(),
-                          textStyle: GoogleFonts.dmSans(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            height: 24 / 15,
+                      child: AbsorbPointer(
+                        absorbing: _saving || periods.length <= 1,
+                        child: TextButton(
+                          onPressed: _saving || periods.length <= 1
+                              ? null
+                              : _delete,
+                          style: TextButton.styleFrom(
+                            foregroundColor: RituColors.textCritical,
+                            disabledForegroundColor: RituColors.textCritical
+                                .withValues(alpha: 0.4),
+                            shape: const StadiumBorder(),
+                            textStyle: GoogleFonts.dmSans(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              height: 24 / 15,
+                            ),
                           ),
+                          child: const Text('Delete this period'),
                         ),
-                        child: const Text('Delete period'),
+                      ),
+                    ),
+                    if (periods.length <= 1) ...[
+                      const SizedBox(height: 16),
+                      const _LastPeriodNotice(),
+                    ],
+                  ],
+                  if (!_isEditing) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      'For a period you didn’t log in real time – not a '
+                      'replacement for your daily check-in',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.dmSans(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        height: 18 / 11,
+                        color: RituColors.textTertiary,
                       ),
                     ),
                   ],
-                  const SizedBox(height: 12),
-                  Text(
-                    _isEditing
-                        ? 'Changes update your cycle history on this device only'
-                        : 'For a period you didn’t log in real time – not a '
-                            'replacement for your daily check-in',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.dmSans(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w500,
-                      height: 18 / 11,
-                      color: RituColors.textTertiary,
-                    ),
-                  ),
                 ],
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _LastPeriodNotice extends StatelessWidget {
+  const _LastPeriodNotice();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: RituColors.fillAttention,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Text(
+        'You need at least one period date - add a new one before removing this.',
+        style: GoogleFonts.dmSans(
+          fontSize: 13,
+          fontWeight: FontWeight.w500,
+          height: 20 / 13,
+          color: RituColors.gradientGh2,
         ),
       ),
     );

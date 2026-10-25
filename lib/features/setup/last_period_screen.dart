@@ -165,7 +165,7 @@ class _LastPeriodScreenState extends State<LastPeriodScreen> {
                       ),
                       const SizedBox(height: 24),
                       SetupFooter(
-                        primaryLabel: 'This look right',
+                        primaryLabel: 'This looks right',
                         primaryEnabled: canSave,
                         onPrimary: () {
                           final start = selected;

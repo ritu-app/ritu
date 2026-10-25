@@ -7,37 +7,64 @@ import '../../core/date_format.dart';
 import '../../data/models/period_log.dart';
 import '../../providers/cycle_snapshot_provider.dart';
 import '../../providers/period_providers.dart';
+import '../../providers/repository_providers.dart';
 import '../../theme/ritu_colors.dart';
 import 'add_period_screen.dart';
 
 /// Figma 1132:5946 / 1132:6069 — Settings → Period History.
-class PeriodHistoryScreen extends ConsumerWidget {
+class PeriodHistoryScreen extends ConsumerStatefulWidget {
   const PeriodHistoryScreen({super.key});
 
-  void _pop(BuildContext context, WidgetRef ref) {
+  @override
+  ConsumerState<PeriodHistoryScreen> createState() =>
+      _PeriodHistoryScreenState();
+}
+
+class _PeriodHistoryScreenState extends ConsumerState<PeriodHistoryScreen> {
+  PeriodLog? _removedPeriod;
+
+  void _pop() {
     final periods = ref.read(allPeriodsProvider).valueOrNull ?? const [];
     final pastCount = periods.length <= 1 ? 0 : periods.length - 1;
     Navigator.of(context).pop(pastCount);
   }
 
-  Future<void> _openAddPeriod(BuildContext context) async {
+  Future<void> _openAddPeriod() async {
     await Navigator.of(context).push<DateTime>(
-      MaterialPageRoute<DateTime>(
-        builder: (_) => const AddPeriodScreen(),
-      ),
+      MaterialPageRoute<DateTime>(builder: (_) => const AddPeriodScreen()),
     );
   }
 
-  Future<void> _openPeriod(BuildContext context, PeriodLog log) async {
-    await Navigator.of(context).push<DateTime>(
-      MaterialPageRoute<DateTime>(
-        builder: (_) => AddPeriodScreen(editing: log),
-      ),
+  Future<void> _openPeriod(PeriodLog log) async {
+    final result = await Navigator.of(context).push<Object?>(
+      MaterialPageRoute<Object?>(builder: (_) => AddPeriodScreen(editing: log)),
     );
+    if (!mounted || result is! PeriodLog) return;
+    setState(() => _removedPeriod = result);
+  }
+
+  Future<void> _undoRemoval() async {
+    final log = _removedPeriod;
+    if (log == null) return;
+    await ref
+        .read(periodRepositoryProvider)
+        .upsertPeriod(
+          startedOn: log.startedOn,
+          endedOn: log.endedOn,
+          source: log.source,
+          startSource: log.startSource,
+          startConfidence: log.startConfidence,
+          endStatus: log.endStatus,
+          endSource: log.endSource,
+          endConfidence: log.endConfidence,
+          roughDurationBucket: log.roughDurationBucket,
+        );
+    if (!mounted) return;
+    setState(() => _removedPeriod = null);
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final periodsAsync = ref.watch(allPeriodsProvider);
     final snapshotAsync = ref.watch(cycleSnapshotProvider);
 
@@ -45,110 +72,173 @@ class PeriodHistoryScreen extends ConsumerWidget {
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
-        _pop(context, ref);
+        _pop();
       },
       child: Scaffold(
         backgroundColor: RituColors.backgroundPage,
         body: SafeArea(
-          child: Column(
+          child: Stack(
             children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                child: Row(
-                  children: [
-                    GestureDetector(
-                      onTap: () => _pop(context, ref),
-                      behavior: HitTestBehavior.opaque,
-                      child: const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: Icon(
-                          LucideIcons.chevronLeft,
-                          size: 24,
-                          color: RituColors.textPrimary,
+              Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                    child: Row(
+                      children: [
+                        GestureDetector(
+                          onTap: _pop,
+                          behavior: HitTestBehavior.opaque,
+                          child: const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: Icon(
+                              LucideIcons.chevronLeft,
+                              size: 24,
+                              color: RituColors.textPrimary,
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Text(
-                        'Period history',
-                        style: GoogleFonts.dmSerifDisplay(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w400,
-                          height: 25 / 18,
-                          color: RituColors.textPrimary,
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Text(
+                            'Period history',
+                            style: GoogleFonts.dmSerifDisplay(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w400,
+                              height: 25 / 18,
+                              color: RituColors.textPrimary,
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () => _openAddPeriod(context),
-                      behavior: HitTestBehavior.opaque,
-                      child: const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: Icon(
-                          LucideIcons.circlePlus,
-                          size: 24,
-                          color: RituColors.sage600,
+                        GestureDetector(
+                          onTap: _openAddPeriod,
+                          behavior: HitTestBehavior.opaque,
+                          child: const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: Icon(
+                              LucideIcons.circlePlus,
+                              size: 24,
+                              color: RituColors.sage600,
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: periodsAsync.when(
-                  loading: () => const Center(
-                    child: CircularProgressIndicator(
-                      color: RituColors.sage500,
+                      ],
                     ),
                   ),
-                  error: (error, _) => Center(child: Text('$error')),
-                  data: (periods) {
-                    final loggedCount =
-                        periods.where((p) => !p.isManual).length;
-                    final mean = snapshotAsync.valueOrNull?.mean;
-                    final mostRecent = periods.isEmpty
-                        ? null
-                        : dateOnly(periods.first.startedOn);
-
-                    return ListView(
-                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-                      children: [
-                        _StatsBanner(
-                          loggedCount: loggedCount,
-                          avgCycleDays: mean,
-                          mostRecent: mostRecent,
+                  Expanded(
+                    child: periodsAsync.when(
+                      loading: () => const Center(
+                        child: CircularProgressIndicator(
+                          color: RituColors.sage500,
                         ),
-                        const SizedBox(height: 20),
-                        if (periods.isEmpty)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 24),
-                            child: Text(
-                              'No periods yet. Tap + to add one you didn’t '
-                              'log in real time.',
-                              textAlign: TextAlign.center,
-                              style: GoogleFonts.dmSans(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w400,
-                                height: 20 / 13,
-                                color: RituColors.textSecondary,
-                              ),
-                            ),
-                          )
-                        else
-                          _PeriodListCard(
-                            periods: periods,
-                            onTapPeriod: (log) => _openPeriod(context, log),
+                      ),
+                      error: (error, _) => Center(child: Text('$error')),
+                      data: (periods) {
+                        final loggedCount = periods
+                            .where((p) => !p.isManual)
+                            .length;
+                        final mean = snapshotAsync.valueOrNull?.mean;
+                        final mostRecent = periods.isEmpty
+                            ? null
+                            : dateOnly(periods.first.startedOn);
+
+                        return ListView(
+                          padding: EdgeInsets.fromLTRB(
+                            16,
+                            16,
+                            16,
+                            _removedPeriod == null ? 32 : 96,
                           ),
-                      ],
-                    );
-                  },
-                ),
+                          children: [
+                            _StatsBanner(
+                              loggedCount: loggedCount,
+                              avgCycleDays: mean,
+                              mostRecent: mostRecent,
+                            ),
+                            const SizedBox(height: 20),
+                            if (periods.isEmpty)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 24),
+                                child: Text(
+                                  'No periods yet. Tap + to add one you didn’t '
+                                  'log in real time.',
+                                  textAlign: TextAlign.center,
+                                  style: GoogleFonts.dmSans(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w400,
+                                    height: 20 / 13,
+                                    color: RituColors.textSecondary,
+                                  ),
+                                ),
+                              )
+                            else
+                              _PeriodListCard(
+                                periods: periods,
+                                onTapPeriod: _openPeriod,
+                              ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
+              if (_removedPeriod != null)
+                Positioned(
+                  left: 16,
+                  right: 16,
+                  bottom: 16,
+                  child: _PeriodRemovedBanner(onUndo: _undoRemoval),
+                ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PeriodRemovedBanner extends StatelessWidget {
+  const _PeriodRemovedBanner({required this.onUndo});
+
+  final VoidCallback onUndo;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: const Color(0xFFCFEFD5),
+      borderRadius: BorderRadius.circular(16),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                'Period removed',
+                style: GoogleFonts.dmSans(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w400,
+                  height: 20 / 13,
+                  color: RituColors.textPrimary,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: onUndo,
+              behavior: HitTestBehavior.opaque,
+              child: Text(
+                'Undo',
+                style: GoogleFonts.dmSans(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  height: 20 / 13,
+                  color: RituColors.sage600,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -192,17 +282,11 @@ class _StatsBanner extends StatelessWidget {
           ),
           Container(width: 0.5, height: 60, color: RituColors.divider),
           Expanded(
-            child: _StatCell(
-              value: avgLabel,
-              label: 'avg cycle (days)',
-            ),
+            child: _StatCell(value: avgLabel, label: 'avg cycle (days)'),
           ),
           Container(width: 0.5, height: 60, color: RituColors.divider),
           Expanded(
-            child: _StatCell(
-              value: recentLabel,
-              label: 'most recent',
-            ),
+            child: _StatCell(value: recentLabel, label: 'most recent'),
           ),
         ],
       ),
@@ -251,10 +335,7 @@ class _StatCell extends StatelessWidget {
 }
 
 class _PeriodListCard extends StatelessWidget {
-  const _PeriodListCard({
-    required this.periods,
-    required this.onTapPeriod,
-  });
+  const _PeriodListCard({required this.periods, required this.onTapPeriod});
 
   final List<PeriodLog> periods;
   final ValueChanged<PeriodLog> onTapPeriod;
