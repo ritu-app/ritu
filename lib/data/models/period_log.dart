@@ -51,6 +51,9 @@ class PeriodEndSources {
   static const onboardingEstimate = 'onboarding_estimate';
   static const settings = 'settings';
   static const day10Cap = 'day_10_cap';
+
+  /// Inclusive end estimated from typical period length when flow starts a period.
+  static const assumedDuration = 'assumed_duration';
 }
 
 /// Confidence in the recorded end date.

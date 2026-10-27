@@ -14,6 +14,7 @@ import '../../providers/daily_log_providers.dart';
 import '../../providers/home_greeting_provider.dart';
 import '../../providers/period_providers.dart';
 import '../../providers/profile_providers.dart';
+import '../../providers/simulated_today_provider.dart';
 import 'home_greeting_header.dart';
 import '../../services/daily_log_notification_navigation.dart';
 import '../../theme/ritu_palette.dart';
@@ -80,9 +81,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (_logFlowOpen || !mounted) return;
     _logFlowOpen = true;
     try {
-      await Navigator.of(
-        context,
-      ).push<bool>(MaterialPageRoute<bool>(builder: (_) => DailyLogFlow()));
+      await Navigator.of(context).push<bool>(
+        MaterialPageRoute<bool>(
+          builder: (_) => DailyLogFlow(date: ref.read(simulatedTodayProvider)),
+        ),
+      );
     } finally {
       _logFlowOpen = false;
     }

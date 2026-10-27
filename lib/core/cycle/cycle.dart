@@ -4,6 +4,7 @@
 library;
 
 export 'classification.dart';
+export 'flow_period_effect.dart';
 export 'cycle_classification.dart';
 export 'cycle_day.dart';
 export 'cycle_lengths.dart';

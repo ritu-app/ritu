@@ -6,6 +6,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../providers/daily_log_providers.dart';
 import '../../providers/journal_entry_providers.dart';
 import '../../providers/repository_providers.dart';
+import 'apply_flow_period_effect.dart';
 import '../../providers/symptom_providers.dart';
 import '../../core/date_format.dart';
 import '../../data/models/custom_symptom.dart';
@@ -299,6 +300,17 @@ class _DailyLogFlowState extends ConsumerState<DailyLogFlow> {
     });
   }
 
+  Future<void> _syncPeriodFromFlow() async {
+    final typical = (await ref.read(profileRepositoryProvider).getProfile())
+        ?.typicalPeriodDays;
+    await applyFlowPeriodEffect(
+      periods: ref.read(periodRepositoryProvider),
+      loggedOn: widget.date,
+      flowIntensity: _flowIntensity,
+      typicalPeriodDays: typical,
+    );
+  }
+
   Future<void> _save() async {
     if (_saving) return;
     setState(() => _saving = true);
@@ -313,6 +325,7 @@ class _DailyLogFlowState extends ConsumerState<DailyLogFlow> {
 
     if (hasStructured) {
       await _persistStructured();
+      await _syncPeriodFromFlow();
     }
     if (notes.isNotEmpty) {
       await ref

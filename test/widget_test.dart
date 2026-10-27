@@ -315,6 +315,55 @@ void main() {
     );
   });
 
+  rituTestWidgets(
+    'logging flow while not menstruating starts menstrual day 1',
+    (tester) async {
+      await seedRegularHistory();
+
+      await tester.pumpWidget(
+        createRituApp(
+          database: database,
+          simulatedToday: DateTime(2026, 4, 20),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Luteal phase'), findsOneWidget);
+
+      await tester.scrollUntilVisible(
+        find.text('Log today'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.tap(find.text('Log today'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Medium'));
+      await tester.pump();
+      await tester.tap(find.widgetWithText(FilledButton, 'Next'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Next'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Next'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Save log'));
+      await tester.pumpAndSettle();
+
+      final scrollable = tester.state<ScrollableState>(
+        find.byType(Scrollable).first,
+      );
+      scrollable.position.jumpTo(0);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Menstrual phase'), findsOneWidget);
+      expect(find.text('days into your period'), findsOneWidget);
+
+      final latest = await DriftPeriodRepository(database).getLatest();
+      expect(dateOnly(latest!.startedOn), DateTime(2026, 4, 20));
+      expect(latest.startSource, PeriodStartSources.dailyLog);
+      expect(latest.startConfidence, PeriodStartConfidence.logged);
+    },
+  );
+
   Future<void> seedVariableHistory() async {
     final profiles = DriftProfileRepository(database);
     final periods = DriftPeriodRepository(database);
