@@ -14,8 +14,9 @@ final allPeriodsProvider = StreamProvider<List<PeriodLog>>((ref) {
 });
 
 final bleedDaysProvider = Provider<AsyncValue<Set<DateTime>>>((ref) {
+  final today = ref.watch(simulatedTodayProvider);
   return ref.watch(allPeriodsProvider).whenData((periods) {
-    return {for (final log in periods) ...log.bleedDays};
+    return {for (final log in periods) ...log.bleedDaysThrough(today)};
   });
 });
 
@@ -30,13 +31,12 @@ final daysSinceLastPeriodProvider = Provider<AsyncValue<int?>>((ref) {
 final pastPeriodStartsProvider = Provider<AsyncValue<List<DateTime>>>((ref) {
   return ref.watch(allPeriodsProvider).whenData((periods) {
     if (periods.length <= 1) return const [];
-    return periods
-        .skip(1)
-        .map((log) => dateOnly(log.startedOn))
-        .toList();
+    return periods.skip(1).map((log) => dateOnly(log.startedOn)).toList();
   });
 });
 
 final showSpeedUpBannerProvider = Provider<AsyncValue<bool>>((ref) {
-  return ref.watch(allPeriodsProvider).whenData((periods) => periods.length < 2);
+  return ref
+      .watch(allPeriodsProvider)
+      .whenData((periods) => periods.length < 2);
 });

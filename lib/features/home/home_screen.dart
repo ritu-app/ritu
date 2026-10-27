@@ -428,10 +428,15 @@ class _StatusCard extends StatelessWidget {
       );
     }
 
+    // Menstrual is logged from the period itself, so a new user sees it on
+    // day 1 even before classification. Later phases still wait for Regular
+    // or Variable. Unpredictable keeps its own card.
     final showPhaseCard =
         hasPeriod &&
+        classification != CycleClassification.unpredictable &&
         (classification == CycleClassification.regular ||
-            classification == CycleClassification.variable);
+            classification == CycleClassification.variable ||
+            todayPhase == CyclePhase.menstrual);
     if (showPhaseCard) {
       return _PhaseStatusCard(
         cycleDay: cycleDay!,
@@ -660,8 +665,9 @@ class _LongCycleStatusCard extends StatelessWidget {
   }
 }
 
-/// Regular / Variable classification hero — phase-colored gradient, badge,
-/// next period (exact date or estimated range).
+/// Phase hero. Regular and Variable use it for every phase. A user who is
+/// not classified yet uses it on menstrual days, because that phase comes
+/// from the logged period rather than from a cycle average.
 class _PhaseStatusCard extends StatelessWidget {
   const _PhaseStatusCard({
     required this.cycleDay,

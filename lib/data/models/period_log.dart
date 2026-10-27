@@ -12,9 +12,7 @@ class PeriodSources {
 
   /// True when the episode used the legacy [source] column only.
   static bool isManual(String source) =>
-      source == manual ||
-      source == settings ||
-      source == onboardingPast;
+      source == manual || source == settings || source == onboardingPast;
 }
 
 /// Where a period start was recorded.
@@ -72,12 +70,12 @@ class RoughDurationBuckets {
 
   /// Typical bleed length used to derive an inclusive [endedOn].
   static int typicalDaysFor(String bucket) => switch (bucket) {
-        twoToThreeDays => 3,
-        fourToFiveDays => 5,
-        sixToSevenDays => 7,
-        eightPlusDays => 8,
-        _ => 5,
-      };
+    twoToThreeDays => 3,
+    fourToFiveDays => 5,
+    sixToSevenDays => 7,
+    eightPlusDays => 8,
+    _ => 5,
+  };
 
   /// Bucket that best matches an inclusive bleed-day count.
   static String? fromInclusiveDayCount(int days) {
@@ -126,8 +124,7 @@ class PeriodLogMetadata {
               ? PeriodEndStatus.estimated
               : PeriodEndStatus.unknown,
           endSource: hasEnd ? PeriodEndSources.onboardingEstimate : null,
-          endConfidence:
-              hasEnd ? PeriodEndConfidence.estimated : null,
+          endConfidence: hasEnd ? PeriodEndConfidence.estimated : null,
         );
       case PeriodSources.onboardingPast:
         return PeriodLogMetadata(
@@ -137,8 +134,7 @@ class PeriodLogMetadata {
               ? PeriodEndStatus.estimated
               : PeriodEndStatus.unknown,
           endSource: hasEnd ? PeriodEndSources.onboardingEstimate : null,
-          endConfidence:
-              hasEnd ? PeriodEndConfidence.estimated : null,
+          endConfidence: hasEnd ? PeriodEndConfidence.estimated : null,
         );
       case PeriodSources.manual:
         return PeriodLogMetadata(
@@ -146,8 +142,7 @@ class PeriodLogMetadata {
           startConfidence: PeriodStartConfidence.manual,
           endStatus: hasEnd ? PeriodEndStatus.rough : PeriodEndStatus.unknown,
           endSource: hasEnd ? PeriodEndSources.addPeriodRough : null,
-          endConfidence:
-              hasEnd ? PeriodEndConfidence.approximate : null,
+          endConfidence: hasEnd ? PeriodEndConfidence.approximate : null,
           roughDurationBucket: inclusiveDays == null
               ? null
               : RoughDurationBuckets.fromInclusiveDayCount(inclusiveDays),
@@ -160,18 +155,15 @@ class PeriodLogMetadata {
               ? PeriodEndStatus.estimated
               : PeriodEndStatus.unknown,
           endSource: hasEnd ? PeriodEndSources.settings : null,
-          endConfidence:
-              hasEnd ? PeriodEndConfidence.estimated : null,
+          endConfidence: hasEnd ? PeriodEndConfidence.estimated : null,
         );
       case PeriodSources.calendar:
         return PeriodLogMetadata(
           startSource: PeriodStartSources.dailyLog,
           startConfidence: PeriodStartConfidence.logged,
-          endStatus:
-              hasEnd ? PeriodEndStatus.exact : PeriodEndStatus.open,
+          endStatus: hasEnd ? PeriodEndStatus.exact : PeriodEndStatus.open,
           endSource: hasEnd ? PeriodEndSources.dailyLogNoneGap : null,
-          endConfidence:
-              hasEnd ? PeriodEndConfidence.confirmed : null,
+          endConfidence: hasEnd ? PeriodEndConfidence.confirmed : null,
         );
       default:
         return PeriodLogMetadata(
@@ -179,8 +171,7 @@ class PeriodLogMetadata {
           startConfidence: PeriodStartConfidence.manual,
           endStatus: hasEnd ? PeriodEndStatus.rough : PeriodEndStatus.unknown,
           endSource: hasEnd ? PeriodEndSources.addPeriodRough : null,
-          endConfidence:
-              hasEnd ? PeriodEndConfidence.approximate : null,
+          endConfidence: hasEnd ? PeriodEndConfidence.approximate : null,
         );
     }
   }
@@ -196,8 +187,11 @@ class PeriodLogMetadata {
     String? endConfidence,
     String? roughDurationBucket,
   }) {
-    final derived =
-        fromLegacySource(legacySource, startedOn: startedOn, endedOn: endedOn);
+    final derived = fromLegacySource(
+      legacySource,
+      startedOn: startedOn,
+      endedOn: endedOn,
+    );
     return PeriodLogMetadata(
       startSource: startSource ?? derived.startSource,
       startConfidence: startConfidence ?? derived.startConfidence,
@@ -281,16 +275,16 @@ class PeriodLog {
     String? endConfidence,
     String? roughDurationBucket,
   }) : _metadata = PeriodLogMetadata.resolve(
-          legacySource: source,
-          startedOn: startedOn,
-          endedOn: endedOn,
-          startSource: startSource,
-          startConfidence: startConfidence,
-          endStatus: endStatus,
-          endSource: endSource,
-          endConfidence: endConfidence,
-          roughDurationBucket: roughDurationBucket,
-        );
+         legacySource: source,
+         startedOn: startedOn,
+         endedOn: endedOn,
+         startSource: startSource,
+         startConfidence: startConfidence,
+         endStatus: endStatus,
+         endSource: endSource,
+         endConfidence: endConfidence,
+         roughDurationBucket: roughDurationBucket,
+       );
 
   final PeriodLogMetadata _metadata;
 
@@ -327,7 +321,11 @@ class PeriodLog {
   /// Manual vs logged classification for UI (based on [startConfidence]).
   bool get isManual => hasManualStart;
 
-  /// Inclusive bleed days for calendar highlighting.
+  /// Inclusive bleed days from the start through the stored end.
+  ///
+  /// A null end is only the start day. An assumed end can sit in the future;
+  /// the calendar uses [bleedDaysThrough] so those days appear once the date
+  /// reaches them.
   Set<DateTime> get bleedDays {
     final start = dateOnly(startedOn);
     final end = endedOn == null ? start : dateOnly(endedOn!);
@@ -340,6 +338,15 @@ class PeriodLog {
       cursor = cursor.add(const Duration(days: 1));
     }
     return days;
+  }
+
+  /// Bleed days to paint on [through]. Days after [through] stay unmarked.
+  Set<DateTime> bleedDaysThrough(DateTime through) {
+    final limit = dateOnly(through);
+    return {
+      for (final day in bleedDays)
+        if (!day.isAfter(limit)) day,
+    };
   }
 
   PeriodLog copyWith({
@@ -373,8 +380,9 @@ class PeriodLog {
       endStatus: endStatus,
       endSource: clearEndSource ? null : endSource,
       endConfidence: clearEndConfidence ? null : endConfidence,
-      roughDurationBucket:
-          clearRoughDurationBucket ? null : roughDurationBucket,
+      roughDurationBucket: clearRoughDurationBucket
+          ? null
+          : roughDurationBucket,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

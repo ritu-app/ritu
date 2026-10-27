@@ -37,6 +37,34 @@ void main() {
       expect(log.roughDurationBucket, RoughDurationBuckets.fourToFiveDays);
     });
 
+    test('calendar hides assumed bleed days that have not arrived', () {
+      final log = PeriodLog(
+        id: 1,
+        startedOn: DateTime(2026, 4, 20),
+        endedOn: DateTime(2026, 4, 24),
+        source: PeriodSources.calendar,
+        createdAt: DateTime(2026, 4, 20),
+        updatedAt: DateTime(2026, 4, 20),
+      );
+
+      expect(log.bleedDays, {
+        DateTime(2026, 4, 20),
+        DateTime(2026, 4, 21),
+        DateTime(2026, 4, 22),
+        DateTime(2026, 4, 23),
+        DateTime(2026, 4, 24),
+      });
+      expect(log.bleedDaysThrough(DateTime(2026, 4, 20)), {
+        DateTime(2026, 4, 20),
+      });
+      expect(log.bleedDaysThrough(DateTime(2026, 4, 22)), {
+        DateTime(2026, 4, 20),
+        DateTime(2026, 4, 21),
+        DateTime(2026, 4, 22),
+      });
+      expect(log.bleedDaysThrough(DateTime(2026, 4, 26)), log.bleedDays);
+    });
+
     test('open period from daily log has no end date', () {
       final log = PeriodLog(
         id: 1,
@@ -87,7 +115,9 @@ void main() {
 
     test('derives endedOn from bucket via repository helper days', () {
       expect(
-        RoughDurationBuckets.typicalDaysFor(RoughDurationBuckets.sixToSevenDays),
+        RoughDurationBuckets.typicalDaysFor(
+          RoughDurationBuckets.sixToSevenDays,
+        ),
         7,
       );
     });

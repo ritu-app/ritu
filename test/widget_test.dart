@@ -20,6 +20,7 @@ import 'package:ritu/data/repositories/drift/drift_symptom_repository.dart';
 import 'package:ritu/data/repositories/period_repository.dart';
 import 'package:ritu/features/log/daily_log_flow.dart';
 import 'package:ritu/features/setup/widgets/choice_chips.dart';
+import 'package:ritu/features/setup/widgets/ritu_calendar.dart';
 import 'package:ritu/providers/repository_providers.dart';
 import 'package:ritu/theme/ritu_colors.dart';
 
@@ -422,6 +423,70 @@ void main() {
       expect(dateOnly(latest!.startedOn), DateTime(2026, 4, 20));
       expect(latest.startSource, PeriodStartSources.dailyLog);
       expect(latest.startConfidence, PeriodStartConfidence.logged);
+
+      await tester.scrollUntilVisible(
+        find.byType(RituCalendar),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      final calendar = tester.widget<RituCalendar>(find.byType(RituCalendar));
+      expect(calendar.periodDates.contains(DateTime(2026, 4, 20)), isTrue);
+      expect(calendar.periodDates.contains(DateTime(2026, 4, 21)), isFalse);
+    },
+  );
+
+  rituTestWidgets(
+    'a new user logging flow today sees menstrual and only today in red',
+    (tester) async {
+      final today = DateTime(2026, 4, 20);
+      final profiles = DriftProfileRepository(database);
+      await profiles.upsertDisplayName('Maya');
+      await profiles.setTypicalPeriodDays(5);
+      await profiles.markOnboardingCompleted();
+
+      await tester.pumpWidget(
+        createRituApp(database: database, simulatedToday: today),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Menstrual phase'), findsNothing);
+      expect(find.text('No history yet'), findsOneWidget);
+
+      await tester.scrollUntilVisible(
+        find.text('Log today'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.tap(find.text('Log today'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Medium'));
+      await tester.pump();
+      await tester.tap(find.widgetWithText(FilledButton, 'Next'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Next'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Next'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Save log'));
+      await tester.pumpAndSettle();
+
+      final scrollable = tester.state<ScrollableState>(
+        find.byType(Scrollable).first,
+      );
+      scrollable.position.jumpTo(0);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Menstrual phase'), findsOneWidget);
+      expect(find.text('days into your period'), findsOneWidget);
+      expect(find.text('No history yet'), findsNothing);
+
+      await tester.scrollUntilVisible(
+        find.byType(RituCalendar),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      final calendar = tester.widget<RituCalendar>(find.byType(RituCalendar));
+      expect(calendar.periodDates, {today});
     },
   );
 
