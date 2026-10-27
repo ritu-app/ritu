@@ -402,6 +402,26 @@ class _StatusCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hasPeriod = cycleDay != null && lastPeriodLabel != null;
+    final usualDays = usualCycleLengthDays(
+      effectiveCycleLength: effectiveCycleLength,
+    );
+    final longerThanUsual =
+        hasPeriod &&
+        usualDays != null &&
+        isCycleLongerThanUsual(
+          classification: classification,
+          cycleDay: cycleDay!,
+          effectiveCycleLength: effectiveCycleLength,
+          sampleCycleLengths: sampleCycleLengths,
+        );
+    if (longerThanUsual) {
+      return _LongCycleStatusCard(
+        cycleDay: cycleDay!,
+        lastPeriodLabel: lastPeriodLabel!,
+        usualLabel: usualCycleLengthLabel(usualDays!),
+      );
+    }
+
     final showPhaseCard =
         hasPeriod &&
         (classification == CycleClassification.regular ||
@@ -497,6 +517,109 @@ class _StatusCard extends StatelessWidget {
               ),
               Text(
                 trailing,
+                style: GoogleFonts.dmSans(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  height: 18 / 11,
+                  color: context.ritu.textOnBrand,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Regular / Variable hero once the cycle has run past the length we can phase.
+///
+/// No phase name or illustration — the next period has not arrived, so the
+/// stage is unknown. Figma 1578:5132.
+class _LongCycleStatusCard extends StatelessWidget {
+  const _LongCycleStatusCard({
+    required this.cycleDay,
+    required this.lastPeriodLabel,
+    required this.usualLabel,
+  });
+
+  final int cycleDay;
+  final String lastPeriodLabel;
+  final String usualLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        gradient: LinearGradient(
+          begin: dark
+              ? const Alignment(-0.94, -0.34)
+              : const Alignment(-0.8, -0.6),
+          end: dark ? const Alignment(0.94, 0.34) : const Alignment(0.9, 0.7),
+          colors: [
+            context.ritu.gradientSh1,
+            context.ritu.gradientSh2,
+            context.ritu.gradientSh3,
+          ],
+          stops: dark ? const [0.0067, 0.5034, 1] : const [0.11, 0.56, 0.88],
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '$cycleDay',
+            style: GoogleFonts.dmSerifDisplay(
+              fontSize: 52,
+              fontWeight: FontWeight.w400,
+              height: 54 / 52,
+              color: context.ritu.textOnBrand,
+            ),
+          ),
+          Text(
+            'days into your cycle',
+            style: GoogleFonts.dmSans(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              height: 20 / 13,
+              color: context.ritu.textOnBrand,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'This cycle is running longer than usual',
+            style: GoogleFonts.dmSans(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              height: 24 / 15,
+              color: context.ritu.textOnBrand,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            height: 1,
+            color: context.ritu.white.withValues(alpha: 0.35),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Last period $lastPeriodLabel',
+                  style: GoogleFonts.dmSans(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    height: 18 / 11,
+                    color: context.ritu.textOnBrand,
+                  ),
+                ),
+              ),
+              Text(
+                usualLabel,
                 style: GoogleFonts.dmSans(
                   fontSize: 11,
                   fontWeight: FontWeight.w500,

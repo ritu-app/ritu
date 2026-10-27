@@ -316,6 +316,31 @@ void main() {
   });
 
   rituTestWidgets(
+    'Regular user past their usual cycle length drops the phase',
+    (tester) async {
+      await seedRegularHistory();
+
+      await tester.pumpWidget(
+        createRituApp(
+          database: database,
+          simulatedToday: DateTime(2026, 4, 29),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('days into your cycle'), findsOneWidget);
+      expect(
+        find.text('This cycle is running longer than usual'),
+        findsOneWidget,
+      );
+      expect(find.text('Last period Apr 1'), findsOneWidget);
+      expect(find.text('Usually 28 days'), findsOneWidget);
+      expect(find.text('Luteal phase'), findsNothing);
+      expect(find.textContaining('Next period'), findsNothing);
+    },
+  );
+
+  rituTestWidgets(
     'logging flow while not menstruating starts menstrual day 1',
     (tester) async {
       await seedRegularHistory();
@@ -413,6 +438,28 @@ void main() {
     final late = lastStart.add(const Duration(days: 35));
     final expectedRange = formatEstimatedShortMonthDayRange(early, late);
     expect(find.text('Next period $expectedRange'), findsOneWidget);
+  });
+
+  rituTestWidgets('Variable user past their longest cycle drops the phase', (
+    tester,
+  ) async {
+    await seedVariableHistory();
+    final latest = await DriftPeriodRepository(database).getLatest();
+    final lastStart = dateOnly(latest!.startedOn);
+    final today = lastStart.add(const Duration(days: 35)); // cycle day 36
+
+    await tester.pumpWidget(
+      createRituApp(database: database, simulatedToday: today),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('This cycle is running longer than usual'),
+      findsOneWidget,
+    );
+    expect(find.text('Usually 28 days'), findsOneWidget);
+    expect(find.textContaining('phase'), findsNothing);
+    expect(find.textContaining('Next period'), findsNothing);
   });
 
   rituTestWidgets('Delete Data clears profile and returns to splash', (

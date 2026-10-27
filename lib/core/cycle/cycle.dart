@@ -12,6 +12,7 @@ export 'cycle_phase.dart';
 export 'cycle_sample.dart';
 export 'cycle_snapshot.dart';
 export 'day_range.dart';
+export 'long_cycle.dart';
 export 'next_period.dart';
 export 'period_episode.dart';
 export 'phase_ranges.dart';
