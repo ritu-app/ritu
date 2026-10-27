@@ -164,6 +164,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   onBleed:
                       snapshot?.todayPhase == CyclePhase.menstrual &&
                       classification == CycleClassification.unpredictable,
+                  loggedDays: loggedDaysCount,
                   patternDaysLogged: loggedDaysCount.clamp(
                     0,
                     widget.patternDaysRequired,
@@ -238,6 +239,7 @@ class _HomeTab extends StatelessWidget {
     required this.todayPhase,
     required this.sampleCycleLengths,
     this.onBleed = false,
+    required this.loggedDays,
     required this.patternDaysLogged,
     required this.patternDaysRequired,
     required this.insightsReady,
@@ -266,6 +268,7 @@ class _HomeTab extends StatelessWidget {
   final CyclePhase? todayPhase;
   final List<int> sampleCycleLengths;
   final bool onBleed;
+  final int loggedDays;
   final int patternDaysLogged;
   final int patternDaysRequired;
   final bool insightsReady;
@@ -325,6 +328,7 @@ class _HomeTab extends StatelessWidget {
           todayPhase: todayPhase,
           sampleCycleLengths: sampleCycleLengths,
           onBleed: onBleed,
+          loggedDays: loggedDays,
         ),
         if (classification == CycleClassification.unpredictable &&
             cycleDay != null &&
@@ -387,6 +391,7 @@ class _StatusCard extends StatelessWidget {
     required this.todayPhase,
     required this.sampleCycleLengths,
     this.onBleed = false,
+    this.loggedDays = 0,
   });
 
   final int? cycleDay;
@@ -398,6 +403,7 @@ class _StatusCard extends StatelessWidget {
   final CyclePhase? todayPhase;
   final List<int> sampleCycleLengths;
   final bool onBleed;
+  final int loggedDays;
 
   @override
   Widget build(BuildContext context) {
@@ -446,12 +452,19 @@ class _StatusCard extends StatelessWidget {
       );
     }
 
+    final quietPrompt =
+        hasPeriod &&
+        classification == CycleClassification.unclassified &&
+        showQuietPreclassificationPrompt(
+          periodStartCount: periodStartCount,
+          cycleDay: cycleDay,
+        );
     final trailing = !hasPeriod
         ? 'No history yet'
         : classification == CycleClassification.unclassified
         ? unclassifiedStatusTrailingLabel(
             periodStartCount: periodStartCount,
-            cycleDay: cycleDay,
+            loggedDays: loggedDays,
           )
         : '';
     final dark = Theme.of(context).brightness == Brightness.dark;
@@ -494,6 +507,18 @@ class _StatusCard extends StatelessWidget {
               color: context.ritu.textOnBrand,
             ),
           ),
+          if (quietPrompt) ...[
+            const SizedBox(height: 8),
+            Text(
+              'Log your next period when it starts',
+              style: GoogleFonts.dmSans(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                height: 24 / 15,
+                color: context.ritu.textOnBrand,
+              ),
+            ),
+          ],
           const SizedBox(height: 8),
           Container(
             height: 1,

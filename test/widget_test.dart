@@ -217,6 +217,42 @@ void main() {
     expect(find.text('No history yet'), findsOneWidget);
   });
 
+  rituTestWidgets(
+    'Unclassified user past 45 days freezes weeks at logged days',
+    (tester) async {
+      final today = DateTime(2026, 10, 27);
+      final start = today.subtract(const Duration(days: 45));
+      final profiles = DriftProfileRepository(database);
+      final periods = DriftPeriodRepository(database);
+      final logs = DriftDailyLogRepository(database);
+      await profiles.upsertDisplayName('Maya');
+      await profiles.markOnboardingCompleted();
+      await periods.upsertPeriod(
+        startedOn: start,
+        endedOn: start.add(const Duration(days: 4)),
+        source: PeriodSources.settings,
+      );
+      for (var day = 0; day < 7; day++) {
+        await logs.upsert(loggedOn: start.add(Duration(days: day)));
+      }
+
+      await tester.pumpWidget(
+        createRituApp(database: database, simulatedToday: today),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('46'), findsOneWidget);
+      expect(find.text('days into your cycle'), findsOneWidget);
+      expect(find.text('Log your next period when it starts'), findsOneWidget);
+      expect(
+        find.text('Last period ${formatShortMonthDay(start)}'),
+        findsOneWidget,
+      );
+      expect(find.text('1 week logged'), findsOneWidget);
+      expect(find.text('6 weeks so far'), findsNothing);
+    },
+  );
+
   rituTestWidgets('Returning user skips onboarding when profile is complete', (
     tester,
   ) async {
